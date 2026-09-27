@@ -3,14 +3,13 @@ import { CALENDAR_START, SAVE_FORMAT_VERSION, WALL_FORTIFICATION_LEVEL_DEFAULT }
 import { formatDate, parseDate } from '../../shared/calendar.js';
 import { initialVisibility, provinceVisibility, nationVisibility } from './fog.js';
 import { initEconomy, zeroResources, zeroEquipment, controlledStates } from '../simulation/economy.js';
+import { supplyValue } from './supply.js';
+import { initialProvinceControl, provinceController, templateStats } from '../simulation/military.js';
+import { seedFromHex } from '../../shared/rng.js';
 
 const clone = (o) => structuredClone(o);
 
-/** supply_value(state) — MECHANICS_SPEC.md §3.4 (0 division au démarrage). */
-export function supplyValue(infrastructureLevel, frontlineDivisionsInState = 0) {
-  if (infrastructureLevel == null) return null;
-  return Math.min(1, Math.max(0, 0.5 + 0.1 * infrastructureLevel - 0.05 * frontlineDivisionsInState));
-}
+export { supplyValue };
 
 function buildStates(map) {
   if (!map.available) return [];
@@ -51,20 +50,23 @@ function buildNation(n, economyRules) {
  * Crée une partie — FEATURES_SPEC.md §0.4 : GameState initialisé depuis les valeurs par défaut de
  * MECHANICS_SPEC.md, CALENDAR_START et GameSettings.historicalMode (immuable ensuite, §0).
  */
-export function createGame({ nationId, historicalMode }, { nations, map, economyRules = null }) {
+export function createGame({ nationId, historicalMode }, { nations, map, economyRules = null, militaryRules = null, scenario = null }) {
   const playable = nations.filter((n) => n.isPlayable).map((n) => n.id);
   if (!playable.includes(nationId)) throw Object.assign(new Error('Nation inconnue'), { code: 'INVALID_NATION' });
   if (typeof historicalMode !== 'boolean') {
     throw Object.assign(new Error('historicalMode doit être un booléen'), { code: 'INVALID_HISTORICAL_MODE' });
   }
-  const gameNations = nations.map((n) => buildNation(n, economyRules));
-  return {
+  const gameNations = nations.map((n) => buildNation({ ...n, ...(scenario?.nationOverrides?.[n.id] ?? {}) }, economyRules));
+  const states = buildStates(map);
+  const rngSeed = randomBytes(8).toString('hex');
+  const game = {
     settings: Object.freeze({ historicalMode, nationId }),
     date: { ...CALENDAR_START },
     speed: 0,
-    rngSeed: randomBytes(8).toString('hex'),
+    rngSeed,
+    rngState: seedFromHex(rngSeed),
     nations: gameNations,
-    states: buildStates(map),
+    states,
     divisions: [],
     activeEvents: [],
     visibility: initialVisibility(gameNations, map),
@@ -73,7 +75,25 @@ export function createGame({ nationId, historicalMode }, { nations, map, economy
     constructionQueues: {},
     nextId: 1,
     lastDailyNet: {},
+    templates: [],
+    provinceControl: initialProvinceControl(states),
+    wars: clone(scenario?.startingWars ?? []),
+    lastCombats: [],
   };
+  applyStartingOrderOfBattle(game, scenario, militaryRules);
+  return game;
+}
+
+/** Modèles et divisions de départ (data/scenario.json ; vides tant que les specs ne les donnent pas). */
+function applyStartingOrderOfBattle(game, scenario, militaryRules) {
+  for (const t of scenario?.startingTemplates ?? []) {
+    game.templates.push({ ...clone(t), computedStats: templateStats(t, militaryRules) });
+  }
+  for (const d of scenario?.startingDivisions ?? []) {
+    game.divisions.push({
+      organization: 100, strength: 100, frontId: null, order: null, targetProvinceId: null, movement: null, ...clone(d),
+    });
+  }
 }
 
 /**
@@ -94,7 +114,7 @@ export function viewFor(state, viewerId, map, { technologies = [], economyRules 
       stateId: p.stateId ?? null,
       stateName: st?.name ?? null,
       ownerId: st?.ownerId ?? null,
-      controllerId: st?.controllerId ?? null,
+      controllerId: provinceController(state, p.id) ?? st?.controllerId ?? null,
       infrastructureLevel: st?.infrastructureLevel ?? null,
       resourceDeposits: st?.resourceDeposits ?? null,
       fortificationLevel: st?.fortificationLevel ?? null,
@@ -121,6 +141,24 @@ export function viewFor(state, viewerId, map, { technologies = [], economyRules 
     provinces,
     economy: economyView(state, viewerId, economyRules),
     technologies,
+    military: militaryView(state, viewerId, map),
+  };
+}
+
+/**
+ * Données militaires visibles par la nation (FEATURES §8, §13). Brouillard : seules les divisions
+ * et les combats situés dans une province `known` sont transmis, sauf les divisions du joueur.
+ */
+export function militaryView(state, viewerId, map) {
+  const known = (pid) => provinceVisibility(state, viewerId, pid) === 'known';
+  const visibleWars = (state.wars ?? []).filter(([a, b]) => a === viewerId || b === viewerId
+    || (nationVisibility(state, viewerId, a) === 'known' && nationVisibility(state, viewerId, b) === 'known'));
+  return {
+    templates: state.templates.filter((t) => t.nationId === viewerId),
+    divisions: state.divisions.filter((d) => d.nationId === viewerId || known(d.locationProvinceId)),
+    wars: visibleWars,
+    combats: (state.lastCombats ?? []).filter((c) => known(c.provinceId)),
+    adjacency: map.available ? map.adjacency : {},
   };
 }
 
@@ -148,6 +186,8 @@ export function economyView(state, viewerId, economyRules) {
  * SaveFile — MECHANICS_SPEC.md §11.
  * [EXTENSION TECHNIQUE, Phase 2] Les entités ProductionLine (§2) et la file de construction ne
  * figurent pas non plus dans §11 : ajoutées sous `productionLines`, `constructionQueues`, `nextId`.
+ * [EXTENSION TECHNIQUE, Phase 3] `templates`, `provinceControl`, `wars`, `rngState` (état du PRNG
+ * pour un rejeu déterministe), `lastCombats`.
  * [EXTENSION TECHNIQUE À VALIDER] §11 ne contient ni GameSettings, ni la date courante, ni
  * l'état du brouillard. Sans eux, une sauvegarde rechargée perdrait le mode choisi (pourtant
  * immuable) et repartirait au 01/01/an-844. Ils sont ajoutés sous `settings`, `currentDate`
@@ -171,6 +211,11 @@ export function toSaveFile(state) {
     productionLines: clone(state.productionLines),
     constructionQueues: clone(state.constructionQueues),
     nextId: state.nextId,
+    templates: clone(state.templates),
+    provinceControl: clone(state.provinceControl),
+    wars: clone(state.wars),
+    rngState: state.rngState,
+    lastCombats: clone(state.lastCombats ?? []),
   };
 }
 
@@ -209,5 +254,10 @@ export function fromSaveFile(save) {
     constructionQueues: clone(save.constructionQueues ?? {}),
     nextId: save.nextId ?? 1,
     lastDailyNet: {},
+    templates: clone(save.templates ?? []),
+    provinceControl: clone(save.provinceControl ?? initialProvinceControl(save.states ?? [])),
+    wars: clone(save.wars ?? []),
+    rngState: save.rngState ?? seedFromHex(save.rngSeed),
+    lastCombats: clone(save.lastCombats ?? []),
   };
 }

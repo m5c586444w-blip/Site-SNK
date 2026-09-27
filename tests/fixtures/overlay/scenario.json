@@ -1,0 +1,71 @@
+{
+  "_note": "SCÉNARIO DE TEST — guerre, effectifs et divisions arbitraires pour exercer le moteur militaire",
+  "startingWars": [
+    [
+      "paradis",
+      "marley"
+    ]
+  ],
+  "nationOverrides": {
+    "paradis": {
+      "manpower": 20000
+    },
+    "marley": {
+      "manpower": 50000
+    }
+  },
+  "startingTemplates": [
+    {
+      "id": "tpl_test_p",
+      "nationId": "paradis",
+      "name": "Test garrison",
+      "battalions": [
+        {
+          "battalionType": "infantry",
+          "count": 4
+        }
+      ]
+    },
+    {
+      "id": "tpl_test_m",
+      "nationId": "marley",
+      "name": "Test assault",
+      "battalions": [
+        {
+          "battalionType": "infantry",
+          "count": 4
+        },
+        {
+          "battalionType": "artillery",
+          "count": 2
+        }
+      ]
+    }
+  ],
+  "startingDivisions": [
+    {
+      "id": "div_test_p1",
+      "nationId": "paradis",
+      "templateId": "tpl_test_p",
+      "locationProvinceId": "test_a2"
+    },
+    {
+      "id": "div_test_p2",
+      "nationId": "paradis",
+      "templateId": "tpl_test_p",
+      "locationProvinceId": "test_a3"
+    },
+    {
+      "id": "div_test_m1",
+      "nationId": "marley",
+      "templateId": "tpl_test_m",
+      "locationProvinceId": "test_b3"
+    },
+    {
+      "id": "div_test_m2",
+      "nationId": "marley",
+      "templateId": "tpl_test_m",
+      "locationProvinceId": "test_b1"
+    }
+  ]
+}

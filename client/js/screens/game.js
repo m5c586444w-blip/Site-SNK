@@ -7,6 +7,7 @@ import { MapRenderer } from '../map/mapRenderer.js';
 import { saveList } from './menus.js';
 import { renderProduction } from './production.js';
 import { renderResearch } from './research.js';
+import { renderDivisions, orderButtons, provinceName, dragging } from './divisions.js';
 import { SPEED_LEVELS, STABILITY_UNREST_THRESHOLD, MAP_MODES, RESOURCE_TYPES } from '/shared/constants.js';
 
 // Phase du cahier des charges (§12) où chaque écran/mode sera livré. null = phase non attribuée.
@@ -15,9 +16,9 @@ const SCREEN_PHASE = {
   titans: 5, politics: 5, warriors: 5, intelligence: null, journal: null,
 };
 const MAP_MODE_PHASE = { political: 1, fog_of_war: 1, resources: 2, supply: 2, front_combat: 3 };
-const CURRENT_PHASE = 2;
+const CURRENT_PHASE = 3;
 /** Écrans livrés : nom -> rendu (host, ctx). */
-const SCREENS = { production: renderProduction, research: renderResearch };
+const SCREENS = { production: renderProduction, research: renderResearch, divisions: renderDivisions };
 const fmt = (x) => (Math.round(x * 10) / 10).toLocaleString();
 
 export async function gameScreen(root, nav) {
@@ -151,6 +152,49 @@ export async function gameScreen(root, nav) {
     provincePanel.classList.remove('hidden');
   }
 
+  // ---------- Clic droit : ordres aux divisions (FEATURES §2) ----------
+  const contextMenu = h('div.context-menu.panel.hidden', { role: 'menu' });
+  const closeContextMenu = (e) => { if (!contextMenu.contains(e.target)) contextMenu.classList.add('hidden'); };
+  document.addEventListener('pointerdown', closeContextMenu);
+
+  function onContextMenu(p, x, y) {
+    const own = (view.military?.divisions ?? []).filter((d) => d.nationId === view.viewerId && d.locationProvinceId === p.id);
+    if (!own.length) { contextMenu.classList.add('hidden'); return; }
+    tooltip.classList.add('hidden');
+    const r = mapHost.getBoundingClientRect();
+    clear(contextMenu).append(
+      h('strong', {}, `${provinceName(view, p.id)} — ${t('map.menu.divisions', { n: own.length })}`),
+      ...orderButtons(view, ctx, own.map((d) => d.id), p.id));
+    contextMenu.style.left = `${x - r.left}px`;
+    contextMenu.style.top = `${y - r.top}px`;
+    contextMenu.classList.remove('hidden');
+    contextMenu.querySelector('button')?.focus();
+  }
+
+  // ---------- Détail d'un combat : les chiffres de §6.3 exposés (FEATURES §13) ----------
+  function onCombatClick(c) {
+    const f = (x, d = 2) => (Math.round(x * 10 ** d) / 10 ** d).toLocaleString();
+    const row = (k, v) => h('tr', {}, h('th', {}, t(k)), h('td.num', {}, v));
+    modal({
+      title: t('combat.title', { province: provinceName(view, c.provinceId) }),
+      body: h('div', {},
+        h('table.data-table.combat-table', {},
+          h('tbody', {},
+            row('combat.attacker', `${nationName(c.attackerNationId)} — ${t('combat.divisions', { n: c.attackerIds.length })}`),
+            row('combat.defender', `${nationName(c.defenderNationId)} — ${t('combat.divisions', { n: c.defenderIds.length })}`),
+            row('combat.attackPower', f(c.attackerPower)),
+            row('combat.defensePower', f(c.defenderPower)),
+            row('combat.terrain', f(c.terrainModifier)),
+            row('combat.wall', t(c.isWallFortified ? 'common.yes' : 'common.no')),
+            row('combat.ratio', f(c.resultRatio, 3)),
+            row('combat.random', f(c.randomFactor, 3)),
+            row('combat.outcome', h('strong', {}, f(c.outcome, 3))))),
+        h('p.small.muted', {}, t('combat.thresholds')),
+        h('p', {}, h('strong', {}, t(`combat.result.${c.result}`)))),
+      actions: [{ label: t('common.close'), value: null, primary: true }],
+    });
+  }
+
   const mapMissing = h('div.map-missing.panel', {},
     h('h2', {}, t('map.missing.title')),
     h('p', {}, t('map.missing.body')),
@@ -202,23 +246,28 @@ export async function gameScreen(root, nav) {
 
   const ctx = {
     getView: () => view,
+    rerender: () => renderScreen({ force: true }),
     act: async (type, payload) => {
       try {
         const delta = await api.nationAction(view.viewerId, type, payload);
         applyDelta(delta);
-      } catch (e) { toast(errorText(e), 'error'); }
+        return delta;
+      } catch (e) { toast(errorText(e), 'error'); return null; }
     },
   };
 
   function openScreen(name) {
     currentScreen = name;
     countryPanel.classList.add('hidden');
-    renderScreen();
+    renderScreen({ force: true });
     screenPanel.classList.remove('hidden');
   }
 
-  function renderScreen() {
+  function renderScreen({ force = false } = {}) {
     if (!currentScreen) return;
+    // Ne pas redessiner pendant une saisie ou un glisser-déposer (l'écran suit chaque jour de jeu).
+    const active = document.activeElement;
+    if (!force && (dragging || (active && screenPanel.contains(active) && active.matches('input, select, textarea')))) return;
     const scroll = screenPanel.querySelector('.screen-body')?.scrollTop ?? 0;
     const body = h('div.screen-body');
     clear(screenPanel).append(
@@ -241,6 +290,10 @@ export async function gameScreen(root, nav) {
     if (payload.economy) view.economy = payload.economy;
     if ('date' in payload) view.date = payload.date;
     if ('speed' in payload) view.speed = payload.speed;
+    if (payload.military) {
+      view.military = payload.military;
+      renderer?.setMilitary(view.military);
+    }
     renderTopbar();
     // Pas de re-rendu pendant qu'une modale de confirmation est ouverte.
     if (currentScreen && !document.querySelector('.modal-overlay')) renderScreen();
@@ -303,7 +356,7 @@ export async function gameScreen(root, nav) {
   clear(root).append(h('div.screen.game-screen', {},
     topbar,
     connBanner,
-    h('main.map-area', {}, modeBar, mapHost, tooltip, provincePanel, countryPanel, screenPanel)));
+    h('main.map-area', {}, modeBar, mapHost, tooltip, provincePanel, countryPanel, screenPanel, contextMenu)));
 
   async function applyView(next, { full }) {
     view = next;
@@ -314,7 +367,7 @@ export async function gameScreen(root, nav) {
     } else if (full) {
       if (!renderer) {
         clear(mapHost);
-        renderer = new MapRenderer(mapHost, { onHover, onSelect });
+        renderer = new MapRenderer(mapHost, { onHover, onSelect, onContextMenu, onCombatClick });
         await renderer.load({ maskUrl: '/map/mask.png', backgroundUrl: view.map.hasBackground ? '/map/background' : null });
       }
       if (!view.fogOfWarEnabled && mapMode === 'fog_of_war') mapMode = 'political';
@@ -324,7 +377,7 @@ export async function gameScreen(root, nav) {
     }
     if (full) {
       if (!countryPanel.classList.contains('hidden')) openCountry();
-      if (currentScreen) renderScreen();
+      if (currentScreen) renderScreen({ force: true });
     }
   }
 
@@ -338,6 +391,7 @@ export async function gameScreen(root, nav) {
       else if (type === 'notification/toast') {
         const vars = { ...(payload.vars ?? {}) };
         if (vars.techId) vars.name = loc(view.technologies?.find((x) => x.id === vars.techId)?.name) ?? vars.techId;
+        if (vars.provinceId) vars.province = provinceName(view, vars.provinceId);
         toast(t(payload.textKey, vars));
       }
     },
@@ -363,6 +417,7 @@ export async function gameScreen(root, nav) {
 
   function teardown() {
     document.removeEventListener('keydown', onKey);
+    document.removeEventListener('pointerdown', closeContextMenu);
     socket.close();
     renderer?.destroy();
   }

@@ -1,0 +1,15 @@
+{
+  "_source": "Valeurs militaires ABSENTES de MECHANICS_SPEC.md §6. Tant qu'elles restent null, l'action ou l'effet correspondant est désactivé avec un message explicite (voir docs/PHASE3_GAPS.md).",
+  "battalionSpeeds": {
+    "infantry": null,
+    "artillery": null,
+    "light_armor": null,
+    "medium_armor": null
+  },
+  "movementDaysPerProvince": null,
+  "_movementNote": "Aucune règle de déplacement (distance, durée) : tant que null, seuls les déplacements par victoire au combat (§6.3 « attacker wins province ») sont possibles ; la retraite et le redéploiement sont refusés.",
+  "terrainModifiers": {},
+  "_terrainNote": "TERRAIN_MODIFIER : aucune table ; §6.3 impose 1.0 par défaut, appliqué tel quel.",
+  "supplyAttritionPerDay": null,
+  "_supplyNote": "§3.4 renvoie à une pénalité d'attrition de §6.4 sous supplyValue < 0.5, mais §6.4 ne la chiffre pas."
+}

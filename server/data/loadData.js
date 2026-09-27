@@ -1,6 +1,7 @@
 import { readFile, access } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { computeAdjacency } from './adjacency.js';
 
 export const ROOT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 export const DATA_DIR = path.join(ROOT_DIR, 'data');
@@ -42,12 +43,20 @@ export async function loadEconomyRules() {
   return readJson('economy_rules.json');
 }
 
+export async function loadMilitaryRules() {
+  return readJson('military_rules.json');
+}
+
+export async function loadScenario() {
+  return readJson('scenario.json');
+}
+
 /** Toutes les données statiques d'une partie. */
 export async function loadGameData() {
-  const [nations, map, technologies, economyRules] = await Promise.all([
-    loadNations(), loadMap(), loadTechnologies(), loadEconomyRules(),
+  const [nations, map, technologies, economyRules, militaryRules, scenario] = await Promise.all([
+    loadNations(), loadMap(), loadTechnologies(), loadEconomyRules(), loadMilitaryRules(), loadScenario(),
   ]);
-  return { nations, map, technologies, economyRules };
+  return { nations, map, technologies, economyRules, militaryRules, scenario };
 }
 
 /**
@@ -66,13 +75,15 @@ export async function loadMap() {
     return { available: false, reason: 'MAP_MASK_MISSING', dir };
   }
   const backgroundPath = def.backgroundFile ? path.join(dir, def.backgroundFile) : null;
+  const provinces = def.provinces ?? [];
   return {
+    adjacency: await computeAdjacency(maskPath, provinces),
     available: true,
     dir,
     maskPath,
     backgroundPath: backgroundPath && (await exists(backgroundPath)) ? backgroundPath : null,
     homeLandmass: def.homeLandmass ?? { paradis: 'paradis_island' },
-    provinces: def.provinces ?? [],
+    provinces,
     states: def.states ?? [],
   };
 }

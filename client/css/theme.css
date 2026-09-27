@@ -251,3 +251,29 @@ select, .text-input { font: 1rem var(--font-ui); padding: 0.4em; border: 1px sol
 .tech-node.blocked { opacity: 0.55; cursor: not-allowed; }
 .tech-node:disabled { cursor: not-allowed; }
 .tech-node.completed:disabled, .tech-node.in_progress:disabled { cursor: default; }
+
+/* ---------- Phase 3 : divisions, modèles, carte militaire ---------- */
+.oob-layout { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 1.4rem; }
+@media (max-width: 900px) { .oob-layout { grid-template-columns: 1fr; } }
+.oob-group { border: 1px solid var(--line); margin-bottom: 0.6rem; background: rgb(255 255 255 / 25%); }
+.oob-group > summary { font-family: var(--font-title); font-weight: 700; padding: 0.45rem 0.7rem; cursor: pointer; }
+.oob-division { border-top: 1px dotted var(--line); padding: 0.35rem 0.7rem; }
+.oob-division > summary { cursor: pointer; display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; }
+.oob-meters { display: inline-flex; align-items: center; gap: 0.3rem; margin-left: auto; }
+.bar-mini { min-width: 60px; height: 14px; }
+.bar-mini .bar-text { line-height: 14px; font-size: 0.65rem; }
+.oob-battalions { list-style: none; padding: 0.3rem 0 0.3rem 1rem; margin: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.order-row { display: flex; flex-wrap: wrap; gap: 0.35rem; padding: 0.3rem 0; }
+.order-select { font-size: 0.85rem; padding: 0.25em; }
+.batt-chip { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.25rem 0.5rem; border: 1px solid var(--accent); background: #f3e8cc; border-radius: 3px; font-size: 0.85rem; cursor: pointer; user-select: none; }
+.batt-chip:hover { background: #e9d9b0; }
+.batt-palette { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.6rem; }
+.batt-drop { min-height: 5rem; border: 2px dashed var(--line); padding: 0.6rem; display: flex; flex-wrap: wrap; gap: 0.4rem; align-content: flex-start; background: rgb(255 255 255 / 25%); }
+.batt-drop.too-wide { border-color: var(--danger); }
+.tpl-editor .inline { flex-wrap: wrap; }
+.tpl-editor .text-input { width: auto; flex: 1; margin-top: 0; }
+.tpl-stats { margin-top: 0.8rem; padding: 0.6rem 0.8rem; border: 1px solid var(--line); background: rgb(255 255 255 / 30%); }
+.danger { color: var(--danger); }
+.cost-list { margin: 0; padding-left: 1.2rem; font-size: 0.9rem; }
+.context-menu { position: absolute; z-index: 30; padding: 0.6rem; display: grid; gap: 0.35rem; min-width: 220px; }
+.combat-table th { font-family: var(--font-ui); font-size: 0.85rem; font-weight: 400; color: var(--ink-soft); }

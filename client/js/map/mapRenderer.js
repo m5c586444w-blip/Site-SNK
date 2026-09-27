@@ -12,6 +12,7 @@ const WALL_OUTLINE = [30, 26, 20];
 const HAZARD = [122, 36, 24];           // hachures « ancien territoire des Titans purs »
 const SEA_NO_BACKGROUND = [196, 182, 150];
 const NEUTRAL = [150, 140, 120];
+const FRONT_LINE = [176, 28, 20];        // front entre nations en guerre (FEATURES §13)
 
 function hexToRgb(hex) {
   const n = parseInt(String(hex).replace('#', ''), 16);
@@ -21,10 +22,14 @@ function hexToRgb(hex) {
 const mix = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
 
 export class MapRenderer {
-  constructor(container, { onHover = () => {}, onSelect = () => {} } = {}) {
+  constructor(container, { onHover = () => {}, onSelect = () => {}, onContextMenu = () => {}, onCombatClick = () => {} } = {}) {
     this.container = container;
     this.onHover = onHover;
     this.onSelect = onSelect;
+    this.onContextMenu = onContextMenu;
+    this.onCombatClick = onCombatClick;
+    this.military = { divisions: [], combats: [], wars: [] };
+    this.viewerId = null;
     this.canvas = document.createElement('canvas');
     this.canvas.className = 'map-canvas';
     this.canvas.tabIndex = 0;
@@ -75,12 +80,40 @@ export class MapRenderer {
       this.pixelProvince = new Int32Array(this.maskKeys.length);
       for (let i = 0; i < this.maskKeys.length; i++) this.pixelProvince[i] = byKey.get(this.maskKeys[i]) ?? -1;
     }
+    this.viewerId = view.viewerId;
+    this.military = view.military ?? { divisions: [], combats: [], wars: [] };
+    this.warSet = new Set((this.military.wars ?? []).map(([a, b]) => [a, b].sort().join('|')));
+    this.computeCentroids();
     this.maxDeposit = Math.max(1, ...this.provinces.map((p) => {
       const r = p.resourceDeposits;
       return r ? (r.steel ?? 0) + (r.fuel ?? 0) + (r.rareMaterials ?? 0) : 0;
     }));
     this.renderLayer();
     this.renderHighlight();
+  }
+
+  /** Mise à jour militaire légère (pions, combats) sans recalcul du calque. */
+  setMilitary(military) {
+    this.military = military;
+    this.warSet = new Set((military.wars ?? []).map(([a, b]) => [a, b].sort().join('|')));
+    this.draw();
+  }
+
+  computeCentroids() {
+    if (!this.pixelProvince) return;
+    const n = this.provinces.length;
+    const sx = new Float64Array(n); const sy = new Float64Array(n); const c = new Float64Array(n);
+    for (let i = 0; i < this.pixelProvince.length; i++) {
+      const idx = this.pixelProvince[i];
+      if (idx < 0) continue;
+      sx[idx] += i % this.width; sy[idx] += Math.floor(i / this.width); c[idx] += 1;
+    }
+    this.centroids = new Map();
+    this.provinces.forEach((p, i) => { if (c[i]) this.centroids.set(p.id, { x: sx[i] / c[i] + 0.5, y: sy[i] / c[i] + 0.5 }); });
+  }
+
+  atWar(a, b) {
+    return a && b && a !== b && this.warSet?.has([a, b].sort().join('|'));
   }
 
   setMode(mode) {
@@ -131,6 +164,7 @@ export class MapRenderer {
           if (isBorder) {
             const nationEdge = nbrs.some((n) => n !== idx && (!known(n) || owner(n) !== p.ownerId));
             out = nationEdge ? NATION_BORDER : mix(out, PROVINCE_BORDER, 0.6);
+            if (this.mode === 'front_combat' && nbrs.some((n) => n >= 0 && n !== idx && this.atWar(provs[n].controllerId, p.controllerId))) out = FRONT_LINE;
           }
           if (p.isWallState) {
             // Mur : ligne claire de 2 px cernée de sombre, le long du bord de l'état fortifié
@@ -162,6 +196,7 @@ export class MapRenderer {
       return p.supplyValue < 0.5 ? mix([150, 40, 25], [214, 170, 60], p.supplyValue / 0.5)
         : mix([214, 170, 60], [75, 93, 58], (p.supplyValue - 0.5) / 0.5);
     }
+    if (this.mode === 'front_combat') return this.nationColors.get(p.controllerId) ?? NEUTRAL;
     return this.nationColors.get(p.ownerId) ?? NEUTRAL;
   }
 
@@ -209,6 +244,69 @@ export class MapRenderer {
     ctx.imageSmoothingEnabled = scale < 2;
     ctx.drawImage(this.layer, ox, oy, this.width * scale, this.height * scale);
     ctx.drawImage(this.highlight, ox, oy, this.width * scale, this.height * scale);
+    this.drawOverlay();
+  }
+
+  toScreen({ x, y }) {
+    return { x: this.view.ox + x * this.view.scale, y: this.view.oy + y * this.view.scale };
+  }
+
+  /** Pions de divisions (par nation et par province) et icônes de combat (FEATURES §2, §13). */
+  drawOverlay() {
+    if (!this.centroids) return;
+    const { ctx } = this;
+    const byProvince = new Map();
+    for (const d of this.military.divisions ?? []) {
+      if (!byProvince.has(d.locationProvinceId)) byProvince.set(d.locationProvinceId, new Map());
+      const m = byProvince.get(d.locationProvinceId);
+      m.set(d.nationId, (m.get(d.nationId) ?? 0) + 1);
+    }
+    ctx.font = '600 11px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (const [pid, nations] of byProvince) {
+      const c = this.centroids.get(pid);
+      if (!c) continue;
+      const s = this.toScreen(c);
+      let offset = -((nations.size - 1) * 26) / 2;
+      for (const [nid, count] of nations) {
+        const col = this.nationColors.get(nid) ?? NEUTRAL;
+        const x = s.x + offset; const y = s.y + 14;
+        ctx.fillStyle = `rgb(${col})`;
+        ctx.strokeStyle = nid === this.viewerId ? '#f6eed9' : '#1e1810';
+        ctx.lineWidth = 2;
+        ctx.fillRect(x - 12, y - 8, 24, 16);
+        ctx.strokeRect(x - 12, y - 8, 24, 16);
+        ctx.fillStyle = '#fff';
+        ctx.fillText(String(count), x, y + 0.5);
+        offset += 26;
+      }
+    }
+    this.combatHits = [];
+    for (const c of this.military.combats ?? []) {
+      const cen = this.centroids.get(c.provinceId);
+      if (!cen) continue;
+      const s = this.toScreen(cen);
+      const y = s.y - 12;
+      ctx.beginPath();
+      ctx.arc(s.x, y, 11, 0, Math.PI * 2);
+      ctx.fillStyle = '#8e2a1c';
+      ctx.fill();
+      ctx.strokeStyle = '#f6eed9';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = '#fff';
+      ctx.font = '13px sans-serif';
+      ctx.fillText('⚔', s.x, y + 1);
+      ctx.font = '600 11px Inter, sans-serif';
+      this.combatHits.push({ x: s.x, y, combat: c });
+    }
+  }
+
+  combatAt(clientX, clientY) {
+    const r = this.canvas.getBoundingClientRect();
+    const x = clientX - r.left; const y = clientY - r.top;
+    return (this.combatHits ?? []).find((h) => Math.hypot(h.x - x, h.y - y) <= 12)?.combat ?? null;
   }
 
   provinceAt(clientX, clientY) {
@@ -277,6 +375,8 @@ export class MapRenderer {
       this.pointers.delete(e.pointerId);
       if (this.pointers.size < 2) pinchDist = null;
       if (wasClick) {
+        const combat = this.combatAt(e.clientX, e.clientY);
+        if (combat) { this.onCombatClick(combat); return; }
         const idx = this.provinceAt(e.clientX, e.clientY);
         this.selectedIndex = idx;
         this.renderHighlight();
@@ -284,6 +384,11 @@ export class MapRenderer {
       }
     };
     c.addEventListener('pointerup', end);
+    c.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      const idx = this.provinceAt(e.clientX, e.clientY);
+      if (idx >= 0) this.onContextMenu(this.provinces[idx], e.clientX, e.clientY);
+    });
     c.addEventListener('pointercancel', end);
     c.addEventListener('pointerleave', () => { if (!this.pointers.size) this.onHover(null); });
     c.addEventListener('keydown', (e) => {

@@ -5,11 +5,12 @@ import { WebSocketServer } from 'ws';
 import http from 'node:http';
 import path from 'node:path';
 import { ROOT_DIR, loadGameData } from './data/loadData.js';
-import { createGame, viewFor, economyView } from './state/gameState.js';
+import { createGame, viewFor, economyView, militaryView } from './state/gameState.js';
 import { Clock } from './simulation/clock.js';
 import { runDay } from './simulation/tick.js';
 import { createLine, assignFactories, deleteLine, queueNewFactory, queueConversion } from './simulation/economy.js';
 import { assignResearch, cancelResearch } from './simulation/research.js';
+import { saveTemplate, deleteTemplate, createDivision, orderDivision, setFront } from './simulation/military.js';
 import { listSaves, createSave, loadSave, deleteSave, autosave } from './state/saves.js';
 import { readSettings, writeSettings } from './state/settings.js';
 import { AUTOSAVE_INTERVAL_DAYS } from '../shared/constants.js';
@@ -25,11 +26,16 @@ const HTTP_STATUS = {
   NO_CIVILIAN_FACTORY: 409, CONVERSION_COST_MISSING: 409,
   RESEARCH_SLOTS_UNKNOWN: 409, INVALID_SLOT: 400, SLOT_BUSY: 409, INVALID_TECH: 404, CATEGORY_LOCKED: 409,
   TECH_COMPLETED: 409, TECH_IN_PROGRESS: 409, PREREQUISITES_MISSING: 409,
+  INVALID_TEMPLATE_NAME: 400, EMPTY_TEMPLATE: 400, INVALID_BATTALION: 400, TEMPLATE_TOO_WIDE: 400,
+  INVALID_TEMPLATE: 404, TEMPLATE_IN_USE: 409, INVALID_PROVINCE: 400, MANPOWER_UNKNOWN: 409,
+  INSUFFICIENT_MANPOWER: 409, INSUFFICIENT_EQUIPMENT: 409, INVALID_DIVISION: 404, NO_FRONT: 409,
+  INVALID_ORDER: 400, INVALID_TARGET: 400, NOT_AT_WAR: 409, MOVEMENT_RULES_MISSING: 409, NO_RETREAT_PATH: 409,
+  NO_MAP: 409,
 };
 
 export async function createServer({ onQuit = () => process.exit(0) } = {}) {
   const data = await loadGameData();
-  const { nations, map, technologies, economyRules } = data;
+  const { nations, map, technologies, economyRules, militaryRules } = data;
 
   /** Une seule partie à la fois (le multijoueur, §15, relève d'une phase ultérieure). */
   let state = null;
@@ -38,16 +44,30 @@ export async function createServer({ onQuit = () => process.exit(0) } = {}) {
   const send = (ws, type, payload) => ws.readyState === 1 && ws.send(JSON.stringify({ type, payload }));
   const broadcast = (type, payload) => { for (const ws of sockets) send(ws, type, payload); };
   const fullView = () => (state ? viewFor(state, state.settings.nationId, map, { technologies, economyRules }) : null);
+  const requireMap = () => { if (!map.available) throw Object.assign(new Error('carte'), { code: 'NO_MAP' }); };
   const player = () => state.nations.find((n) => n.id === state.settings.nationId);
   /** Diff joueur : sa nation (stocks, recherche) et son économie. Jamais l'état complet (§18). */
-  const playerDelta = () => ({ nation: player(), economy: economyView(state, state.settings.nationId, economyRules) });
+  const playerDelta = () => ({
+    nation: player(),
+    economy: economyView(state, state.settings.nationId, economyRules),
+    military: militaryView(state, state.settings.nationId, map),
+  });
 
   const clock = new Clock({
     getState: () => state,
     onTick: async (s) => {
-      const { dailyNet, completedTechs } = await runDay(s, data);
+      const { dailyNet, completedTechs, military } = await runDay(s, data);
       s.lastDailyNet = dailyNet;
-      broadcast('state/delta', { date: formatDate(s.date), ...playerDelta() });
+      // Un changement de contrôle modifie la carte : on renvoie alors la vue complète.
+      if (military.captured.length) broadcast('state/full', fullView());
+      else broadcast('state/delta', { date: formatDate(s.date), ...playerDelta() });
+      const me = s.settings.nationId;
+      for (const c of military.captured.filter((x) => x.from === me || x.to === me)) {
+        broadcast('notification/toast', { id: `cap_${c.provinceId}_${formatDate(s.date)}`, category: 'military', textKey: c.to === me ? 'toast.provinceTaken' : 'toast.provinceLost', vars: { provinceId: c.provinceId } });
+      }
+      for (const d of military.destroyed.filter((x) => x.nationId === me)) {
+        broadcast('notification/toast', { id: `dest_${d.id}`, category: 'military', textKey: 'toast.divisionDestroyed', vars: { provinceId: d.provinceId } });
+      }
       for (const techId of completedTechs[s.settings.nationId] ?? []) {
         broadcast('notification/toast', { id: `tech_${techId}`, category: 'research', textKey: 'toast.researchDone', vars: { techId } });
       }
@@ -77,7 +97,7 @@ export async function createServer({ onQuit = () => process.exit(0) } = {}) {
       res.json(await fn(req));
     } catch (e) {
       if (!e.code || !(e.code in HTTP_STATUS)) console.error(e);
-      res.status(HTTP_STATUS[e.code] ?? 500).json({ error: { code: e.code ?? 'INTERNAL', messageKey: `error.${e.code ?? 'INTERNAL'}` } });
+      res.status(HTTP_STATUS[e.code] ?? 500).json({ error: { code: e.code ?? 'INTERNAL', messageKey: `error.${e.code ?? 'INTERNAL'}`, details: e.details } });
     }
   };
 
@@ -92,7 +112,7 @@ export async function createServer({ onQuit = () => process.exit(0) } = {}) {
 
   app.post('/api/game/new', wrap((req) => {
     const { nationId, historicalMode } = req.body ?? {};
-    setState(createGame({ nationId, historicalMode }, { nations, map, economyRules }));
+    setState(createGame({ nationId, historicalMode }, data));
     return fullView();
   }));
 
@@ -115,6 +135,11 @@ export async function createServer({ onQuit = () => process.exit(0) } = {}) {
     'production/convertFactory': (n, p) => queueConversion(state, n, p.stateId, economyRules),
     'research/assign': (n, p) => assignResearch(state, n, p.techId, p.slotIndex, technologies),
     'research/cancel': (n, p) => cancelResearch(state, n, p.slotIndex),
+    'template/save': (n, p) => saveTemplate(state, n, p.template, militaryRules),
+    'template/delete': (n, p) => deleteTemplate(state, n, p.templateId),
+    'division/create': (n, p) => { requireMap(); return createDivision(state, n, p.templateId, p.provinceId); },
+    'division/order': (n, p) => { requireMap(); return orderDivision(state, map, n, p.divisionId, p.order, p.targetProvinceId, militaryRules); },
+    'division/setFront': (n, p) => { requireMap(); return setFront(state, map, n, p.divisionId); },
   };
 
   function runNationAction(type, payload) {

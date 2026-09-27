@@ -79,3 +79,28 @@ export const RESEARCH_SLOTS_PARADIS_OVERRIDE = 3;
 export const RESEARCH_CATEGORIES = ['infantry', 'artillery', 'armor', 'aviation', 'navy', 'industry', 'doctrine'];
 /** §4 : navy et aviation fermées pour Paradis jusqu'à l'effet de focus unlockTech correspondant. */
 export const PARADIS_LOCKED_RESEARCH_CATEGORIES = ['aviation', 'navy'];
+
+// ---------------- Phase 3 : militaire (MECHANICS_SPEC.md §6) ----------------
+/** §6.1 (aucune vitesse fournie : voir data/military_rules.json → battalionSpeeds) */
+export const BATTALION_TYPES = {
+  infantry: { attack: 2, defense: 3, width: 1, manpower: 1000, equipmentCost: { infantry_equipment: 36 } },
+  artillery: { attack: 5, defense: 1, width: 1, manpower: 300, equipmentCost: { artillery: 12 } },
+  light_armor: { attack: 6, defense: 4, width: 2, manpower: 200, equipmentCost: { light_armor: 12 } },
+  medium_armor: { attack: 9, defense: 7, width: 3, manpower: 200, equipmentCost: { medium_armor: 12 } },
+};
+export const MAX_TEMPLATE_WIDTH = 20;
+
+/** §6.3 */
+export const COMBAT_WIN_THRESHOLD = 1.15;
+export const COMBAT_LOSS_THRESHOLD = 0.85;
+export const RANDOM_FACTOR_RANGE = [0.85, 1.15];
+export const ORG_LOSS_DECISIVE = 25;
+export const ORG_LOSS_INCONCLUSIVE = 10;
+export const ORG_REGEN_PER_DAY_OUT_OF_COMBAT = 5;
+export const WALL_DEFENSE_BONUS = 0.5;
+export const TERRAIN_MODIFIER_DEFAULT = 1.0;
+
+/** §6.4 */
+export const PURE_TITAN_ATTRITION_PER_DAY = 0.02;
+
+export const DIVISION_ORDERS = ['hold', 'advance', 'retreat'];

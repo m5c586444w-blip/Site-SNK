@@ -11,7 +11,7 @@ Hearts of Iron IV. Projet personnel non commercial. Les spécifications de réf�
 | `docs/MECHANICS_SPEC.md` | formules et valeurs numériques |
 | `docs/FEATURES_SPEC.md` | écrans, interactions, API |
 | `docs/HISTORICAL_EVENT_CHAIN_845_854.md` | évènements datés 845-854 (Mode historique) |
-| **`docs/PHASE1_GAPS.md`**, **`docs/PHASE2_GAPS.md`** | **données manquantes et points à trancher** |
+| **`docs/PHASE1_GAPS.md`**, **`PHASE2_GAPS.md`**, **`PHASE3_GAPS.md`** | **données manquantes et points à trancher** |
 
 ## Lancer
 
@@ -63,12 +63,28 @@ de test abstraites** (`tests/fixtures/`), pas du contenu de jeu.
 - Données absentes (catalogue de technologies, coûts d'usine, stocks initiaux, etc.) : voir
   `docs/PHASE2_GAPS.md`.
 
+## Contenu de la Phase 3 (cahier des charges §12)
+
+- **Écran Divisions** (FEATURES §8) : ordre de bataille par front, puis divisions (organisation,
+  effectif, ordre en cours), puis bataillons. Éditeur de modèles par glisser-déposer, avec la
+  largeur max de 20 contrôlée et les statistiques §6.2 recalculées en direct. Formation d'une
+  division avec aperçu des coûts et blocage explicite si le stock est insuffisant.
+- **Ordres** depuis l'écran ou par clic droit sur la carte : assigner au front, avancer vers une
+  province voisine, tenir, se replier.
+- **Combat terrestre** (MECHANICS §6.3) résolu chaque jour : capture de province, repli ou
+  destruction des défenseurs, bonus du Mur, facteur aléatoire déterministe.
+- **Mode de carte Fronts** (FEATURES §13) : lignes de front, pions de divisions, icône de combat.
+  Un clic sur l'icône ouvre le détail chiffré du calcul.
+- **Titans purs** (§6.4) : −2 points d'effectif par jour en zone hachurée.
+- `supply_value` recalculé avec les divisions de front (§3.4).
+- Données absentes et choix d'interprétation : voir `docs/PHASE3_GAPS.md`.
+
 ## Structure
 
 ```
 server/launcher/   démarrage, choix du port, ouverture du navigateur
 server/state/      GameState, brouillard, sauvegardes, réglages
-server/simulation/ horloge, tick quotidien, économie/production, recherche
+server/simulation/ horloge, tick quotidien, économie/production, recherche, militaire
 server/app.js      API REST + WebSocket
 client/            interface (JS natif, Canvas 2D), theme.css, polices OFL auto-hébergées
 shared/            constantes MECHANICS_SPEC, calendrier

@@ -43,6 +43,13 @@
       "color": "#ff00ff",
       "stateId": "test_state_b",
       "landmass": "test_continent_b"
+    },
+    {
+      "id": "test_b3",
+      "name": "Test B3",
+      "color": "#00ffff",
+      "stateId": "test_state_b3",
+      "landmass": "test_continent_b"
     }
   ],
   "states": [
@@ -135,6 +142,15 @@
           "type": "military"
         }
       ]
+    },
+    {
+      "id": "test_state_b3",
+      "name": "Test State B3",
+      "ownerId": "marley",
+      "provinceIds": [
+        "test_b3"
+      ],
+      "infrastructureLevel": 1
     }
   ]
 }

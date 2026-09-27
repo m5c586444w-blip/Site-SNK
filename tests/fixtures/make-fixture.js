@@ -15,6 +15,7 @@ const rects = [
   ['test_a3', '#0000ff', 20, 70, 100, 110],
   ['test_b1', '#ffff00', 140, 20, 200, 80],
   ['test_b2', '#ff00ff', 140, 80, 200, 140],
+  ['test_b3', '#00ffff', 100, 30, 140, 70], // bande reliant l'île A au continent B (voisinage de test)
 ];
 const png = new PNG({ width: W, height: H });
 for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
@@ -36,6 +37,7 @@ const def = {
     { id: 'test_a3', name: 'Test A3', color: '#0000ff', stateId: 'test_state_a3', landmass: 'test_island_a', formerPureTitanTerritory: true },
     { id: 'test_b1', name: 'Test B1', color: '#ffff00', stateId: 'test_state_b', landmass: 'test_continent_b' },
     { id: 'test_b2', name: 'Test B2', color: '#ff00ff', stateId: 'test_state_b', landmass: 'test_continent_b' },
+    { id: 'test_b3', name: 'Test B3', color: '#00ffff', stateId: 'test_state_b3', landmass: 'test_continent_b' },
   ],
   states: [
     {
@@ -50,6 +52,7 @@ const def = {
       resourceDeposits: { steel: 3, fuel: 3, rareMaterials: 0 },
       factories: [{ id: 'tf_b_c1', type: 'civilian' }, { id: 'tf_b_m1', type: 'military' }, { id: 'tf_b_m2', type: 'military' }],
     },
+    { id: 'test_state_b3', name: 'Test State B3', ownerId: 'marley', provinceIds: ['test_b3'], infrastructureLevel: 1 },
   ],
 };
 writeFileSync(path.join(dir, 'provinces.json'), JSON.stringify(def, null, 2) + '\n');
@@ -76,4 +79,20 @@ writeFileSync(path.join(overlay, 'economy_rules.json'), JSON.stringify({
   factoryConversionCost: 10,
   startingStockpiles: { byNation: { paradis: { resources: { steel: 5 }, equipment: { infantry_equipment: 100 } } } },
   resourceConsumption: null,
+}, null, 2) + '\n');
+
+writeFileSync(path.join(overlay, 'scenario.json'), JSON.stringify({
+  _note: 'SCÉNARIO DE TEST — guerre, effectifs et divisions arbitraires pour exercer le moteur militaire',
+  startingWars: [['paradis', 'marley']],
+  nationOverrides: { paradis: { manpower: 20000 }, marley: { manpower: 50000 } },
+  startingTemplates: [
+    { id: 'tpl_test_p', nationId: 'paradis', name: 'Test garrison', battalions: [{ battalionType: 'infantry', count: 4 }] },
+    { id: 'tpl_test_m', nationId: 'marley', name: 'Test assault', battalions: [{ battalionType: 'infantry', count: 4 }, { battalionType: 'artillery', count: 2 }] },
+  ],
+  startingDivisions: [
+    { id: 'div_test_p1', nationId: 'paradis', templateId: 'tpl_test_p', locationProvinceId: 'test_a2' },
+    { id: 'div_test_p2', nationId: 'paradis', templateId: 'tpl_test_p', locationProvinceId: 'test_a3' },
+    { id: 'div_test_m1', nationId: 'marley', templateId: 'tpl_test_m', locationProvinceId: 'test_b3' },
+    { id: 'div_test_m2', nationId: 'marley', templateId: 'tpl_test_m', locationProvinceId: 'test_b1' },
+  ],
 }, null, 2) + '\n');
