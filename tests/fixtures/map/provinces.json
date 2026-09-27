@@ -1,0 +1,90 @@
+{
+  "_note": "CARTE DE TEST ABSTRAITE — pas du contenu de jeu",
+  "maskFile": "provinces_mask.png",
+  "ignoredColors": [
+    "#000000"
+  ],
+  "homeLandmass": {
+    "paradis": "test_island_a"
+  },
+  "provinces": [
+    {
+      "id": "test_a1",
+      "name": "Test A1",
+      "color": "#ff0000",
+      "stateId": "test_state_a1",
+      "landmass": "test_island_a"
+    },
+    {
+      "id": "test_a2",
+      "name": "Test A2",
+      "color": "#00ff00",
+      "stateId": "test_state_a2",
+      "landmass": "test_island_a"
+    },
+    {
+      "id": "test_a3",
+      "name": "Test A3",
+      "color": "#0000ff",
+      "stateId": "test_state_a3",
+      "landmass": "test_island_a",
+      "formerPureTitanTerritory": true
+    },
+    {
+      "id": "test_b1",
+      "name": "Test B1",
+      "color": "#ffff00",
+      "stateId": "test_state_b",
+      "landmass": "test_continent_b"
+    },
+    {
+      "id": "test_b2",
+      "name": "Test B2",
+      "color": "#ff00ff",
+      "stateId": "test_state_b",
+      "landmass": "test_continent_b"
+    }
+  ],
+  "states": [
+    {
+      "id": "test_state_a1",
+      "name": "Test State A1",
+      "ownerId": "paradis",
+      "provinceIds": [
+        "test_a1"
+      ],
+      "isWallState": true,
+      "infrastructureLevel": 2,
+      "resourceDeposits": {
+        "steel": 1,
+        "fuel": 0,
+        "rareMaterials": 0
+      }
+    },
+    {
+      "id": "test_state_a2",
+      "name": "Test State A2",
+      "ownerId": "paradis",
+      "provinceIds": [
+        "test_a2"
+      ]
+    },
+    {
+      "id": "test_state_a3",
+      "name": "Test State A3",
+      "ownerId": "paradis",
+      "provinceIds": [
+        "test_a3"
+      ]
+    },
+    {
+      "id": "test_state_b",
+      "name": "Test State B",
+      "ownerId": "marley",
+      "provinceIds": [
+        "test_b1",
+        "test_b2"
+      ]
+    }
+  ]
+}

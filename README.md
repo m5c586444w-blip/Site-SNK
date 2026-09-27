@@ -1,0 +1,62 @@
+# SNK — Grande stratégie (application web locale)
+
+Jeu de grande stratégie dans l'univers de *L'Attaque des Titans*, avec des mécaniques inspirées de
+Hearts of Iron IV. Projet personnel non commercial. Les spécifications de référence sont dans
+`docs/` :
+
+| Document | Autorité |
+|---|---|
+| `docs/cahier_des_charges_snk_hoi4.pdf` | vision globale, architecture, plan en phases |
+| `docs/LORE_BIBLE.md` | faits du monde, règles de texte (aucun personnage nommé) |
+| `docs/MECHANICS_SPEC.md` | formules et valeurs numériques |
+| `docs/FEATURES_SPEC.md` | écrans, interactions, API |
+| `docs/HISTORICAL_EVENT_CHAIN_845_854.md` | évènements datés 845-854 (Mode historique) |
+| **`docs/PHASE1_GAPS.md`** | **données manquantes et points à trancher** |
+
+## Lancer
+
+Il faut Node.js 20 ou plus récent.
+
+```bash
+npm install
+npm start            # démarre le serveur (port 5173, ou le suivant s'il est pris) et ouvre le navigateur
+npm run start:no-open
+npm test
+npm run validate-map # vérifie le masque de la carte et sa table (data/map/)
+```
+
+Le launcher affiche l'adresse locale et l'adresse sur le réseau local. Les sauvegardes vont dans
+`saves/` (JSON) et les réglages dans `settings.json`.
+
+Pour tester le moteur de carte sans la vraie carte, qui n'est pas encore fournie :
+`SNK_MAP_DIR=tests/fixtures/map npm start`. C'est une grille abstraite de test.
+
+## Contenu de la Phase 1 (cahier des charges §12)
+
+- Launcher (FEATURES §0.1), menu principal (§0.2) et réglages FR/EN (§0.3).
+- Sélection de la nation parmi 4 cartes, et choix **Mode historique / Mode libre** (historique par
+  défaut) sur le même écran (§0.4). `GameSettings.historicalMode` est ensuite figé pour toute la
+  partie.
+- Carte par masque de couleur : politique et brouillard de guerre (celui-ci pour Paradis
+  seulement), tracé des Murs, hachures des zones de Titans purs, infobulle, panneau de province,
+  zoom et déplacement (souris, pincement, flèches) (§2).
+- Brouillard asymétrique pour Paradis, filtré **côté serveur** (MECHANICS §10).
+- Horloge et vitesses 0 à 4, avec les raccourcis Espace et 1 à 4 (MECHANICS §1).
+- Sauvegarde, chargement et suppression, avec confirmation si le nom existe déjà, et sauvegarde
+  automatique tous les 5 jours sur 3 emplacements tournants. Une version de format incompatible
+  est refusée (§16, §17).
+- Fiche pays minimale (§3).
+
+## Structure
+
+```
+server/launcher/   démarrage, choix du port, ouverture du navigateur
+server/state/      GameState, brouillard, sauvegardes, réglages
+server/simulation/ horloge (les systèmes de jeu s'y brancheront)
+server/app.js      API REST + WebSocket
+client/            interface (JS natif, Canvas 2D), theme.css, polices OFL auto-hébergées
+shared/            constantes MECHANICS_SPEC, calendrier
+data/              nations.json ; data/map/ (carte à fournir, voir README)
+tools/             validateur de carte
+tests/             tests node:test + carte de test abstraite
+```

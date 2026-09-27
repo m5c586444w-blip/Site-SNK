@@ -1,0 +1,21 @@
+{
+  "name": "snk-grande-strategie",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Jeu de grande stratégie (univers SNK, mécaniques HOI4-like) — application web locale. Phase 1.",
+  "type": "module",
+  "scripts": {
+    "start": "node server/launcher/index.js",
+    "start:no-open": "node server/launcher/index.js --no-open",
+    "test": "node --test tests/*.test.js",
+    "validate-map": "node tools/validate-map.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "pngjs": "^7.0.0",
+    "ws": "^8.22.0"
+  }
+}

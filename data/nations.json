@@ -1,0 +1,86 @@
+{
+  "_source": "Nations jouables : cahier des charges §2 et §4 ; résumés : LORE_BIBLE.md §2 (paraphrasés) ; couleurs : cahier des charges §9 ; difficulté : FEATURES_SPEC.md §0.4. Une valeur null = donnée ABSENTE des documents, affichée « N/D » dans le jeu. Elle n'est pas inventée (voir docs/PHASE1_GAPS.md).",
+  "nations": [
+    {
+      "id": "paradis",
+      "name": { "fr": "Île du Paradis (Eldia)", "en": "Paradis Island (Eldia)" },
+      "isPlayable": true,
+      "difficulty": "isolated_hard",
+      "colors": { "primary": "#4B5D3A", "secondary": "#E8DCC0" },
+      "blurb": {
+        "fr": "Île ceinte de trois Murs concentriques, coupée du monde extérieur depuis plus d'un siècle ; monarchie flanquée d'une armée à trois branches.",
+        "en": "An island ringed by three concentric Walls, cut off from the outside world for over a century; a monarchy flanked by a three-branch army."
+      },
+      "governmentLabel": { "fr": "Monarchie sous influence militaire", "en": "Monarchy under military influence" },
+      "_governmentLabelSource": "LORE_BIBLE.md §2.1 et §4.1",
+      "stability": null,
+      "warSupport": null,
+      "politicalCapital": null,
+      "researchSlots": 3,
+      "_researchSlotsSource": "MECHANICS_SPEC.md §4 RESEARCH_SLOTS_PARADIS_OVERRIDE",
+      "eldianStatusPolicy": null,
+      "fogOfWarEnabled": true,
+      "titanPowersHeld": ["TITAN_FOUNDING"],
+      "_titanPowersHeldSource": "Déduit de LORE_BIBLE.md §1/§3.3 (le Fondateur est lié à la lignée royale de Paradis) et de la condition de RUMBLING_854 (« Paradis still holds TITAN_FOUNDING ») ; les autres Titans éventuellement détenus en 844 ne sont pas précisés"
+    },
+    {
+      "id": "marley",
+      "name": { "fr": "Empire marleyen", "en": "Marleyan Empire" },
+      "isPlayable": true,
+      "difficulty": "complex_hegemon",
+      "colors": { "primary": "#7A1F1F", "secondary": "#B9962F" },
+      "blurb": {
+        "fr": "Puissance dominante du continent, administrant de nombreux territoires subordonnés et détenant la plupart des Neuf Titans ; sa minorité eldienne vit en zones d'internement.",
+        "en": "The continent's dominant power, administering many subordinate territories and holding most of the Nine Titans; its Eldian minority lives in internment zones."
+      },
+      "governmentLabel": null,
+      "stability": null,
+      "warSupport": null,
+      "politicalCapital": null,
+      "researchSlots": null,
+      "eldianStatusPolicy": null,
+      "fogOfWarEnabled": false,
+      "titanPowersHeld": null,
+      "_titanPowersHeldSource": "LORE_BIBLE.md §1 dit seulement « most of the Nine Titans » : la liste exacte en 844 n'est pas donnée"
+    },
+    {
+      "id": "mideast_alliance",
+      "name": { "fr": "Alliance du Moyen-Orient", "en": "Mid-East Alliance" },
+      "isPlayable": true,
+      "difficulty": "standard",
+      "colors": { "primary": "#3E4A56", "secondary": "#C9A66B" },
+      "blurb": {
+        "fr": "Coalition de nations fédérées pour leur sécurité collective face à l'hégémonie marleyenne ; en tension avec l'Empire, sans guerre ouverte en 844.",
+        "en": "A coalition of nations federated for collective security against Marleyan hegemony; in tension with the Empire, with no open war in 844."
+      },
+      "governmentLabel": { "fr": "Fédération", "en": "Federation" },
+      "_governmentLabelSource": "LORE_BIBLE.md §2.3 (défaut [EXTENSION] fourni par le document)",
+      "stability": null,
+      "warSupport": null,
+      "politicalCapital": null,
+      "researchSlots": null,
+      "eldianStatusPolicy": null,
+      "fogOfWarEnabled": false,
+      "titanPowersHeld": null
+    },
+    {
+      "id": "hizuru",
+      "name": { "fr": "Hizuru", "en": "Hizuru" },
+      "isPlayable": true,
+      "difficulty": "standard",
+      "colors": { "primary": "#2B3A55", "secondary": "#EDE7DA" },
+      "blurb": {
+        "fr": "Puissance d'Asie de l'Est déclinante, ternie par son ancienne association avec l'Empire eldien ; plutôt bienveillante envers les personnes d'ascendance eldienne.",
+        "en": "A waning East Asian power, tarnished by its past association with the Eldian Empire; comparatively well-disposed toward people of Eldian descent."
+      },
+      "governmentLabel": null,
+      "stability": null,
+      "warSupport": null,
+      "politicalCapital": null,
+      "researchSlots": null,
+      "eldianStatusPolicy": null,
+      "fogOfWarEnabled": false,
+      "titanPowersHeld": null
+    }
+  ]
+}

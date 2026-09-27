@@ -1,0 +1,4 @@
+node_modules/
+saves/*
+!saves/.gitkeep
+settings.json
