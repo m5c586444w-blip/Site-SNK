@@ -2,6 +2,7 @@
 import { api } from '../api.js';
 import { t, loc, setLanguage } from '../i18n.js';
 import { h, clear, confirmModal, modal, toast, errorText, flagPlaceholder } from '../ui.js';
+import { session, send } from '../session.js';
 
 export function mainMenu(root, nav) {
   clear(root).append(h('div.screen.menu-screen', {},
@@ -9,7 +10,7 @@ export function mainMenu(root, nav) {
       h('h1.menu-title', {}, t('app.title')),
       h('p.menu-subtitle', {}, t('app.subtitle')),
       h('nav.menu-buttons', {},
-        h('button.btn.btn-primary', { onClick: () => nav('select') }, t('menu.newGame')),
+        h('button.btn.btn-primary', { onClick: () => nav('lobby') }, t('menu.newGame')),
         h('button.btn', { onClick: () => nav('load') }, t('menu.loadGame')),
         h('button.btn', { onClick: () => nav('settings') }, t('menu.settings')),
         h('button.btn', {
@@ -60,11 +61,16 @@ export async function settingsScreen(root, nav, applySettings) {
 export async function nationSelect(root, nav) {
   const meta = await api.meta();
   let selected = null;
-  let historicalMode = true; // défaut : Mode historique (FEATURES_SPEC.md §0.4)
+  // Défaut : Mode historique (FEATURES §0.4). En multijoueur, l'hôte le règle pour toute la session.
+  let historicalMode = session.list?.historicalMode ?? true;
+  const others = (session.list?.players ?? []).filter((p) => p.id !== session.me?.id && p.nationId);
   const error = h('p.inline-error', { role: 'alert' });
 
   const cards = meta.nations.map((n) => {
+    const takenBy = others.find((p) => p.nationId === n.id);
     const card = h('button.nation-card.panel', {
+      disabled: Boolean(takenBy),
+      title: takenBy ? t('mp.taken', { name: takenBy.nickname }) : null,
       'data-nation': n.id,
       style: { '--faction': n.colors.primary, '--faction-2': n.colors.secondary },
       onClick: () => {
@@ -76,7 +82,8 @@ export async function nationSelect(root, nav) {
     },
     h('div.nation-card-head', {}, flagPlaceholder(n, 'lg'), h('h2', {}, loc(n.name))),
     h('p.nation-blurb', {}, loc(n.blurb)),
-    h('span.tag', {}, t(`select.difficulty.${n.difficulty}`)));
+    h('span.tag', {}, t(`select.difficulty.${n.difficulty}`)),
+    takenBy ? h('span.tag.tag-small', {}, t('mp.taken', { name: takenBy.nickname })) : null);
     return card;
   });
 
@@ -85,7 +92,7 @@ export async function nationSelect(root, nav) {
     ...[[true, 'select.mode.historical'], [false, 'select.mode.free']].map(([val, key]) =>
       h('label', {}, h('input', {
         type: 'radio', name: 'historicalMode', value: String(val), checked: val === historicalMode,
-        onChange: () => { historicalMode = val; renderExplain(); },
+        onChange: () => { historicalMode = val; renderExplain(); send('session/setMode', { historicalMode: val }); },
       }), t(key))));
   const renderExplain = () => {
     explain.textContent = t(historicalMode ? 'select.mode.historical.explain' : 'select.mode.free.explain');

@@ -1,5 +1,9 @@
 # Phase 4 (focus, diplomatie, brouillard progressif, évènements) : contenu [EXTENSION], manques, choix
 
+> **Mise à jour (phase 5)** : à la demande du commanditaire (« Réalise tout en fonction du lore »), les données
+> manquantes listées ici ont été complétées en **[EXTENSION]**. Détail et justification : `docs/PHASE5_GAPS.md`.
+
+
 ## 0. Autorisation et périmètre
 
 À la fin de la phase 3, le commanditaire a répondu « Oui fais » à la question : « fournir les arbres

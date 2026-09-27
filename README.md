@@ -11,7 +11,7 @@ Hearts of Iron IV. Projet personnel non commercial. Les spécifications de réf�
 | `docs/MECHANICS_SPEC.md` | formules et valeurs numériques |
 | `docs/FEATURES_SPEC.md` | écrans, interactions, API |
 | `docs/HISTORICAL_EVENT_CHAIN_845_854.md` | évènements datés 845-854 (Mode historique) |
-| **`docs/PHASE1_GAPS.md`** … **`PHASE4_GAPS.md`** | **données manquantes et points à trancher** |
+| **`docs/PHASE1_GAPS.md`** … **`PHASE5_GAPS.md`** | **données manquantes, contenu [EXTENSION] rédigé, points à trancher** |
 
 ## Lancer
 
@@ -28,9 +28,20 @@ npm run validate-map # vérifie le masque de la carte et sa table (data/map/)
 Le launcher affiche l'adresse locale et l'adresse sur le réseau local. Les sauvegardes vont dans
 `saves/` (JSON) et les réglages dans `settings.json`.
 
-Pour voir les moteurs tourner sans la vraie carte ni les vraies données, qui ne sont pas encore
-fournies : `npm run start:fixture`. Carte, usines, technologies et coûts sont alors des **données
-de test abstraites** (`tests/fixtures/`), pas du contenu de jeu.
+Toutes les données de jeu (carte, valeurs de départ, technologies, ordre de bataille, lois…) sont
+désormais présentes. Ce qui manquait aux spécifications a été rédigé en **[EXTENSION]** d'après le
+lore : voir `docs/PHASE5_GAPS.md`. Pour régénérer la carte : `node tools/generate-map.js`.
+
+`npm run start:fixture` lance le jeu sur les **données de test abstraites** de `tests/fixtures/`.
+
+### Multijoueur en réseau local (FEATURES §15)
+
+1. L'hôte lance `npm start` puis choisit **Nouvelle partie**. L'écran de session affiche l'adresse
+   réseau à partager.
+2. Les autres joueurs ouvrent cette adresse, choisissent un pseudo, puis **Se connecter**.
+3. L'hôte attribue les nations et clique **Commencer la partie**. Il choisit ensuite sa nation et le
+   Mode historique ou libre (les autres joueurs voient ce choix en lecture seule).
+4. Si un joueur se déconnecte, l'IA reprend sa nation. En se reconnectant, il la retrouve.
 
 ## Contenu de la Phase 1 (cahier des charges §12)
 
@@ -94,16 +105,28 @@ de test abstraites** (`tests/fixtures/`), pas du contenu de jeu.
 - **Journal** (FEATURES §14.3) filtrable par catégorie et par dates, cloche avec compteur de non-lus.
 - Contenu [EXTENSION], manques et choix : `docs/PHASE4_GAPS.md`.
 
+## Contenu de la Phase 5 (cahier des charges §12)
+
+- **Neuf Titans** (MECHANICS §7 ; FEATURES §7) : bonus §7.3 appliqués aux formules, cycle de 13
+  ans, héritage `TITAN_INHERITANCE`, écran dédié (le brouillard y masque ce qui est inconnu : « ??? »).
+- **Programme des Guerriers** (§7.4 ; FEATURES §12), **statut eldien** (§9.3), **lois** avec délai de
+  90 jours et **troubles** (§9), **écran politique** (FEATURES §10).
+- **Renseignement** (FEATURES §11) : agents, trois opérations, journal, reconnaissance qui lève le
+  brouillard.
+- **Multijoueur** (FEATURES §15), **blasons originaux** et fond de carte d'état-major (cahier §9).
+- **Données complètes en [EXTENSION]** d'après le lore : `docs/PHASE5_GAPS.md`.
+
 ## Structure
 
 ```
 server/launcher/   démarrage, choix du port, ouverture du navigateur
-server/state/      GameState, brouillard, sauvegardes, réglages
-server/simulation/ horloge, tick, économie, recherche, militaire, focus, évènements, diplomatie
+server/state/      GameState, brouillard, journal, session multijoueur, sauvegardes, réglages
+server/simulation/ horloge, tick, économie, recherche, militaire, focus, évènements, diplomatie,
+                   Titans, politique, renseignement, modificateurs
 server/app.js      API REST + WebSocket
 client/            interface (JS natif, Canvas 2D), theme.css, polices OFL auto-hébergées
 shared/            constantes MECHANICS_SPEC, calendrier
-data/              nations.json ; data/map/ (carte à fournir, voir README)
-tools/             validateur de carte
+data/              nations, carte, focus, évènements, technologies, règles… ([EXTENSION] signalées)
+tools/             générateur et validateur de carte
 tests/             tests node:test + carte de test abstraite
 ```

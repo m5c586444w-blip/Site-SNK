@@ -1,3 +1,5 @@
+import { session } from './session.js';
+
 // Appels REST au serveur local. Une erreur serveur est levée avec son code (§17 : pas d'échec silencieux).
 export class ApiError extends Error {
   constructor(code, status) {
@@ -7,10 +9,14 @@ export class ApiError extends Error {
   }
 }
 
+
 async function request(method, url, body) {
+  const headers = body !== undefined ? { 'Content-Type': 'application/json' } : {};
+  // Identité du joueur (multijoueur §15) : chaque action est validée pour SA nation côté serveur.
+  if (session.token) headers['x-session-token'] = session.token;
   const res = await fetch(url, {
     method,
-    headers: body !== undefined ? { 'Content-Type': 'application/json' } : {},
+    headers,
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
   const data = await res.json().catch(() => ({}));
@@ -30,6 +36,7 @@ export const api = {
   loadSave: (id) => request('POST', `/api/saves/${encodeURIComponent(id)}/load`),
   deleteSave: (id) => request('DELETE', `/api/saves/${encodeURIComponent(id)}`),
   quit: () => request('POST', '/api/quit'),
+  sessionInfo: () => request('GET', '/api/session/info'),
 };
 
 /** Action de nation (FEATURES §18), ex. nationAction('paradis', 'research/assign', { techId, slotIndex }). */

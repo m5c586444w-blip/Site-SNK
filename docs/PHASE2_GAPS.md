@@ -1,5 +1,9 @@
 # Phase 2 (économie, production, recherche) : données manquantes et choix à valider
 
+> **Mise à jour (phase 5)** : à la demande du commanditaire (« Réalise tout en fonction du lore »), les données
+> manquantes listées ici ont été complétées en **[EXTENSION]**. Détail et justification : `docs/PHASE5_GAPS.md`.
+
+
 Même règle qu'en Phase 1 : les **formules** de MECHANICS_SPEC §3-§4 sont implémentées telles
 quelles et testées. Les **valeurs** absentes restent `null` dans `data/`. Tant qu'elles manquent,
 l'action correspondante est refusée avec un message explicite, et le moteur fonctionne dès qu'on

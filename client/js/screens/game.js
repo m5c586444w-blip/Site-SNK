@@ -1,6 +1,6 @@
 // Écran de jeu : barre supérieure (§1), carte (§2), fiche pays (§3), sauvegarde/chargement (§16).
 import { api } from '../api.js';
-import { connectSocket } from '../ws.js';
+import { session, onMessage, onStatus, reconnect } from '../session.js';
 import { t, loc } from '../i18n.js';
 import { h, clear, modal, toast, errorText, flagPlaceholder, naValue } from '../ui.js';
 import { MapRenderer } from '../map/mapRenderer.js';
@@ -62,6 +62,7 @@ export async function gameScreen(root, nav) {
   const bellBadge = h('span.bell-badge.hidden');
   const bellBtn = h('button.bell-btn', { title: t('screen.journal'), 'aria-label': t('screen.journal'), onClick: () => openScreen('journal') }, '🔔', bellBadge);
   const connBanner = h('div.conn-banner.hidden', { role: 'status' });
+  const playersBanner = h('div.conn-banner.players-banner.hidden', { role: 'status' });
   // Pastilles de ressources + effectifs (FEATURES §1)
   const resourcePips = RESOURCE_TYPES.map((r) => h('span.pip', { 'data-resource': r }));
   const manpowerPip = h('span.pip', { title: t('topbar.manpower') });
@@ -81,7 +82,13 @@ export async function gameScreen(root, nav) {
     clear(nationBtn).append(flagPlaceholder(n, 'sm'), h('span', {}, loc(n?.name)));
     dateBtn.textContent = view.date;
     modeBadge.textContent = t(view.settings.historicalMode ? 'game.mode.historical' : 'game.mode.free');
-    for (const b of speedBtns) b.classList.toggle('active', Number(b.dataset.level) === view.speed);
+    const isHost = !session.me || session.me.isHost;
+    for (const b of speedBtns) {
+      b.classList.toggle('active', Number(b.dataset.level) === view.speed);
+      // Seul l'hôte règle la vitesse (multijoueur)
+      b.disabled = !isHost;
+      if (!isHost) b.title = t('mp.hostOnly');
+    }
     const net = view.economy?.dailyNet;
     for (const pip of resourcePips) {
       const r = pip.dataset.resource;
@@ -399,15 +406,16 @@ export async function gameScreen(root, nav) {
   }
 
   async function openGameMenu() {
+    const isHost = !session.me || session.me.isHost;
     const choice = await modal({
       title: t('game.menu'),
-      body: null,
-      actions: [
+      body: isHost ? null : h('p.muted', {}, t('mp.hostOnly')),
+      actions: isHost ? [
         { label: t('game.saveGame'), value: 'save', primary: true },
         { label: t('game.loadGame'), value: 'load' },
         { label: t('game.mainMenu'), value: 'menu' },
         { label: t('common.close'), value: null },
-      ],
+      ] : [{ label: t('common.close'), value: null, primary: true }],
     });
     if (choice === 'save') {
       const name = `${view.date.replace(/\//g, '-')}_${loc(me().name)}`;
@@ -427,6 +435,7 @@ export async function gameScreen(root, nav) {
   clear(root).append(h('div.screen.game-screen', {},
     topbar,
     connBanner,
+    playersBanner,
     h('main.map-area', {}, modeBar, mapHost, tooltip, provincePanel, countryPanel, screenPanel, contextMenu)));
 
   async function applyView(next, { full }) {
@@ -455,42 +464,55 @@ export async function gameScreen(root, nav) {
 
   await applyView(view, { full: true });
 
-  const socket = connectSocket({
-    onMessage: (type, payload) => {
-      if (type === 'state/full' && payload) applyView(payload, { full: true });
-      else if (type === 'state/delta') applyDelta(payload);
-      else if (type === 'error') toast(t(payload.messageKey), 'error');
-      else if (type === 'notification/toast') {
-        const vars = { ...(payload.vars ?? {}) };
-        if (vars.techId) vars.name = loc(view.technologies?.find((x) => x.id === vars.techId)?.name) ?? vars.techId;
-        if (vars.provinceId) vars.province = provinceName(view, vars.provinceId);
-        toast(t(payload.textKey, vars));
-      }
-    },
-    onStatus: (s) => {
-      connBanner.classList.toggle('hidden', s === 'connected');
-      clear(connBanner);
-      if (s === 'reconnecting') connBanner.append(t('ws.reconnecting'));
-      if (s === 'failed') connBanner.append(t('ws.failed'), ' ', h('button.btn.btn-small', { onClick: () => socket.reconnect() }, t('ws.reconnect')));
-    },
+  // Connexion partagée (session.js) : état poussé par le serveur, reconnexion automatique (§17).
+  const offMessage = onMessage((type, payload) => {
+    if (type === 'state/full' && payload) applyView(payload, { full: true });
+    else if (type === 'state/delta') applyDelta(payload);
+    else if (type === 'error') toast(t(payload.messageKey), 'error');
+    else if (type === 'session/playerList') renderPlayersBanner();
+    else if (type === 'notification/toast') {
+      const vars = { ...(payload.vars ?? {}) };
+      if (vars.techId) vars.name = loc(view.technologies?.find((x) => x.id === vars.techId)?.name) ?? vars.techId;
+      if (vars.provinceId) vars.province = provinceName(view, vars.provinceId);
+      toast(t(payload.textKey, vars));
+    }
   });
+  const offStatus = onStatus((s) => {
+    connBanner.classList.toggle('hidden', s === 'connected');
+    clear(connBanner);
+    if (s === 'reconnecting') connBanner.append(t('ws.reconnecting'));
+    if (s === 'failed') connBanner.append(t('ws.failed'), ' ', h('button.btn.btn-small', { onClick: () => reconnect() }, t('ws.reconnect')));
+  });
+
+  // §15.3 : bandeau « reconnexion en cours » pour les nations dont le joueur s'est déconnecté.
+  function renderPlayersBanner() {
+    const away = session.list.players.filter((p) => !p.connected && p.nationId && p.id !== session.me?.id);
+    playersBanner.classList.toggle('hidden', !away.length);
+    // Brouillard : une nation inconnue du joueur reste « ??? »
+    const known = (id) => (view.nations.some((n) => n.id === id) ? nationName(id) : '???');
+    clear(playersBanner).append(away.map((p) => t('mp.reconnecting', { name: p.nickname, nation: known(p.nationId) })).join(' · '));
+  }
+  renderPlayersBanner();
 
   // Raccourcis : Espace = pause/reprise, 1..4 = vitesse (MECHANICS_SPEC.md §1)
   const onKey = (e) => {
     if (e.target.closest('input, select, textarea') || document.querySelector('.modal-overlay')) return;
-    if (e.code === 'Space') { e.preventDefault(); setSpeed(view.speed === 0 ? lastSpeed : 0); }
-    else if (['1', '2', '3', '4'].includes(e.key)) setSpeed(Number(e.key));
+    const canSpeed = !session.me || session.me.isHost;
+    if (e.code === 'Space') { e.preventDefault(); if (canSpeed) setSpeed(view.speed === 0 ? lastSpeed : 0); }
+    else if (['1', '2', '3', '4'].includes(e.key)) { if (canSpeed) setSpeed(Number(e.key)); }
     else if (e.key.startsWith('Arrow') && renderer && document.activeElement !== renderer.canvas) {
       renderer.canvas.focus();
       renderer.canvas.dispatchEvent(new KeyboardEvent('keydown', { key: e.key }));
     }
   };
   document.addEventListener('keydown', onKey);
+  window.addEventListener('snk:leave-game', teardown, { once: true });
 
   function teardown() {
     document.removeEventListener('keydown', onKey);
     document.removeEventListener('pointerdown', closeContextMenu);
-    socket.close();
+    offMessage();
+    offStatus();
     renderer?.destroy();
   }
 }

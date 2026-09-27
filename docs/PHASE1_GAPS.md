@@ -1,5 +1,9 @@
 # Phase 1 : données manquantes et points à trancher
 
+> **Mise à jour (phase 5)** : à la demande du commanditaire (« Réalise tout en fonction du lore »), les données
+> manquantes listées ici ont été complétées en **[EXTENSION]**. Détail et justification : `docs/PHASE5_GAPS.md`.
+
+
 Consigne suivie : ne rien inventer. Quand une valeur manque, le jeu affiche « N/D » avec une
 infobulle, ou un message explicite pour la carte, et le manque est listé ici. Chaque point dit ce
 qui manque, où cela bloque, et ce que j'ai fait en attendant.

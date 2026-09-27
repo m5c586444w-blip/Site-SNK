@@ -1,19 +1,9 @@
 #!/usr/bin/env node
 // Launcher — FEATURES_SPEC.md §0.1 : port 5173 (+1 si occupé, 20 tentatives max),
 // affichage des URL locale et réseau, ouverture automatique du navigateur.
-import os from 'node:os';
 import { spawn } from 'node:child_process';
-import { createServer } from '../app.js';
+import { createServer, lanAddress } from '../app.js';
 import { DEFAULT_PORT, PORT_MAX_ATTEMPTS } from '../../shared/constants.js';
-
-function lanAddress() {
-  for (const ifaces of Object.values(os.networkInterfaces())) {
-    for (const i of ifaces ?? []) {
-      if (i.family === 'IPv4' && !i.internal) return i.address;
-    }
-  }
-  return null;
-}
 
 function listen(server, port) {
   return new Promise((resolve, reject) => {

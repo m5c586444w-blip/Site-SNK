@@ -21,6 +21,9 @@ import { listSaves, createSave, loadSave, deleteSave, autosave } from './state/s
 import { readSettings, writeSettings } from './state/settings.js';
 import { AUTOSAVE_INTERVAL_DAYS } from '../shared/constants.js';
 import { formatDate } from '../shared/calendar.js';
+import { Session } from './state/session.js';
+import { resolveEvent as resolvePending } from './simulation/events.js';
+import os from 'node:os';
 
 const HTTP_STATUS = {
   INVALID_NATION: 400, INVALID_HISTORICAL_MODE: 400, INVALID_SPEED: 400, INVALID_SETTINGS: 400,
@@ -45,29 +48,58 @@ const HTTP_STATUS = {
   EVENT_NOT_PENDING: 404, INVALID_CHOICE: 400, EVENT_PENDING: 409,
   INVALID_LAW: 400, LAW_COOLDOWN: 409, LAW_ALREADY_ACTIVE: 409, MARLEY_ONLY: 403, POOL_FULL: 409,
   INVALID_OPERATION: 400, INVALID_AGENT: 400, AGENT_BUSY: 409,
+  NOT_HOST: 403, GAME_STARTED: 409, INVALID_PLAYER: 400, NATION_TAKEN: 409,
 };
+
+const LOOPBACK = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1']);
+
+export function lanAddress() {
+  for (const ifaces of Object.values(os.networkInterfaces())) {
+    for (const i of ifaces ?? []) if (i.family === 'IPv4' && !i.internal) return i.address;
+  }
+  return null;
+}
 
 export async function createServer({ onQuit = () => process.exit(0) } = {}) {
   const data = await loadGameData();
   const { nations, map, technologies, economyRules, militaryRules, focuses, focusBranches, events, politics } = data;
   const viewOpts = { technologies, economyRules, focuses, focusBranches, events, politics };
+  const playableIds = nations.filter((n) => n.isPlayable).map((n) => n.id);
 
-  /** Une seule partie à la fois (le multijoueur, §15, relève d'une phase ultérieure). */
   let state = null;
-  const sockets = new Set();
+  const session = new Session();
+  /** @type {Map<WebSocket, {player: any}>} */
+  const sockets = new Map();
 
   const send = (ws, type, payload) => ws.readyState === 1 && ws.send(JSON.stringify({ type, payload }));
-  const broadcast = (type, payload) => { for (const ws of sockets) send(ws, type, payload); };
-  const fullView = () => (state ? viewFor(state, state.settings.nationId, map, viewOpts) : null);
   const requireMap = () => { if (!map.available) throw Object.assign(new Error('carte'), { code: 'NO_MAP' }); };
-  const player = () => state.nations.find((n) => n.id === state.settings.nationId);
-  /** Diff joueur : sa nation (stocks, recherche) et son économie. Jamais l'état complet (§18). */
-  const playerDelta = () => ({
-    nation: player(),
-    economy: economyView(state, state.settings.nationId, economyRules),
-    military: militaryView(state, state.settings.nationId, map),
-    ...politicalView(state, state.settings.nationId, viewOpts),
+  const noGame = () => Object.assign(new Error('Aucune partie'), { code: 'NO_GAME' });
+
+  // Nation vue par un client : celle de son joueur ; sans jeton (solo, tests) : celle de l'hôte.
+  const viewerOf = (player) => {
+    if (!player) return state?.settings.nationId;
+    return player.nationId ?? (player.isHost ? state?.settings.nationId : null);
+  };
+  const fullView = (nationId) => (state ? { ...viewFor(state, nationId, map, viewOpts), session: session.publicList() } : null);
+  /** Diff d'un joueur : sa nation et ses écrans. Jamais l'état complet (§18). */
+  const delta = (nationId) => ({
+    nation: state.nations.find((n) => n.id === nationId),
+    economy: economyView(state, nationId, economyRules),
+    military: militaryView(state, nationId, map),
+    ...politicalView(state, nationId, viewOpts),
   });
+  // Un invité sans nation (spectateur de la salle d'attente) ne reçoit aucune vue de partie.
+  const eachClient = (fn) => {
+    for (const [ws, c] of sockets) {
+      if (!c.player) continue;
+      const n = viewerOf(c.player);
+      if (n) fn(ws, n, c.player);
+    }
+  };
+  const broadcastFull = () => eachClient((ws, n) => send(ws, 'state/full', fullView(n)));
+  const broadcastDelta = (extra = {}) => eachClient((ws, n) => send(ws, 'state/delta', { ...extra, ...delta(n) }));
+  const broadcastSession = () => { for (const ws of sockets.keys()) send(ws, 'session/playerList', session.publicList()); };
+  const toastFor = (nationId, payload) => eachClient((ws, n) => { if (n === nationId) send(ws, 'notification/toast', payload); });
 
   const clock = new Clock({
     getState: () => state,
@@ -78,21 +110,20 @@ export async function createServer({ onQuit = () => process.exit(0) } = {}) {
       // Modale d'évènement bloquante (FEATURES §14.2) : la partie se met en pause.
       if ((s.pendingEvents.length || s.pendingInheritances.length) && s.speed !== 0) { s.speed = 0; clock.stop(); }
       // Changement de contrôle, de brouillard ou évènement : la carte change, vue complète.
-      if (military.captured.length || firedEvents.length || JSON.stringify(s.visibility) !== visibilityBefore) broadcast('state/full', fullView());
-      else broadcast('state/delta', { date: formatDate(s.date), ...playerDelta() });
-      const me = s.settings.nationId;
-      for (const c of military.captured.filter((x) => x.from === me || x.to === me)) {
-        broadcast('notification/toast', { id: `cap_${c.provinceId}_${formatDate(s.date)}`, category: 'military', textKey: c.to === me ? 'toast.provinceTaken' : 'toast.provinceLost', vars: { provinceId: c.provinceId } });
-      }
-      for (const d of military.destroyed.filter((x) => x.nationId === me)) {
-        broadcast('notification/toast', { id: `dest_${d.id}`, category: 'military', textKey: 'toast.divisionDestroyed', vars: { provinceId: d.provinceId } });
-      }
-      for (const techId of completedTechs[s.settings.nationId] ?? []) {
-        broadcast('notification/toast', { id: `tech_${techId}`, category: 'research', textKey: 'toast.researchDone', vars: { techId } });
+      if (military.captured.length || firedEvents.length || JSON.stringify(s.visibility) !== visibilityBefore) broadcastFull();
+      else broadcastDelta({ date: formatDate(s.date), speed: s.speed });
+      for (const me of s.humanNations ?? []) {
+        for (const c of military.captured.filter((x) => x.from === me || x.to === me)) {
+          toastFor(me, { id: `cap_${c.provinceId}_${formatDate(s.date)}`, category: 'military', textKey: c.to === me ? 'toast.provinceTaken' : 'toast.provinceLost', vars: { provinceId: c.provinceId } });
+        }
+        for (const d of military.destroyed.filter((x) => x.nationId === me)) {
+          toastFor(me, { id: `dest_${d.id}`, category: 'military', textKey: 'toast.divisionDestroyed', vars: { provinceId: d.provinceId } });
+        }
+        for (const techId of completedTechs[me] ?? []) toastFor(me, { id: `tech_${techId}`, category: 'research', textKey: 'toast.researchDone', vars: { techId } });
       }
       if (s.daysSinceAutosave >= AUTOSAVE_INTERVAL_DAYS) {
         s.daysSinceAutosave = 0;
-        try { await autosave(s); } catch (e) { broadcast('error', { code: 'AUTOSAVE_FAILED', messageKey: 'error.AUTOSAVE_FAILED' }); console.error(e); }
+        try { await autosave(s); } catch (e) { for (const ws of sockets.keys()) send(ws, 'error', { code: 'AUTOSAVE_FAILED', messageKey: 'error.AUTOSAVE_FAILED' }); console.error(e); }
       }
     },
   });
@@ -100,18 +131,36 @@ export async function createServer({ onQuit = () => process.exit(0) } = {}) {
   const setState = (next) => {
     clock.stop();
     state = next;
-    broadcast('state/full', fullView());
+    session.phase = 'game';
+    broadcastFull();
+    broadcastSession();
   };
 
-  const setSpeed = (level) => {
+  /** Seul l'hôte règle la vitesse (choix documenté, PHASE5_GAPS). */
+  const setSpeed = (level, player) => {
+    if (player && !player.isHost) throw Object.assign(new Error('hôte'), { code: 'NOT_HOST' });
     if ((state?.pendingEvents?.length || state?.pendingInheritances?.length) && level !== 0) throw Object.assign(new Error('évènement'), { code: 'EVENT_PENDING' });
     clock.setSpeed(level);
-    broadcast('state/delta', { speed: state.speed });
+    eachClient((ws) => send(ws, 'state/delta', { speed: state.speed }));
+  };
+
+  /** Déconnexion (§15.3) : la nation repasse à l'IA ; ses évènements en attente prennent le 1er choix. */
+  const onDisconnect = (player) => {
+    if (!player || player.sockets.size) return;
+    player.connected = false;
+    if (state && player.nationId && player.nationId !== state.settings.nationId) {
+      state.humanNations = state.humanNations.filter((n) => n !== player.nationId);
+      const ctx = effectContext(state, data);
+      for (const id of state.pendingEvents.filter((e) => events.find((x) => x.id === e)?.nationId === player.nationId)) resolvePending(state, player.nationId, id, 0, ctx);
+      for (const p of state.pendingInheritances.filter((x) => x.nationId === player.nationId)) resolvePending(state, player.nationId, `TITAN_INHERITANCE:${p.id}`, 0, ctx);
+    }
+    broadcastSession();
   };
 
   const app = express();
   app.use(express.json({ limit: '1mb' }));
 
+  const playerOf = (req) => session.byToken(req.get('x-session-token'));
   const wrap = (fn) => async (req, res) => {
     try {
       res.json(await fn(req));
@@ -127,22 +176,44 @@ export async function createServer({ onQuit = () => process.exit(0) } = {}) {
     gameInProgress: Boolean(state),
   })));
 
+  app.get('/api/session/info', wrap((req) => {
+    const port = req.socket.localPort;
+    const lan = lanAddress();
+    return {
+      isLocal: LOOPBACK.has(req.socket.remoteAddress),
+      lanUrl: lan ? `http://${lan}:${port}` : null,
+      localUrl: `http://localhost:${port}`,
+      ...session.publicList(),
+    };
+  }));
+
   app.get('/api/settings', wrap(() => readSettings()));
   app.put('/api/settings', wrap((req) => writeSettings(req.body)));
 
+  /** Création de partie (§0.4). En multijoueur, réservée à l'hôte ; les nations attribuées aux
+   * autres joueurs deviennent humaines (humanNations). */
   app.post('/api/game/new', wrap((req) => {
+    const player = playerOf(req);
+    if (player && !player.isHost) throw Object.assign(new Error('hôte'), { code: 'NOT_HOST' });
     const { nationId, historicalMode } = req.body ?? {};
-    setState(createGame({ nationId, historicalMode }, data));
-    return fullView();
+    const others = [...session.players.values()].filter((p) => p !== player && p.connected && p.nationId);
+    if (others.some((p) => p.nationId === nationId)) throw Object.assign(new Error('prise'), { code: 'NATION_TAKEN' });
+    const humanNations = [nationId, ...others.map((p) => p.nationId)];
+    const next = createGame({ nationId, historicalMode, humanNations }, data);
+    if (player) player.nationId = nationId;
+    session.historicalMode = historicalMode;
+    setState(next);
+    return fullView(nationId);
   }));
 
-  app.get('/api/game/state', wrap(() => {
-    if (!state) throw Object.assign(new Error('Aucune partie'), { code: 'NO_GAME' });
-    return fullView();
+  app.get('/api/game/state', wrap((req) => {
+    if (!state) throw noGame();
+    return fullView(viewerOf(playerOf(req)));
   }));
 
   app.post('/api/game/speed', wrap((req) => {
-    setSpeed(req.body?.level);
+    if (!state) throw noGame();
+    setSpeed(req.body?.level, playerOf(req));
     return { speed: state.speed };
   }));
 
@@ -169,40 +240,52 @@ export async function createServer({ onQuit = () => process.exit(0) } = {}) {
     'event/resolve': (n, p) => resolveEvent(state, n, p.eventId, p.choiceIndex, effectContext(state, data)),
   };
 
-  function runNationAction(type, payload) {
-    if (!state) throw Object.assign(new Error('Aucune partie'), { code: 'NO_GAME' });
+  function runNationAction(type, payload, player) {
+    if (!state) throw noGame();
     const action = nationActions[type];
     if (!action) throw Object.assign(new Error(type), { code: 'UNKNOWN_ACTION' });
-    // Le joueur n'agit que pour sa propre nation.
-    if (payload?.nationId !== state.settings.nationId) throw Object.assign(new Error('nation'), { code: 'NOT_YOUR_NATION' });
+    // Chaque joueur n'agit que pour sa propre nation.
+    if (payload?.nationId !== viewerOf(player)) throw Object.assign(new Error('nation'), { code: 'NOT_YOUR_NATION' });
     const visibilityBefore = JSON.stringify(state.visibility);
     const result = action(payload.nationId, payload ?? {});
-    // Une action peut lever le brouillard ou déclencher un évènement : la vue complète est alors renvoyée.
-    if (JSON.stringify(state.visibility) !== visibilityBefore || type === 'event/resolve') {
-      const full = fullView();
-      broadcast('state/full', full);
-      return { result: result ?? null, full };
+    // Une action peut lever le brouillard ou déclencher un évènement : vue complète pour tous.
+    if (JSON.stringify(state.visibility) !== visibilityBefore || type === 'event/resolve' || type === 'diplomacy/action') {
+      broadcastFull();
+      return { result: result ?? null, full: fullView(payload.nationId) };
     }
-    const delta = playerDelta();
-    broadcast('state/delta', delta);
-    return { result: result ?? null, ...delta };
+    broadcastDelta();
+    return { result: result ?? null, ...delta(payload.nationId) };
   }
 
   app.post('/api/nation/:nationId/:system/:action', wrap((req) =>
-    runNationAction(`${req.params.system}/${req.params.action}`, { ...(req.body ?? {}), nationId: req.params.nationId })));
+    runNationAction(`${req.params.system}/${req.params.action}`, { ...(req.body ?? {}), nationId: req.params.nationId }, playerOf(req))));
 
+  const requireHostReq = (req) => {
+    const p = playerOf(req);
+    if (p && !p.isHost) throw Object.assign(new Error('hôte'), { code: 'NOT_HOST' });
+  };
   app.get('/api/saves', wrap(() => listSaves()));
   app.post('/api/saves', wrap((req) => {
-    if (!state) throw Object.assign(new Error('Aucune partie'), { code: 'NO_GAME' });
+    requireHostReq(req);
+    if (!state) throw noGame();
     return createSave(req.body?.name, state, { overwrite: req.body?.overwrite === true });
   }));
   app.post('/api/saves/:id/load', wrap(async (req) => {
-    setState(await loadSave(req.params.id));
-    return fullView();
+    requireHostReq(req);
+    const next = await loadSave(req.params.id);
+    // Multijoueur : l'hôte reprend la nation de la sauvegarde, les autres gardent leur attribution.
+    const host = playerOf(req) ?? session.host();
+    if (host) host.nationId = next.settings.nationId;
+    const others = [...session.players.values()].filter((p) => p !== host && p.connected && p.nationId && p.nationId !== next.settings.nationId);
+    next.humanNations = [next.settings.nationId, ...others.map((p) => p.nationId)];
+    setState(next);
+    return fullView(next.settings.nationId);
   }));
-  app.delete('/api/saves/:id', wrap(async (req) => { await deleteSave(req.params.id); return { ok: true }; }));
+  app.delete('/api/saves/:id', wrap(async (req) => { requireHostReq(req); await deleteSave(req.params.id); return { ok: true }; }));
 
   app.post('/api/quit', (req, res) => {
+    // Fermer le serveur n'est possible que depuis la machine hôte.
+    if (!LOOPBACK.has(req.socket.remoteAddress)) { res.status(403).json({ error: { code: 'NOT_HOST', messageKey: 'error.NOT_HOST' } }); return; }
     res.json({ ok: true });
     setTimeout(() => { clock.stop(); onQuit(); }, 100);
   });
@@ -217,33 +300,66 @@ export async function createServer({ onQuit = () => process.exit(0) } = {}) {
   const server = http.createServer(app);
   const wss = new WebSocketServer({ server, path: '/ws' });
 
-  // Messages client -> serveur du catalogue FEATURES_SPEC.md §18 couverts en Phase 1.
   const wsHandlers = {
-    'game/speed': ({ level }) => setSpeed(level),
-    'save/create': async ({ name, overwrite }, ws) => {
-      if (!state) throw Object.assign(new Error('Aucune partie'), { code: 'NO_GAME' });
+    // §18 session/join { nickname, sessionToken? }
+    'session/join': ({ nickname, sessionToken }, ws, client, req) => {
+      const player = session.join({ nickname, token: sessionToken, isLocal: LOOPBACK.has(req.socket.remoteAddress) });
+      if (client.player && client.player !== player) client.player.sockets.delete(ws);
+      client.player = player;
+      player.sockets.add(ws);
+      // Reconnexion : la nation redevient humaine (§15.3).
+      if (state && player.nationId && !state.humanNations.includes(player.nationId)) state.humanNations.push(player.nationId);
+      send(ws, 'session/joined', { token: player.token, id: player.id, isHost: player.isHost, nationId: player.nationId });
+      broadcastSession();
+      if (state && session.phase === 'game' && viewerOf(player)) send(ws, 'state/full', fullView(viewerOf(player)));
+    },
+    'session/assign': ({ playerId, nationId }, ws, client) => { session.assign(client.player, playerId, nationId ?? null, playableIds); broadcastSession(); },
+    'session/ready': ({ ready }, ws, client) => { if (client.player) { client.player.ready = Boolean(ready); broadcastSession(); } },
+    'session/setMode': ({ historicalMode }, ws, client) => {
+      session.requireHost(client.player);
+      if (typeof historicalMode !== 'boolean') throw Object.assign(new Error('mode'), { code: 'INVALID_HISTORICAL_MODE' });
+      session.historicalMode = historicalMode;
+      broadcastSession();
+    },
+    // §15.1 : « Start Game » de l'hôte verrouille les attributions et passe tout le monde à §0.4.
+    'session/start': (payload, ws, client) => { session.requireHost(client.player); session.phase = 'confirm'; broadcastSession(); },
+    'game/speed': ({ level }, ws, client) => { if (!state) throw noGame(); setSpeed(level, client.player); },
+    'save/create': async ({ name, overwrite }, ws, client) => {
+      if (client.player && !client.player.isHost) throw Object.assign(new Error('hôte'), { code: 'NOT_HOST' });
+      if (!state) throw noGame();
       send(ws, 'save/created', await createSave(name, state, { overwrite: overwrite === true }));
     },
-    'save/load': async ({ saveId }) => setState(await loadSave(saveId)),
+    'save/load': async ({ saveId }, ws, client) => {
+      if (client.player && !client.player.isHost) throw Object.assign(new Error('hôte'), { code: 'NOT_HOST' });
+      setState(await loadSave(saveId));
+    },
   };
-  for (const type of Object.keys(nationActions)) wsHandlers[type] = (payload) => { runNationAction(type, payload); };
+  for (const type of Object.keys(nationActions)) wsHandlers[type] = (payload, ws, client) => { runNationAction(type, payload, client.player); };
 
-  wss.on('connection', (ws) => {
-    sockets.add(ws);
-    if (state) send(ws, 'state/full', fullView());
-    ws.on('close', () => sockets.delete(ws));
+  wss.on('connection', (ws, req) => {
+    // Aucune donnée de partie avant l'identification (session/join) : pas de fuite de la vue de l'hôte.
+    const client = { player: null };
+    sockets.set(ws, client);
+    ws.on('close', () => {
+      sockets.delete(ws);
+      if (client.player) { client.player.sockets.delete(ws); onDisconnect(client.player); }
+    });
     ws.on('message', async (raw) => {
       let msg;
       try { msg = JSON.parse(String(raw)); } catch { return send(ws, 'error', { code: 'BAD_MESSAGE', messageKey: 'error.BAD_MESSAGE' }); }
       const handler = wsHandlers[msg?.type];
       if (!handler) return send(ws, 'error', { code: 'UNKNOWN_MESSAGE', messageKey: 'error.UNKNOWN_MESSAGE' });
       try {
-        await handler(msg.payload ?? {}, ws);
+        await handler(msg.payload ?? {}, ws, client, req);
       } catch (e) {
         send(ws, 'error', { code: e.code ?? 'INTERNAL', messageKey: `error.${e.code ?? 'INTERNAL'}` });
       }
     });
   });
 
-  return { server, close: () => { clock.stop(); wss.close(); server.close(); } };
+  return {
+    server,
+    session,
+    close: () => { clock.stop(); for (const ws of wss.clients) ws.terminate(); wss.close(); server.close(); },
+  };
 }

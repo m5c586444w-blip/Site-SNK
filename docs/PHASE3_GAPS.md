@@ -1,5 +1,9 @@
 # Phase 3 (divisions, fronts, combat, Titans purs) : données manquantes et choix à valider
 
+> **Mise à jour (phase 5)** : à la demande du commanditaire (« Réalise tout en fonction du lore »), les données
+> manquantes listées ici ont été complétées en **[EXTENSION]**. Détail et justification : `docs/PHASE5_GAPS.md`.
+
+
 Les formules de MECHANICS_SPEC §6.1-§6.4 sont implémentées telles quelles et testées :
 statistiques des bataillons, statistiques de modèle, puissances offensive et défensive, bonus du
 Mur (+50 %), seuils 1,15 / 0,85, pertes d'organisation −25 / −10, regain +5 par jour, attrition des

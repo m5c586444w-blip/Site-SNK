@@ -1,8 +1,9 @@
 # Carte des provinces : format attendu
 
-**État actuel : aucune carte fournie.** Le jeu démarre quand même, mais l'écran carte affiche
-« Carte des provinces indisponible ». Aucune géographie n'a été inventée, voir
-`docs/PHASE1_GAPS.md`.
+**État actuel** : la carte fournie est une carte **[EXTENSION]** générée par
+`node tools/generate-map.js` d'après la carte de référence et LORE §2 (voir `docs/PHASE5_GAPS.md`).
+Pour la remplacer par une carte dessinée à la main, déposez vos fichiers ici au même format, puis
+vérifiez-les avec `npm run validate-map`.
 
 Technique utilisée : cahier des charges §3. On superpose une image de fond (la carte d'état-major)
 et une image de masque où chaque province a une couleur RVB unique. Au clic, le jeu lit la couleur
