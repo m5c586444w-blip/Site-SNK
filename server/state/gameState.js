@@ -6,6 +6,10 @@ import { initEconomy, zeroResources, zeroEquipment, controlledStates } from '../
 import { supplyValue } from './supply.js';
 import { initialProvinceControl, provinceController, templateStats } from '../simulation/military.js';
 import { seedFromHex } from '../../shared/rng.js';
+import { initialRelations, relation, actionBlocker } from '../simulation/diplomacy.js';
+import { focusBlockers } from '../simulation/focus.js';
+import { journalFor } from './journal.js';
+import { ACTION_COSTS } from '../../shared/constants.js';
 
 const clone = (o) => structuredClone(o);
 
@@ -28,6 +32,7 @@ function buildStates(map) {
       supplyValue: supplyValue(infrastructureLevel),
       factories: (s.factories ?? []).map((f) => ({ id: f.id, type: f.type, stateId: s.id, assignedLineId: null })),
       isWallState,
+      wallRing: s.wallRing ?? null,
     };
   });
 }
@@ -50,7 +55,7 @@ function buildNation(n, economyRules) {
  * Crée une partie — FEATURES_SPEC.md §0.4 : GameState initialisé depuis les valeurs par défaut de
  * MECHANICS_SPEC.md, CALENDAR_START et GameSettings.historicalMode (immuable ensuite, §0).
  */
-export function createGame({ nationId, historicalMode }, { nations, map, economyRules = null, militaryRules = null, scenario = null }) {
+export function createGame({ nationId, historicalMode }, { nations, map, economyRules = null, militaryRules = null, scenario = null, diplomacyRules = null }) {
   const playable = nations.filter((n) => n.isPlayable).map((n) => n.id);
   if (!playable.includes(nationId)) throw Object.assign(new Error('Nation inconnue'), { code: 'INVALID_NATION' });
   if (typeof historicalMode !== 'boolean') {
@@ -77,9 +82,23 @@ export function createGame({ nationId, historicalMode }, { nations, map, economy
     lastDailyNet: {},
     templates: [],
     provinceControl: initialProvinceControl(states),
-    wars: clone(scenario?.startingWars ?? []),
+    wars: [],
+    warInfo: {},
     lastCombats: [],
+    relations: initialRelations(gameNations, diplomacyRules),
+    agreements: [],
+    wargoals: [],
+    diplomacyLog: [],
+    eventLog: {},
+    pendingEvents: [],
+    journal: [],
+    journalSeq: 0,
+    dynamicHazards: {},
   };
+  for (const [a, b] of scenario?.startingWars ?? []) {
+    game.wars.push([a, b]);
+    game.warInfo[[a, b].sort().join('|')] = { attacker: a, defender: b, startDate: '01/01/an-844', warscore: { [a]: 0, [b]: 0 } };
+  }
   applyStartingOrderOfBattle(game, scenario, militaryRules);
   return game;
 }
@@ -101,7 +120,7 @@ function applyStartingOrderOfBattle(game, scenario, militaryRules) {
  * sous brouillard (Paradis) ne reçoit jamais le nom, le propriétaire ni les stats d'une
  * province ou d'une nation qu'elle ne connaît pas.
  */
-export function viewFor(state, viewerId, map, { technologies = [], economyRules = null } = {}) {
+export function viewFor(state, viewerId, map, { technologies = [], economyRules = null, focuses = [], focusBranches = {}, events = [] } = {}) {
   const statesById = new Map(state.states.map((s) => [s.id, s]));
   const provinces = (map.available ? map.provinces : []).map((p) => {
     const visibility = provinceVisibility(state, viewerId, p.id);
@@ -120,7 +139,7 @@ export function viewFor(state, viewerId, map, { technologies = [], economyRules 
       fortificationLevel: st?.fortificationLevel ?? null,
       isWallState: st?.isWallState ?? false,
       supplyValue: st?.supplyValue ?? null,
-      formerPureTitanTerritory: Boolean(p.formerPureTitanTerritory),
+      formerPureTitanTerritory: Boolean(p.formerPureTitanTerritory || state.dynamicHazards?.[p.id]),
     };
   });
   const nations = state.nations
@@ -142,6 +161,42 @@ export function viewFor(state, viewerId, map, { technologies = [], economyRules 
     economy: economyView(state, viewerId, economyRules),
     technologies,
     military: militaryView(state, viewerId, map),
+    ...politicalView(state, viewerId, { focuses, focusBranches, events }),
+  };
+}
+
+/** Focus, diplomatie, évènements en attente, journal (phase 4) — filtrés pour la nation. */
+export function politicalView(state, viewerId, { focuses = [], focusBranches = {}, events = [] } = {}) {
+  const nation = state.nations.find((n) => n.id === viewerId);
+  const knownIds = state.nations.map((n) => n.id).filter((id) => id !== viewerId && nationVisibility(state, viewerId, id) === 'known');
+  const involves = (x) => x.actor === viewerId || x.target === viewerId || x.a === viewerId || x.b === viewerId;
+  return {
+    focus: {
+      branches: focusBranches[viewerId] ?? {},
+      tree: focuses.filter((f) => f.nationId === viewerId).map((f) => ({ ...f, blockers: focusBlockers(state, nation, f) })),
+      activeFocusId: nation.activeFocusId,
+      focusDaysRemaining: nation.focusDaysRemaining,
+      completedFocusIds: nation.completedFocusIds,
+    },
+    diplomacy: {
+      politicalCapital: nation.politicalCapital,
+      costs: ACTION_COSTS,
+      nations: knownIds.map((id) => ({
+        id,
+        relation: relation(state, viewerId, id),
+        blockers: Object.fromEntries(['propose_alliance', 'propose_nonaggression', 'guarantee_independence', 'embargo', 'justify_wargoal', 'declare_war']
+          .map((a) => [a, actionBlocker(state, viewerId, id, a)])),
+      })),
+      agreements: state.agreements.filter(involves),
+      wargoals: state.wargoals.filter((w) => w.nationId === viewerId),
+      wars: Object.values(state.warInfo).filter((w) => w.attacker === viewerId || w.defender === viewerId),
+      log: state.diplomacyLog.filter(involves),
+    },
+    pendingEvents: state.pendingEvents
+      .map((id) => events.find((e) => e.id === id))
+      .filter((e) => e && e.nationId === viewerId)
+      .map(({ id, title, body, choices, category }) => ({ id, title, body, category, choices: choices.map((c) => ({ label: c.label, effects: c.effects })) })),
+    journal: journalFor(state, viewerId),
   };
 }
 
@@ -188,6 +243,8 @@ export function economyView(state, viewerId, economyRules) {
  * figurent pas non plus dans §11 : ajoutées sous `productionLines`, `constructionQueues`, `nextId`.
  * [EXTENSION TECHNIQUE, Phase 3] `templates`, `provinceControl`, `wars`, `rngState` (état du PRNG
  * pour un rejeu déterministe), `lastCombats`.
+ * [EXTENSION TECHNIQUE, Phase 4] `warInfo`, `relations`, `agreements`, `wargoals`, `diplomacyLog`,
+ * `eventLog`, `pendingEvents`, `journal`, `dynamicHazards`.
  * [EXTENSION TECHNIQUE À VALIDER] §11 ne contient ni GameSettings, ni la date courante, ni
  * l'état du brouillard. Sans eux, une sauvegarde rechargée perdrait le mode choisi (pourtant
  * immuable) et repartirait au 01/01/an-844. Ils sont ajoutés sous `settings`, `currentDate`
@@ -216,6 +273,16 @@ export function toSaveFile(state) {
     wars: clone(state.wars),
     rngState: state.rngState,
     lastCombats: clone(state.lastCombats ?? []),
+    warInfo: clone(state.warInfo),
+    relations: clone(state.relations),
+    agreements: clone(state.agreements),
+    wargoals: clone(state.wargoals),
+    diplomacyLog: clone(state.diplomacyLog),
+    eventLog: clone(state.eventLog),
+    pendingEvents: [...state.pendingEvents],
+    journal: clone(state.journal),
+    journalSeq: state.journalSeq,
+    dynamicHazards: clone(state.dynamicHazards),
   };
 }
 
@@ -259,5 +326,15 @@ export function fromSaveFile(save) {
     wars: clone(save.wars ?? []),
     rngState: save.rngState ?? seedFromHex(save.rngSeed),
     lastCombats: clone(save.lastCombats ?? []),
+    warInfo: clone(save.warInfo ?? {}),
+    relations: clone(save.relations ?? initialRelations(nations, null)),
+    agreements: clone(save.agreements ?? []),
+    wargoals: clone(save.wargoals ?? []),
+    diplomacyLog: clone(save.diplomacyLog ?? []),
+    eventLog: clone(save.eventLog ?? {}),
+    pendingEvents: [...(save.pendingEvents ?? [])],
+    journal: clone(save.journal ?? []),
+    journalSeq: save.journalSeq ?? 0,
+    dynamicHazards: clone(save.dynamicHazards ?? {}),
   };
 }

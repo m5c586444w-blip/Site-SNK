@@ -4,11 +4,30 @@
 import { economyDay } from './economy.js';
 import { researchDay } from './research.js';
 import { militaryDay } from './military.js';
+import { focusDay } from './focus.js';
+import { recordCaptures, diplomacyDay } from './diplomacy.js';
+import { eventsDay, fireEvent } from './events.js';
 
 const yieldToLoop = () => new Promise((r) => setImmediate(r));
 
 /** @returns {Promise<{ dailyNet: Record<string, any>, completedTechs: Record<string, string[]>, military: any }>} */
-export async function runDay(state, { economyRules, militaryRules, map }) {
+/** Contexte d'application des effets (focus, évènements). */
+export function effectContext(state, data) {
+  const ctx = {
+    map: data.map,
+    events: data.events ?? [],
+    eventValues: data.eventValues ?? {},
+    fireEvent: (eventId, opts) => {
+      const ev = ctx.events.find((e) => e.id === eventId);
+      return ev ? fireEvent(state, ev, ctx, opts) : false;
+    },
+  };
+  return ctx;
+}
+
+export async function runDay(state, data) {
+  const { economyRules, militaryRules, map } = data;
+  const ctx = effectContext(state, data);
   const player = state.settings.nationId;
   const order = [player, ...state.nations.map((n) => n.id).filter((id) => id !== player)];
   const dailyNet = {};
@@ -17,10 +36,14 @@ export async function runDay(state, { economyRules, militaryRules, map }) {
     if (i > 0) await yieldToLoop();
     dailyNet[nationId] = economyDay(state, nationId, economyRules);
     completedTechs[nationId] = researchDay(state, nationId);
+    focusDay(state, nationId, data.focuses ?? [], ctx);
   }
   // Combat et attrition : résolus une fois pour toutes les nations (les deux camps d'un combat
   // doivent être traités ensemble).
   await yieldToLoop();
   const military = map?.available ? militaryDay(state, map, militaryRules) : { combats: [], destroyed: [], captured: [] };
-  return { dailyNet, completedTechs, military };
+  recordCaptures(state, military.captured);
+  diplomacyDay(state, data.diplomacyRules);
+  const firedEvents = eventsDay(state, ctx);
+  return { dailyNet, completedTechs, military, firedEvents };
 }

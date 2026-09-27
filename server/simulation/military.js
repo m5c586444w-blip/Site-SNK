@@ -272,7 +272,7 @@ export function militaryDay(state, map, rules) {
 
   // 4. Récupération d'organisation hors combat, attrition (§6.4 ; ravitaillement si chiffré)
   const supplyOf = new Map(map.provinces.map((p) => [p.id, state.states.find((s) => s.id === p.stateId)?.supplyValue ?? null]));
-  const hazard = new Set(map.provinces.filter((p) => p.formerPureTitanTerritory).map((p) => p.id));
+  const hazard = new Set(map.provinces.filter((p) => p.formerPureTitanTerritory || state.dynamicHazards?.[p.id]).map((p) => p.id));
   for (const d of state.divisions) {
     if (!inCombat.has(d.id)) d.organization = clamp(d.organization + ORG_REGEN_PER_DAY_OUT_OF_COMBAT, 0, 100);
     if (hazard.has(d.locationProvinceId)) d.strength = clamp(d.strength - PURE_TITAN_ATTRITION_PER_DAY * 100, 0, 100);

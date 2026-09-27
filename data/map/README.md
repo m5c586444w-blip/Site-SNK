@@ -46,6 +46,7 @@ transparents et laissent voir le fond. Déclarez leurs couleurs dans `ignoredCol
       "controllerId": "paradis",               // optionnel, = ownerId par défaut
       "provinceIds": ["prov_x"],
       "isWallState": true,                     // tracé des Murs ; fortification 8/10 par défaut (§6.5)
+      "wallRing": "outer",                     // outer | middle | inner : sert à l'évènement WALL_BREACH_845
       "fortificationLevel": null,              // null → WALL_FORTIFICATION_LEVEL_DEFAULT si isWallState
       "infrastructureLevel": null,             // 0-5 — donnée à fournir
       "resourceDeposits": null,                // { steel, fuel, rareMaterials } — donnée à fournir

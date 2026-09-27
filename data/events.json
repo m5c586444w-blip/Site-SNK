@@ -1,0 +1,286 @@
+{
+  "_source": "Conditions de déclenchement : MECHANICS_SPEC.md §5.3, reprises mot pour mot, plus le verrou global historicalMode, ajouté automatiquement pour historical=true, et la clause d'évitement (avertFocus) de HISTORICAL_EVENT_CHAIN §1. Textes : paraphrase [EXTENSION] des beats de HISTORICAL_EVENT_CHAIN_845_854.md, sans personnage nommé (LORE §0.1), ton sobre (§0.5). Montants des effets : [EXTENSION] à valider (docs/PHASE4_GAPS.md).",
+  "_rumblingNote": "devastateMainland / globalShock : effets uniquement (cahier §5.7, HISTORICAL_EVENT_CHAIN §1.7), aucune description technique.",
+  "extensionValues": {
+    "globalShockStability": -30,
+    "globalShockRelations": -100,
+    "delayOceanDiscoveryDays": 365
+  },
+  "events": [
+    {
+      "id": "WALL_BREACH_845",
+      "historical": true,
+      "nationId": "paradis",
+      "category": "historical_chain",
+      "triggerCondition": "date == '01/01/an-845'",
+      "title": {
+        "fr": "La brèche du Mur extérieur",
+        "en": "The outer Wall breached"
+      },
+      "body": {
+        "fr": "Une brèche s'ouvre dans le Mur extérieur. Les Titans purs se répandent dans des districts que l'on croyait sûrs, et la population reflue vers les Murs intérieurs. Le commandement doit accueillir les réfugiés sans en avoir les moyens. Dans le chaos, une certitude s'impose : quelqu'un, dehors, a voulu cela.",
+        "en": "A breach opens in the outer Wall. Pure Titans spread into districts believed safe, and the population flees towards the inner Walls. The command must take in refugees it cannot support. In the chaos, one certainty emerges: someone, outside, wanted this."
+      },
+      "choices": [
+        {
+          "label": {
+            "fr": "Accueillir les réfugiés derrière le Mur médian",
+            "en": "Take in the refugees behind the middle Wall"
+          },
+          "effects": [
+            {
+              "type": "modifyWarSupport",
+              "delta": -10
+            },
+            {
+              "type": "modifyStability",
+              "delta": -10
+            },
+            {
+              "type": "abandonWallRing",
+              "nationId": "paradis",
+              "ring": "outer"
+            },
+            {
+              "type": "reveal",
+              "viewerId": "paradis",
+              "nationId": "marley",
+              "level": "known"
+            }
+          ]
+        }
+      ],
+      "avertFocus": {
+        "nationId": "paradis",
+        "focusId": "AVERT_BREACH_845"
+      }
+    },
+    {
+      "id": "TROST_CRISIS_850",
+      "historical": true,
+      "nationId": "paradis",
+      "category": "historical_chain",
+      "triggerCondition": "date == '01/01/an-850' AND event.WALL_BREACH_845.fired == true",
+      "title": {
+        "fr": "La crise de la ville-garnison",
+        "en": "The garrison town crisis"
+      },
+      "body": {
+        "fr": "Une nouvelle incursion frappe la ville-garnison qui fait face aux terres perdues. Elle est repoussée au prix de lourdes pertes. Dans les jours qui suivent, un soupçon se répand : des porteurs de pouvoir auraient agi depuis l'intérieur des rangs.",
+        "en": "A new incursion strikes the garrison town facing the lost lands. It is repelled at heavy cost. In the following days a suspicion spreads: shifters may have acted from within the ranks."
+      },
+      "choices": [
+        {
+          "label": {
+            "fr": "Enquêter dans les rangs",
+            "en": "Investigate the ranks"
+          },
+          "effects": [
+            {
+              "type": "modifyStability",
+              "delta": -5
+            },
+            {
+              "type": "modifyWarSupport",
+              "delta": 10
+            }
+          ]
+        }
+      ],
+      "avertFocus": {
+        "nationId": "paradis",
+        "focusId": "PREVENT_TROST_CRISIS_850"
+      }
+    },
+    {
+      "id": "MARLEY_TITAN_LOSS_850",
+      "historical": true,
+      "nationId": "marley",
+      "category": "historical_chain",
+      "triggerCondition": "date == '01/01/an-850' AND event.TROST_CRISIS_850.fired == true",
+      "title": {
+        "fr": "Pouvoirs perdus sur l'île",
+        "en": "Powers lost on the island"
+      },
+      "body": {
+        "fr": "Deux Guerriers infiltrés ont été vaincus sur l'île ennemie. Leurs pouvoirs ne reviendront pas à l'Empire : ils sont passés à des individus alignés sur Paradis. L'état-major cherche des responsables ; les familles, elles, n'ont plus rien à attendre.",
+        "en": "Two infiltrated Warriors were defeated on the enemy island. Their powers will not return to the Empire: they have passed to individuals aligned with Paradis. The general staff looks for culprits; the families have nothing left to wait for."
+      },
+      "choices": [
+        {
+          "label": {
+            "fr": "Reprendre le programme",
+            "en": "Rebuild the program"
+          },
+          "effects": [
+            {
+              "type": "modifyWarSupport",
+              "delta": -10
+            },
+            {
+              "type": "transferTitanPowers",
+              "from": "marley",
+              "to": "paradis",
+              "count": 2,
+              "titanIds": null
+            }
+          ]
+        }
+      ],
+      "avertFocus": {
+        "nationId": "marley",
+        "focusId": "SECURE_INFILTRATORS_850"
+      }
+    },
+    {
+      "id": "PARADIS_COUP_850",
+      "historical": true,
+      "nationId": "paradis",
+      "category": "historical_chain",
+      "triggerCondition": "date == '01/01/an-850'",
+      "title": {
+        "fr": "Le trône contesté",
+        "en": "The contested throne"
+      },
+      "body": {
+        "fr": "Une crise politique révèle que le gouvernement en place n'appartient pas à la véritable lignée royale. Un coup de force installe une administration liée à cette lignée. Ni l'ancien pouvoir ni le nouveau ne sont exempts de fautes, et chacun prétend agir pour le peuple.",
+        "en": "A political crisis reveals that the sitting government does not belong to the true royal line. A coup installs an administration tied to that line. Neither the old power nor the new is free of fault, and each claims to act for the people."
+      },
+      "choices": [
+        {
+          "label": {
+            "fr": "Reconnaître la nouvelle administration",
+            "en": "Recognise the new administration"
+          },
+          "effects": [
+            {
+              "type": "modifyStability",
+              "delta": -10
+            },
+            {
+              "type": "setNationFlag",
+              "nationId": "paradis",
+              "flag": "royalBloodlineFlag"
+            }
+          ]
+        }
+      ],
+      "avertFocus": {
+        "nationId": "paradis",
+        "focusId": "SUPPRESS_COUP_850"
+      }
+    },
+    {
+      "id": "OCEAN_DISCOVERY_850",
+      "historical": true,
+      "nationId": "paradis",
+      "category": "historical_chain",
+      "triggerCondition": "date >= '01/01/an-850' AND date <= '01/01/an-851'",
+      "title": {
+        "fr": "La mer",
+        "en": "The sea"
+      },
+      "body": {
+        "fr": "Une expédition atteint enfin une côte ouverte. Au-delà de l'eau, il existe un monde, et ce monde n'a jamais oublié l'île. La nouvelle ne peut plus être contenue.",
+        "en": "An expedition finally reaches an open coast. Beyond the water there is a world, and that world never forgot the island. The news can no longer be contained."
+      },
+      "choices": [
+        {
+          "label": {
+            "fr": "Annoncer la découverte",
+            "en": "Announce the discovery"
+          },
+          "effects": [
+            {
+              "type": "modifyWarSupport",
+              "delta": 5
+            },
+            {
+              "type": "reveal",
+              "viewerId": "paradis",
+              "nationId": "*",
+              "level": "partially_known"
+            }
+          ]
+        }
+      ],
+      "delayFocus": {
+        "nationId": "paradis",
+        "focusId": "DELAY_OCEAN_DISCOVERY",
+        "delayedCondition": "date >= '01/01/an-851' AND date <= '01/01/an-852'"
+      }
+    },
+    {
+      "id": "MARLEY_MIDEAST_WAR_850_854",
+      "historical": true,
+      "nationId": "marley",
+      "category": "historical_chain",
+      "triggerCondition": "event.MARLEY_TITAN_LOSS_850.fired == true AND date >= '01/01/an-850'",
+      "title": {
+        "fr": "La guerre contre l'Alliance",
+        "en": "War with the Alliance"
+      },
+      "body": {
+        "fr": "Voyant l'Empire affaibli par la perte de ses pouvoirs, l'Alliance du Moyen-Orient prend les armes. Une guerre de plusieurs années commence.",
+        "en": "Seeing the Empire weakened by the loss of its powers, the Mid-East Alliance takes up arms. A war of several years begins."
+      },
+      "choices": [
+        {
+          "label": {
+            "fr": "Mobiliser l'Empire",
+            "en": "Mobilise the Empire"
+          },
+          "effects": [
+            {
+              "type": "startWar",
+              "nations": [
+                "marley",
+                "mideast_alliance"
+              ],
+              "historicalWarEventId": "MARLEY_MIDEAST_WAR_850_854"
+            }
+          ]
+        }
+      ],
+      "softEndDate": "01/01/an-854",
+      "softEndWinner": "marley"
+    },
+    {
+      "id": "RUMBLING_854",
+      "historical": true,
+      "nationId": "paradis",
+      "category": "historical_chain",
+      "triggerCondition": "event.MARLEY_MIDEAST_WAR_850_854.resolved == true AND nation('Paradis').titanPowersHeld includes 'TITAN_FOUNDING' AND date >= '01/01/an-854'",
+      "title": {
+        "fr": "Le Grondement",
+        "en": "The Rumbling"
+      },
+      "body": {
+        "fr": "Le pouvoir des Murs est libéré. Les conséquences dépassent tout ce que la simulation peut mesurer : des régions entières du continent sont dévastées, des nations cessent de fonctionner, le monde entier se retourne contre l'île.",
+        "en": "The power of the Walls is unleashed. The consequences exceed anything the simulation can measure: entire regions of the mainland are devastated, nations cease to function, the whole world turns against the island."
+      },
+      "choices": [
+        {
+          "label": {
+            "fr": "Porter ce poids",
+            "en": "Bear this weight"
+          },
+          "effects": [
+            {
+              "type": "devastateMainland",
+              "sparedNationId": "paradis"
+            },
+            {
+              "type": "globalShock",
+              "nationId": "paradis"
+            }
+          ]
+        }
+      ],
+      "avertFocus": {
+        "nationId": "paradis",
+        "focusId": "AVERT_RUMBLING"
+      }
+    }
+  ]
+}

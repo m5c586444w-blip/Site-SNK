@@ -1,0 +1,7 @@
+{
+  "_source": "MECHANICS_SPEC.md §8 pour les coûts et seuils (dans le code). Valeurs ci-dessous ABSENTES des specs.",
+  "initialRelations": {},
+  "_initialRelationsNote": "Relations initiales non spécifiées : 0 (neutre) par défaut. Format : { \"marley|mideast_alliance\": -50 } (paire triée).",
+  "politicalCapitalPerDay": null,
+  "_politicalCapitalNote": "« accrues over time » (§2) sans taux : null = pas d'accumulation."
+}

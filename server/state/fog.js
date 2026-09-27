@@ -33,3 +33,26 @@ export function nationVisibility(state, viewerId, nationId) {
   if (!v) return 'known';
   return v.nations[nationId] ?? 'hidden';
 }
+
+const RANK = { hidden: 0, partially_known: 1, known: 2 };
+
+/**
+ * Levée du brouillard (MECHANICS §10, REVEAL_TRIGGERS) pour une nation sous brouillard.
+ * `nationId = '*'` : toutes les autres nations. Une révélation ne dégrade jamais un niveau acquis.
+ * Les provinces suivent la nation propriétaire de leur état.
+ */
+export function reveal(state, map, viewerId, nationId, level) {
+  const v = state.visibility[viewerId];
+  if (!v) return false;
+  const targets = nationId === '*' ? state.nations.map((n) => n.id).filter((id) => id !== viewerId) : [nationId];
+  const ownerOfState = new Map(state.states.map((s) => [s.id, s.ownerId]));
+  let changed = false;
+  for (const target of targets) {
+    if (RANK[level] > RANK[v.nations[target] ?? 'hidden']) { v.nations[target] = level; changed = true; }
+    for (const p of map.available ? map.provinces : []) {
+      if (ownerOfState.get(p.stateId) !== target) continue;
+      if (RANK[level] > RANK[v.provinces[p.id] ?? 'hidden']) { v.provinces[p.id] = level; changed = true; }
+    }
+  }
+  return changed;
+}

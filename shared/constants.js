@@ -104,3 +104,20 @@ export const TERRAIN_MODIFIER_DEFAULT = 1.0;
 export const PURE_TITAN_ATTRITION_PER_DAY = 0.02;
 
 export const DIVISION_ORDERS = ['hold', 'advance', 'retreat'];
+
+// ---------------- Phase 4 : focus, diplomatie ----------------
+/** MECHANICS_SPEC.md §5 */
+export const MAX_CONCURRENT_FOCUS = 1;
+/** §8 */
+export const RELATION_SCALE = [-200, 200];
+export const ACTION_COSTS = {
+  propose_alliance: { minRelation: 50, politicalCapitalCost: 100 },
+  propose_nonaggression: { minRelation: -50, politicalCapitalCost: 40 },
+  guarantee_independence: { minRelation: 0, politicalCapitalCost: 60 },
+  embargo: { minRelation: null, politicalCapitalCost: 20 },
+};
+export const WARGOAL_JUSTIFY_DAYS_DEFAULT = 90;
+export const WARSCORE_PER_OBJECTIVE_CAPTURED = 10;
+export const WARSCORE_PEACE_THRESHOLD = 100;
+/** FEATURES §14.3 */
+export const JOURNAL_CATEGORIES = ['military', 'diplomacy', 'politics', 'focus', 'titan', 'intel', 'historical_chain'];

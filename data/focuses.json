@@ -1,0 +1,1299 @@
+{
+  "_source": "[EXTENSION] Arbres de focus rédigés pour ce projet (cahier des charges §7 : « le détail exact de chaque focus reste à écrire », autorisé par le commanditaire en phase 4). Branches = cahier §7. Identifiants d'évitement = HISTORICAL_EVENT_CHAIN_845_854.md / MECHANICS §5.3. Coûts (jours) et montants des effets : valeurs [EXTENSION] à valider (voir docs/PHASE4_GAPS.md). Règles LORE §0.1 (aucun personnage nommé) et §0.5 (coûts et contreparties) respectées.",
+  "_effectSemantics": "resourceBonus = ajout ponctuel au stock (montant négatif = dépense) ; unlockTech avec un nom de catégorie (navy, aviation) = ouverture de la catégorie ; diplomaticAction : establish_contact | improve_relations (amount).",
+  "branches": {
+    "paradis": {
+      "survival": {
+        "fr": "Survie face aux Titans",
+        "en": "Survival against the Titans"
+      },
+      "command": {
+        "fr": "Commandement et garnison",
+        "en": "Command and garrison"
+      },
+      "exploration": {
+        "fr": "Exploration",
+        "en": "Exploration"
+      },
+      "opening": {
+        "fr": "Ouverture diplomatique",
+        "en": "Diplomatic opening"
+      },
+      "founder": {
+        "fr": "Titan Fondateur (fin de partie)",
+        "en": "Founding Titan (end game)"
+      }
+    },
+    "marley": {
+      "hegemony": {
+        "fr": "Hégémonie mondiale",
+        "en": "World hegemony"
+      },
+      "warriors": {
+        "fr": "Programme des Guerriers",
+        "en": "Warrior program"
+      },
+      "rivals": {
+        "fr": "Alliance et Hizuru",
+        "en": "Alliance and Hizuru"
+      },
+      "internal": {
+        "fr": "Population eldienne",
+        "en": "Eldian population"
+      }
+    },
+    "mideast_alliance": {
+      "resistance": {
+        "fr": "Résistance à Marley",
+        "en": "Resisting Marley"
+      },
+      "cooperation": {
+        "fr": "Coopération des membres",
+        "en": "Member cooperation"
+      },
+      "external": {
+        "fr": "Alliances extérieures",
+        "en": "External alliances"
+      }
+    },
+    "hizuru": {
+      "reconstruction": {
+        "fr": "Reconstruction",
+        "en": "Reconstruction"
+      },
+      "alliances": {
+        "fr": "Alliances",
+        "en": "Alliances"
+      },
+      "industry": {
+        "fr": "Industrie et marine",
+        "en": "Industry and navy"
+      }
+    }
+  },
+  "focuses": [
+    {
+      "id": "PARADIS_WALL_WATCH",
+      "nationId": "paradis",
+      "treeBranch": "survival",
+      "x": 0,
+      "y": 0,
+      "costDays": 35,
+      "name": {
+        "fr": "Renforcer le guet du Mur extérieur",
+        "en": "Tighten the watch on the outer Wall"
+      },
+      "description": {
+        "fr": "Les tours du Mur extérieur reçoivent des vigies supplémentaires. La garnison y voit un surcroît de corvées plus qu'une menace réelle.",
+        "en": "The outer Wall's towers receive extra lookouts. The garrison sees more chores in it than any real threat."
+      },
+      "prerequisiteFocusIds": [],
+      "effects": [
+        {
+          "type": "modifyWarSupport",
+          "delta": 5
+        },
+        {
+          "type": "resourceBonus",
+          "resource": "steel",
+          "amount": 20
+        }
+      ]
+    },
+    {
+      "id": "AVERT_BREACH_845",
+      "nationId": "paradis",
+      "treeBranch": "survival",
+      "x": 0,
+      "y": 1,
+      "costDays": 70,
+      "name": {
+        "fr": "Doubler les garnisons des portes extérieures",
+        "en": "Double the outer gate garrisons"
+      },
+      "description": {
+        "fr": "Les portes du Mur extérieur sont murées de renforts et de poudre. Les districts paient la levée d'hommes et de pierre, et certains accusent le commandement d'alarmisme.",
+        "en": "The outer Wall's gates are reinforced with stone and powder. The districts pay the levy of men and materials, and some accuse the command of alarmism."
+      },
+      "prerequisiteFocusIds": [
+        "PARADIS_WALL_WATCH"
+      ],
+      "effects": [
+        {
+          "type": "modifyStability",
+          "delta": -5
+        },
+        {
+          "type": "modifyWarSupport",
+          "delta": 5
+        }
+      ],
+      "avertsEventId": "WALL_BREACH_845"
+    },
+    {
+      "id": "PARADIS_REFUGEE_PLAN",
+      "nationId": "paradis",
+      "treeBranch": "survival",
+      "x": 1,
+      "y": 1,
+      "costDays": 70,
+      "name": {
+        "fr": "Plans d'évacuation des districts",
+        "en": "District evacuation plans"
+      },
+      "description": {
+        "fr": "Des registres et des itinéraires d'évacuation sont préparés pour les districts saillants. Le plan rassure, mais il admet à voix haute que les Murs peuvent céder.",
+        "en": "Registers and evacuation routes are drawn up for the salient districts. The plan reassures, but it admits aloud that the Walls could fail."
+      },
+      "prerequisiteFocusIds": [
+        "PARADIS_WALL_WATCH"
+      ],
+      "effects": [
+        {
+          "type": "modifyStability",
+          "delta": 5
+        },
+        {
+          "type": "modifyWarSupport",
+          "delta": -5
+        }
+      ]
+    },
+    {
+      "id": "PREVENT_TROST_CRISIS_850",
+      "nationId": "paradis",
+      "treeBranch": "survival",
+      "x": 1,
+      "y": 2,
+      "costDays": 70,
+      "name": {
+        "fr": "Fortifier la ville-garnison du Mur médian",
+        "en": "Fortify the middle Wall's garrison town"
+      },
+      "description": {
+        "fr": "La cité-garnison qui fait face aux terres perdues reçoit canons fixes et réserves. Les moyens détournés manquent ailleurs, et l'intérieur grogne.",
+        "en": "The garrison city facing the lost lands receives fixed guns and reserves. The diverted means are missed elsewhere, and the interior grumbles."
+      },
+      "prerequisiteFocusIds": [
+        "PARADIS_REFUGEE_PLAN"
+      ],
+      "effects": [
+        {
+          "type": "modifyWarSupport",
+          "delta": 5
+        },
+        {
+          "type": "modifyStability",
+          "delta": -5
+        }
+      ],
+      "avertsEventId": "TROST_CRISIS_850"
+    },
+    {
+      "id": "PARADIS_COMMAND_REVIEW",
+      "nationId": "paradis",
+      "treeBranch": "command",
+      "x": 3,
+      "y": 0,
+      "costDays": 70,
+      "name": {
+        "fr": "Réviser la chaîne de commandement",
+        "en": "Review the chain of command"
+      },
+      "description": {
+        "fr": "Les trois branches militaires doivent répondre d'une même autorité. La branche de police intérieure y perd des prérogatives et ne l'oublie pas.",
+        "en": "The three military branches are made answerable to a single authority. The interior police branch loses prerogatives and does not forget it."
+      },
+      "prerequisiteFocusIds": [],
+      "effects": [
+        {
+          "type": "modifyStability",
+          "delta": 5
+        }
+      ]
+    },
+    {
+      "id": "PARADIS_GARRISON_DRILL",
+      "nationId": "paradis",
+      "treeBranch": "command",
+      "x": 3,
+      "y": 1,
+      "costDays": 70,
+      "name": {
+        "fr": "Exercices de la garnison des Murs",
+        "en": "Wall garrison drills"
+      },
+      "description": {
+        "fr": "La branche de garnison, la plus nombreuse, reprend l'entraînement au canon et à l'équipement de manœuvre. Les exercices coûtent de la poudre et du temps.",
+        "en": "The garrison branch, the most numerous, resumes cannon and manoeuvre-gear training. The drills cost powder and time."
+      },
+      "prerequisiteFocusIds": [
+        "PARADIS_COMMAND_REVIEW"
+      ],
+      "effects": [
+        {
+          "type": "modifyWarSupport",
+          "delta": 10
+        },
+        {
+          "type": "resourceBonus",
+          "resource": "fuel",
+          "amount": -10
+        }
+      ]
+    },
+    {
+      "id": "SUPPRESS_COUP_850",
+      "nationId": "paradis",
+      "treeBranch": "command",
+      "x": 4,
+      "y": 1,
+      "costDays": 70,
+      "name": {
+        "fr": "Maintenir l'administration en place",
+        "en": "Keep the sitting administration"
+      },
+      "description": {
+        "fr": "Le conseil royal resserre sa garde et ses fidélités. L'ordre est préservé, mais les doutes sur la légitimité du trône ne disparaissent pas, ils se taisent.",
+        "en": "The royal council tightens its guard and its loyalties. Order is preserved, but doubts about the throne's legitimacy do not vanish; they fall silent."
+      },
+      "prerequisiteFocusIds": [
+        "PARADIS_COMMAND_REVIEW"
+      ],
+      "effects": [
+        {
+          "type": "modifyStability",
+          "delta": 10
+        },
+        {
+          "type": "modifyWarSupport",
+          "delta": -5
+        }
+      ],
+      "avertsEventId": "PARADIS_COUP_850"
+    },
+    {
+      "id": "PARADIS_RECON_CORPS",
+      "nationId": "paradis",
+      "treeBranch": "command",
+      "x": 3,
+      "y": 2,
+      "costDays": 70,
+      "name": {
+        "fr": "Élargir la branche d'exploration",
+        "en": "Expand the reconnaissance branch"
+      },
+      "description": {
+        "fr": "La plus petite branche reçoit recrues et chevaux. Chaque sortie hors des Murs se paie en vies, et les familles le savent.",
+        "en": "The smallest branch receives recruits and horses. Every sortie beyond the Walls is paid for in lives, and families know it."
+      },
+      "prerequisiteFocusIds": [
+        "PARADIS_GARRISON_DRILL"
+      ],
+      "effects": [
+        {
+          "type": "modifyWarSupport",
+          "delta": -5
+        },
+        {
+          "type": "resourceBonus",
+          "resource": "steel",
+          "amount": 15
+        }
+      ]
+    },
+    {
+      "id": "EXPLORATION_BEYOND_WALLS",
+      "nationId": "paradis",
+      "treeBranch": "exploration",
+      "x": 2,
+      "y": 3,
+      "costDays": 70,
+      "name": {
+        "fr": "Expéditions au-delà des Murs",
+        "en": "Expeditions beyond the Walls"
+      },
+      "description": {
+        "fr": "Des colonnes d'exploration cartographient les terres abandonnées jusqu'aux limites connues. Les rapports décrivent des horizons que personne n'ose encore nommer.",
+        "en": "Reconnaissance columns chart the abandoned lands up to the known limits. The reports describe horizons no one yet dares to name."
+      },
+      "prerequisiteFocusIds": [
+        "PARADIS_RECON_CORPS"
+      ],
+      "effects": [
+        {
+          "type": "modifyWarSupport",
+          "delta": -5
+        }
+      ],
+      "reveal": [
+        {
+          "nationId": "*",
+          "level": "partially_known"
+        }
+      ]
+    },
+    {
+      "id": "DELAY_OCEAN_DISCOVERY",
+      "nationId": "paradis",
+      "treeBranch": "exploration",
+      "x": 3,
+      "y": 3,
+      "costDays": 35,
+      "name": {
+        "fr": "Garder le secret des rapports d'expédition",
+        "en": "Keep the expedition reports secret"
+      },
+      "description": {
+        "fr": "Le commandement classe les rapports les plus troublants. Le calme est gagné, au prix d'un mensonge qui devra un jour être défait.",
+        "en": "The command classifies the most troubling reports. Calm is gained, at the price of a lie that must one day be undone."
+      },
+      "prerequisiteFocusIds": [
+        "PARADIS_RECON_CORPS"
+      ],
+      "effects": [
+        {
+          "type": "modifyStability",
+          "delta": 5
+        }
+      ],
+      "delaysEventId": "OCEAN_DISCOVERY_850"
+    },
+    {
+      "id": "EXPLORATION_HIZURU_LINEAGE",
+      "nationId": "paradis",
+      "treeBranch": "exploration",
+      "x": 1,
+      "y": 4,
+      "costDays": 70,
+      "name": {
+        "fr": "Interroger la lignée venue d'ailleurs",
+        "en": "Question the lineage from abroad"
+      },
+      "description": {
+        "fr": "Une famille de la cité intérieure, épargnée par l'oubli général, garde la mémoire d'un pays lointain. Lui demander de parler, c'est l'exposer.",
+        "en": "A family of the inner city, spared by the general forgetting, keeps the memory of a distant country. Asking it to speak means exposing it."
+      },
+      "prerequisiteFocusIds": [
+        "EXPLORATION_BEYOND_WALLS"
+      ],
+      "effects": [
+        {
+          "type": "diplomaticAction",
+          "targetNationId": "hizuru",
+          "action": "establish_contact"
+        }
+      ],
+      "reveal": [
+        {
+          "nationId": "hizuru",
+          "level": "known"
+        }
+      ]
+    },
+    {
+      "id": "EXPLORATION_MAINLAND_SURVEY",
+      "nationId": "paradis",
+      "treeBranch": "exploration",
+      "x": 2,
+      "y": 4,
+      "costDays": 105,
+      "name": {
+        "fr": "Reconnaître les côtes du continent",
+        "en": "Survey the mainland coasts"
+      },
+      "description": {
+        "fr": "De petites embarcations longent des côtes étrangères et en rapportent des pavillons, des ports, des armées. Ce que l'on apprend n'apaise personne.",
+        "en": "Small boats follow foreign coasts and bring back flags, harbours, armies. What is learned reassures no one."
+      },
+      "prerequisiteFocusIds": [
+        "EXPLORATION_BEYOND_WALLS"
+      ],
+      "effects": [
+        {
+          "type": "modifyStability",
+          "delta": -5
+        }
+      ],
+      "reveal": [
+        {
+          "nationId": "marley",
+          "level": "known"
+        },
+        {
+          "nationId": "mideast_alliance",
+          "level": "known"
+        }
+      ]
+    },
+    {
+      "id": "PARADIS_NAVAL_YARDS",
+      "nationId": "paradis",
+      "treeBranch": "opening",
+      "x": 2,
+      "y": 5,
+      "costDays": 70,
+      "name": {
+        "fr": "Chantiers navals côtiers",
+        "en": "Coastal shipyards"
+      },
+      "description": {
+        "fr": "Des charpentiers apprennent à construire pour la haute mer. L'île, qui ne s'était jamais pensée maritime, doit tout apprendre.",
+        "en": "Carpenters learn to build for the open sea. The island, which never thought of itself as maritime, must learn everything."
+      },
+      "prerequisiteFocusIds": [
+        "EXPLORATION_MAINLAND_SURVEY"
+      ],
+      "effects": [
+        {
+          "type": "unlockEquipment",
+          "equipmentId": "naval_hull_light"
+        },
+        {
+          "type": "unlockEquipment",
+          "equipmentId": "naval_hull_heavy"
+        },
+        {
+          "type": "unlockTech",
+          "techId": "navy"
+        },
+        {
+          "type": "resourceBonus",
+          "resource": "steel",
+          "amount": -20
+        }
+      ]
+    },
+    {
+      "id": "PARADIS_OPENING_ENVOYS",
+      "nationId": "paradis",
+      "treeBranch": "opening",
+      "x": 1,
+      "y": 5,
+      "costDays": 70,
+      "name": {
+        "fr": "Envoyer des émissaires outre-mer",
+        "en": "Send envoys overseas"
+      },
+      "description": {
+        "fr": "Des émissaires partent vers le seul pays qui ne semble pas hostile. Ouvrir une porte, c'est aussi accepter d'être vu.",
+        "en": "Envoys leave for the only country that does not seem hostile. Opening a door also means accepting being seen."
+      },
+      "prerequisiteFocusIds": [
+        "EXPLORATION_HIZURU_LINEAGE"
+      ],
+      "effects": [
+        {
+          "type": "diplomaticAction",
+          "targetNationId": "hizuru",
+          "action": "improve_relations",
+          "amount": 25
+        },
+        {
+          "type": "modifyStability",
+          "delta": -5
+        }
+      ]
+    },
+    {
+      "id": "PARADIS_AVIATION",
+      "nationId": "paradis",
+      "treeBranch": "opening",
+      "x": 1,
+      "y": 6,
+      "costDays": 105,
+      "name": {
+        "fr": "Étudier les machines volantes étrangères",
+        "en": "Study foreign flying machines"
+      },
+      "description": {
+        "fr": "Les récits et plans rapportés par les émissaires sont étudiés en secret. Rattraper un siècle de retard suppose de dépendre d'autrui.",
+        "en": "The accounts and plans brought back by the envoys are studied in secret. Catching up a century means depending on others."
+      },
+      "prerequisiteFocusIds": [
+        "PARADIS_OPENING_ENVOYS",
+        "PARADIS_NAVAL_YARDS"
+      ],
+      "effects": [
+        {
+          "type": "unlockEquipment",
+          "equipmentId": "fighter_aircraft"
+        },
+        {
+          "type": "unlockEquipment",
+          "equipmentId": "bomber_aircraft"
+        },
+        {
+          "type": "unlockTech",
+          "techId": "aviation"
+        }
+      ]
+    },
+    {
+      "id": "PARADIS_FOUNDER_COUNCIL",
+      "nationId": "paradis",
+      "treeBranch": "founder",
+      "x": 5,
+      "y": 1,
+      "costDays": 70,
+      "name": {
+        "fr": "Le conseil de l'héritier du Titan Fondateur",
+        "en": "The Founding heir's council"
+      },
+      "description": {
+        "fr": "Un cercle restreint débat de ce que le pouvoir du Fondateur permet, et de ce qu'il interdit. Chaque faction y voit une menace ou un salut.",
+        "en": "A narrow circle debates what the Founding power allows, and what it forbids. Every faction sees in it a threat or a salvation."
+      },
+      "prerequisiteFocusIds": [
+        "PARADIS_COMMAND_REVIEW"
+      ],
+      "effects": [
+        {
+          "type": "modifyStability",
+          "delta": -5
+        }
+      ],
+      "requires": {
+        "titanPowerHeld": "TITAN_FOUNDING"
+      }
+    },
+    {
+      "id": "AVERT_RUMBLING_1",
+      "nationId": "paradis",
+      "treeBranch": "founder",
+      "x": 5,
+      "y": 2,
+      "costDays": 70,
+      "name": {
+        "fr": "Chercher une voie négociée",
+        "en": "Seek a negotiated path"
+      },
+      "description": {
+        "fr": "Des canaux discrets sont ouverts vers l'extérieur. Ceux qui y voient une faiblesse gagnent des partisans.",
+        "en": "Discreet channels are opened to the outside. Those who see weakness in it gain followers."
+      },
+      "prerequisiteFocusIds": [
+        "PARADIS_FOUNDER_COUNCIL"
+      ],
+      "effects": [
+        {
+          "type": "modifyWarSupport",
+          "delta": -5
+        }
+      ]
+    },
+    {
+      "id": "AVERT_RUMBLING_2",
+      "nationId": "paradis",
+      "treeBranch": "founder",
+      "x": 5,
+      "y": 3,
+      "costDays": 105,
+      "name": {
+        "fr": "Garanties mutuelles",
+        "en": "Mutual guarantees"
+      },
+      "description": {
+        "fr": "Le conseil cherche des garanties qui rendraient l'arme inutile. Aucune n'est jamais tout à fait suffisante.",
+        "en": "The council seeks guarantees that would make the weapon unnecessary. None is ever quite sufficient."
+      },
+      "prerequisiteFocusIds": [
+        "AVERT_RUMBLING_1"
+      ],
+      "effects": [
+        {
+          "type": "modifyStability",
+          "delta": -5
+        }
+      ]
+    },
+    {
+      "id": "AVERT_RUMBLING",
+      "nationId": "paradis",
+      "treeBranch": "founder",
+      "x": 5,
+      "y": 4,
+      "costDays": 140,
+      "name": {
+        "fr": "Renoncer à l'arme des Murs",
+        "en": "Renounce the Walls' weapon"
+      },
+      "description": {
+        "fr": "Le renoncement est proclamé. Il protège le monde, mais laisse l'île sans dernier recours, et une partie de l'armée ne l'accepte pas.",
+        "en": "The renunciation is proclaimed. It protects the world, but leaves the island without a last resort, and part of the army does not accept it."
+      },
+      "prerequisiteFocusIds": [
+        "AVERT_RUMBLING_2"
+      ],
+      "effects": [
+        {
+          "type": "modifyStability",
+          "delta": -10
+        },
+        {
+          "type": "modifyWarSupport",
+          "delta": -10
+        }
+      ],
+      "avertsEventId": "RUMBLING_854",
+      "mutuallyExclusive": [
+        "PARADIS_WALLS_AWAKEN"
+      ]
+    },
+    {
+      "id": "PARADIS_FOUNDER_RESOLVE",
+      "nationId": "paradis",
+      "treeBranch": "founder",
+      "x": 6,
+      "y": 2,
+      "costDays": 70,
+      "name": {
+        "fr": "Préparer l'arme des Murs",
+        "en": "Prepare the Walls' weapon"
+      },
+      "description": {
+        "fr": "Des études secrètes évaluent ce que coûterait l'usage du pouvoir des Murs. Les conclusions sont gardées sous clé.",
+        "en": "Secret studies assess what using the power of the Walls would cost. The conclusions are kept under lock."
+      },
+      "prerequisiteFocusIds": [
+        "PARADIS_FOUNDER_COUNCIL"
+      ],
+      "effects": [
+        {
+          "type": "modifyWarSupport",
+          "delta": 5
+        },
+        {
+          "type": "modifyStability",
+          "delta": -5
+        }
+      ]
+    },
+    {
+      "id": "PARADIS_WALLS_AWAKEN",
+      "nationId": "paradis",
+      "treeBranch": "founder",
+      "x": 6,
+      "y": 3,
+      "costDays": 140,
+      "name": {
+        "fr": "Activer les Titans des Murs",
+        "en": "Activate the Wall Titans"
+      },
+      "description": {
+        "fr": "Option de fin de partie (cahier §5.7). Décrite uniquement par ses effets : destructions massives sur le continent et choc diplomatique mondial. Il n'y a pas de retour possible.",
+        "en": "End-game option (specification §5.7). Described only by its effects: massive destruction on the mainland and a worldwide diplomatic shock. There is no way back."
+      },
+      "prerequisiteFocusIds": [
+        "PARADIS_FOUNDER_RESOLVE"
+      ],
+      "effects": [
+        {
+          "type": "triggerEvent",
+          "eventId": "RUMBLING_854"
+        }
+      ],
+      "requires": {
+        "titanPowerHeld": "TITAN_FOUNDING",
+        "dateFrom": "01/01/an-854"
+      },
+      "mutuallyExclusive": [
+        "AVERT_RUMBLING"
+      ]
+    },
+    {
+      "id": "MARLEY_COLONIAL_LEVIES",
+      "nationId": "marley",
+      "treeBranch": "hegemony",
+      "x": 0,
+      "y": 0,
+      "costDays": 70,
+      "name": {
+        "fr": "Levées coloniales",
+        "en": "Colonial levies"
+      },
+      "description": {
+        "fr": "Les territoires subordonnés doivent fournir davantage. Les administrateurs coloniaux obéissent, les populations administrées s'en souviennent.",
+        "en": "The subordinate territories must provide more. The colonial administrators obey; the administered populations remember."
+      },
+      "prerequisiteFocusIds": [],
+      "effects": [
+        {
+          "type": "resourceBonus",
+          "resource": "steel",
+          "amount": 40
+        },
+        {
+          "type": "modifyStability",
+          "delta": -5
+        }
+      ]
+    },
+    {
+      "id": "MARLEY_IMPERIAL_FOUNDRIES",
+      "nationId": "marley",
+      "treeBranch": "hegemony",
+      "x": 0,
+      "y": 1,
+      "costDays": 70,
+      "name": {
+        "fr": "Fonderies impériales",
+        "en": "Imperial foundries"
+      },
+      "description": {
+        "fr": "Les fonderies de la métropole tournent à plein. La puissance industrielle rassure l'état-major plus que la population.",
+        "en": "The home foundries run at full capacity. Industrial power reassures the general staff more than the population."
+      },
+      "prerequisiteFocusIds": [
+        "MARLEY_COLONIAL_LEVIES"
+      ],
+      "effects": [
+        {
+          "type": "resourceBonus",
+          "resource": "steel",
+          "amount": 50
+        },
+        {
+          "type": "resourceBonus",
+          "resource": "fuel",
+          "amount": 30
+        }
+      ]
+    },
+    {
+      "id": "MARLEY_NAVAL_SUPREMACY",
+      "nationId": "marley",
+      "treeBranch": "hegemony",
+      "x": 0,
+      "y": 2,
+      "costDays": 105,
+      "name": {
+        "fr": "Suprématie navale",
+        "en": "Naval supremacy"
+      },
+      "description": {
+        "fr": "La flotte impériale étend ses patrouilles. Chaque port contrôlé est un rival de moins, et un ressentiment de plus.",
+        "en": "The imperial fleet extends its patrols. Every controlled port is one rival fewer, and one more resentment."
+      },
+      "prerequisiteFocusIds": [
+        "MARLEY_IMPERIAL_FOUNDRIES"
+      ],
+      "effects": [
+        {
+          "type": "modifyWarSupport",
+          "delta": 5
+        },
+        {
+          "type": "resourceBonus",
+          "resource": "fuel",
+          "amount": -20
+        }
+      ]
+    },
+    {
+      "id": "MARLEY_WARRIOR_DIRECTORATE",
+      "nationId": "marley",
+      "treeBranch": "warriors",
+      "x": 2,
+      "y": 0,
+      "costDays": 70,
+      "name": {
+        "fr": "Réorganiser la direction du programme des Guerriers",
+        "en": "Reorganise the Warrior program directorate"
+      },
+      "description": {
+        "fr": "La direction du programme reçoit budget et autorité. Des enfants des zones d'internement y sont formés pour un rôle court et dangereux ; le statut « honoraire » promis à leurs familles reste une formule creuse.",
+        "en": "The program directorate receives budget and authority. Children from the internment zones are trained there for a short and dangerous role; the 'honorary' status promised to their families remains a hollow formula."
+      },
+      "prerequisiteFocusIds": [],
+      "effects": [
+        {
+          "type": "modifyWarSupport",
+          "delta": 5
+        },
+        {
+          "type": "modifyStability",
+          "delta": -5
+        }
+      ]
+    },
+    {
+      "id": "MARLEY_INFILTRATION_MISSION",
+      "nationId": "marley",
+      "treeBranch": "warriors",
+      "x": 2,
+      "y": 1,
+      "costDays": 105,
+      "name": {
+        "fr": "Mission d'infiltration outre-mer",
+        "en": "Overseas infiltration mission"
+      },
+      "description": {
+        "fr": "Des Guerriers sont envoyés en mission de longue durée vers l'île ennemie. L'état-major en attend des renseignements ; les familles n'attendent que des nouvelles.",
+        "en": "Warriors are sent on a long mission to the enemy island. The general staff expects intelligence; the families only wait for news."
+      },
+      "prerequisiteFocusIds": [
+        "MARLEY_WARRIOR_DIRECTORATE"
+      ],
+      "effects": [
+        {
+          "type": "modifyWarSupport",
+          "delta": 5
+        }
+      ]
+    },
+    {
+      "id": "SECURE_INFILTRATORS_850",
+      "nationId": "marley",
+      "treeBranch": "warriors",
+      "x": 2,
+      "y": 2,
+      "costDays": 70,
+      "name": {
+        "fr": "Rapatrier les infiltrés",
+        "en": "Extract the infiltrators"
+      },
+      "description": {
+        "fr": "Les Guerriers exposés sont rappelés avant d'être démasqués. Les pouvoirs sont préservés, mais la mission de renseignement est perdue.",
+        "en": "The exposed Warriors are recalled before being unmasked. The powers are preserved, but the intelligence mission is lost."
+      },
+      "prerequisiteFocusIds": [
+        "MARLEY_INFILTRATION_MISSION"
+      ],
+      "effects": [
+        {
+          "type": "modifyWarSupport",
+          "delta": -5
+        }
+      ],
+      "avertsEventId": "MARLEY_TITAN_LOSS_850"
+    },
+    {
+      "id": "MARLEY_MIDEAST_BORDER",
+      "nationId": "marley",
+      "treeBranch": "rivals",
+      "x": 4,
+      "y": 0,
+      "costDays": 70,
+      "name": {
+        "fr": "Garnisons de la frontière orientale",
+        "en": "Eastern frontier garrisons"
+      },
+      "description": {
+        "fr": "Les garnisons face à l'Alliance sont renforcées. La dissuasion rassure l'état-major et durcit l'adversaire.",
+        "en": "The garrisons facing the Alliance are reinforced. Deterrence reassures the general staff and hardens the adversary."
+      },
+      "prerequisiteFocusIds": [],
+      "effects": [
+        {
+          "type": "modifyWarSupport",
+          "delta": 5
+        },
+        {
+          "type": "diplomaticAction",
+          "targetNationId": "mideast_alliance",
+          "action": "improve_relations",
+          "amount": -25
+        }
+      ]
+    },
+    {
+      "id": "MARLEY_HIZURU_TRADE",
+      "nationId": "marley",
+      "treeBranch": "rivals",
+      "x": 5,
+      "y": 0,
+      "costDays": 70,
+      "name": {
+        "fr": "Accords commerciaux avec Hizuru",
+        "en": "Trade accords with Hizuru"
+      },
+      "description": {
+        "fr": "Des concessions commerciales sont proposées à Hizuru. Le rapprochement profite surtout à l'Empire, et chacun le sait.",
+        "en": "Trade concessions are offered to Hizuru. The rapprochement mostly benefits the Empire, and everyone knows it."
+      },
+      "prerequisiteFocusIds": [],
+      "effects": [
+        {
+          "type": "diplomaticAction",
+          "targetNationId": "hizuru",
+          "action": "improve_relations",
+          "amount": 25
+        },
+        {
+          "type": "resourceBonus",
+          "resource": "rareMaterials",
+          "amount": 20
+        }
+      ]
+    },
+    {
+      "id": "MARLEY_INTERNMENT_REVIEW",
+      "nationId": "marley",
+      "treeBranch": "internal",
+      "x": 6,
+      "y": 0,
+      "costDays": 70,
+      "name": {
+        "fr": "Réviser l'administration des zones d'internement",
+        "en": "Review the internment administration"
+      },
+      "description": {
+        "fr": "L'autorité des zones d'internement réexamine ses règlements. Toute inflexion rassure les uns et inquiète les autres.",
+        "en": "The internment zone authority reviews its regulations. Any shift reassures some and alarms others."
+      },
+      "prerequisiteFocusIds": [],
+      "effects": [
+        {
+          "type": "modifyStability",
+          "delta": 5
+        }
+      ]
+    },
+    {
+      "id": "MARLEY_HONORARY_STATUS",
+      "nationId": "marley",
+      "treeBranch": "internal",
+      "x": 6,
+      "y": 1,
+      "costDays": 70,
+      "name": {
+        "fr": "Élargir le statut honoraire",
+        "en": "Widen honorary status"
+      },
+      "description": {
+        "fr": "Davantage de familles eldiennes reçoivent le titre de « Marleyens honoraires ». Le titre change les registres plus que la vie quotidienne, et la population marleyenne s'en offusque.",
+        "en": "More Eldian families receive the title of 'honorary Marleyans'. The title changes the registers more than daily life, and the Marleyan population takes offence."
+      },
+      "prerequisiteFocusIds": [
+        "MARLEY_INTERNMENT_REVIEW"
+      ],
+      "effects": [
+        {
+          "type": "modifyStability",
+          "delta": -5
+        },
+        {
+          "type": "modifyWarSupport",
+          "delta": 5
+        }
+      ]
+    },
+    {
+      "id": "MIDEAST_FORTIFY_FRONTIER",
+      "nationId": "mideast_alliance",
+      "treeBranch": "resistance",
+      "x": 0,
+      "y": 0,
+      "costDays": 70,
+      "name": {
+        "fr": "Fortifier la frontière commune",
+        "en": "Fortify the common frontier"
+      },
+      "description": {
+        "fr": "Les membres financent ensemble une ligne de fortins. Les contributions inégales alimentent les querelles.",
+        "en": "Members jointly fund a line of forts. Unequal contributions fuel quarrels."
+      },
+      "prerequisiteFocusIds": [],
+      "effects": [
+        {
+          "type": "modifyWarSupport",
+          "delta": 10
+        },
+        {
+          "type": "modifyStability",
+          "delta": -5
+        }
+      ]
+    },
+    {
+      "id": "MIDEAST_ANTI_TITAN_STUDY",
+      "nationId": "mideast_alliance",
+      "treeBranch": "resistance",
+      "x": 0,
+      "y": 1,
+      "costDays": 105,
+      "name": {
+        "fr": "Étudier les armes anti-Titans",
+        "en": "Study anti-Titan weapons"
+      },
+      "description": {
+        "fr": "Des ingénieurs cherchent des moyens de frapper les Titans de l'Empire. Les budgets sont lourds et les résultats lointains.",
+        "en": "Engineers seek ways to strike the Empire's Titans. Budgets are heavy and results distant."
+      },
+      "prerequisiteFocusIds": [
+        "MIDEAST_FORTIFY_FRONTIER"
+      ],
+      "effects": [
+        {
+          "type": "resourceBonus",
+          "resource": "rareMaterials",
+          "amount": -20
+        },
+        {
+          "type": "modifyWarSupport",
+          "delta": 5
+        }
+      ]
+    },
+    {
+      "id": "MIDEAST_CUSTOMS_UNION",
+      "nationId": "mideast_alliance",
+      "treeBranch": "cooperation",
+      "x": 2,
+      "y": 0,
+      "costDays": 70,
+      "name": {
+        "fr": "Union douanière",
+        "en": "Customs union"
+      },
+      "description": {
+        "fr": "Les tarifs internes sont abaissés. Les marchands y gagnent, certains producteurs locaux y perdent.",
+        "en": "Internal tariffs are lowered. Merchants gain; some local producers lose."
+      },
+      "prerequisiteFocusIds": [],
+      "effects": [
+        {
+          "type": "resourceBonus",
+          "resource": "steel",
+          "amount": 30
+        },
+        {
+          "type": "resourceBonus",
+          "resource": "fuel",
+          "amount": 30
+        },
+        {
+          "type": "modifyStability",
+          "delta": -5
+        }
+      ]
+    },
+    {
+      "id": "MIDEAST_JOINT_COMMAND",
+      "nationId": "mideast_alliance",
+      "treeBranch": "cooperation",
+      "x": 2,
+      "y": 1,
+      "costDays": 105,
+      "name": {
+        "fr": "Commandement militaire conjoint",
+        "en": "Joint military command"
+      },
+      "description": {
+        "fr": "Les armées membres acceptent un état-major commun. Chaque capitale y cède un peu de souveraineté.",
+        "en": "Member armies accept a common staff. Each capital cedes some sovereignty."
+      },
+      "prerequisiteFocusIds": [
+        "MIDEAST_CUSTOMS_UNION"
+      ],
+      "effects": [
+        {
+          "type": "modifyWarSupport",
+          "delta": 5
+        },
+        {
+          "type": "modifyStability",
+          "delta": 5
+        }
+      ]
+    },
+    {
+      "id": "MIDEAST_SEEK_ALLIES",
+      "nationId": "mideast_alliance",
+      "treeBranch": "external",
+      "x": 4,
+      "y": 0,
+      "costDays": 70,
+      "name": {
+        "fr": "Chercher des alliés extérieurs",
+        "en": "Seek external allies"
+      },
+      "description": {
+        "fr": "Des délégations partent vers les puissances qui craignent aussi l'Empire. Chercher de l'aide, c'est avouer qu'on en a besoin.",
+        "en": "Delegations leave for the powers that also fear the Empire. Seeking help means admitting one needs it."
+      },
+      "prerequisiteFocusIds": [],
+      "effects": [
+        {
+          "type": "diplomaticAction",
+          "targetNationId": "hizuru",
+          "action": "improve_relations",
+          "amount": 25
+        }
+      ]
+    },
+    {
+      "id": "HIZURU_REBUILD_PROVINCES",
+      "nationId": "hizuru",
+      "treeBranch": "reconstruction",
+      "x": 0,
+      "y": 0,
+      "costDays": 70,
+      "name": {
+        "fr": "Reconstruire les provinces",
+        "en": "Rebuild the provinces"
+      },
+      "description": {
+        "fr": "Les provinces restantes sont remises en ordre. La reconstruction absorbe des moyens que l'armée réclamait.",
+        "en": "The remaining provinces are put back in order. Reconstruction absorbs means the army was demanding."
+      },
+      "prerequisiteFocusIds": [],
+      "effects": [
+        {
+          "type": "modifyStability",
+          "delta": 5
+        },
+        {
+          "type": "modifyWarSupport",
+          "delta": -5
+        }
+      ]
+    },
+    {
+      "id": "HIZURU_ISLAND_INTEGRATION",
+      "nationId": "hizuru",
+      "treeBranch": "reconstruction",
+      "x": 0,
+      "y": 1,
+      "costDays": 70,
+      "name": {
+        "fr": "Intégrer les îles",
+        "en": "Integrate the islands"
+      },
+      "description": {
+        "fr": "Les îles périphériques sont rattachées plus étroitement au centre. Les notables locaux perdent de leur autonomie.",
+        "en": "The outlying islands are tied more closely to the centre. Local notables lose some autonomy."
+      },
+      "prerequisiteFocusIds": [
+        "HIZURU_REBUILD_PROVINCES"
+      ],
+      "effects": [
+        {
+          "type": "resourceBonus",
+          "resource": "steel",
+          "amount": 30
+        },
+        {
+          "type": "modifyStability",
+          "delta": -5
+        }
+      ]
+    },
+    {
+      "id": "HIZURU_ENVOYS",
+      "nationId": "hizuru",
+      "treeBranch": "alliances",
+      "x": 2,
+      "y": 0,
+      "costDays": 70,
+      "name": {
+        "fr": "Émissaires vers l'Alliance",
+        "en": "Envoys to the Alliance"
+      },
+      "description": {
+        "fr": "Hizuru se rapproche des voisins de l'Empire. La prudence commande de ne rien promettre.",
+        "en": "Hizuru draws closer to the Empire's neighbours. Prudence dictates promising nothing."
+      },
+      "prerequisiteFocusIds": [],
+      "effects": [
+        {
+          "type": "diplomaticAction",
+          "targetNationId": "mideast_alliance",
+          "action": "improve_relations",
+          "amount": 20
+        }
+      ]
+    },
+    {
+      "id": "HIZURU_ELDIAN_LINEAGE",
+      "nationId": "hizuru",
+      "treeBranch": "alliances",
+      "x": 2,
+      "y": 1,
+      "costDays": 105,
+      "name": {
+        "fr": "La lignée d'outre-Murs",
+        "en": "The lineage beyond the Walls"
+      },
+      "description": {
+        "fr": "D'anciens registres évoquent une branche de la noblesse restée sur l'île fermée. S'y intéresser, c'est raviver l'ancienne association avec l'Empire eldien et le discrédit qu'elle a valu à Hizuru.",
+        "en": "Old registers mention a branch of the nobility that stayed on the closed island. Taking an interest in it revives the old association with the Eldian Empire, and the discredit it brought Hizuru."
+      },
+      "prerequisiteFocusIds": [
+        "HIZURU_ENVOYS"
+      ],
+      "effects": [
+        {
+          "type": "diplomaticAction",
+          "targetNationId": "paradis",
+          "action": "improve_relations",
+          "amount": 25
+        },
+        {
+          "type": "modifyStability",
+          "delta": -5
+        }
+      ]
+    },
+    {
+      "id": "HIZURU_SHIPYARDS",
+      "nationId": "hizuru",
+      "treeBranch": "industry",
+      "x": 4,
+      "y": 0,
+      "costDays": 70,
+      "name": {
+        "fr": "Chantiers navals",
+        "en": "Shipyards"
+      },
+      "description": {
+        "fr": "Les chantiers reprennent. Chaque coque rappelle ce que Hizuru a perdu.",
+        "en": "The yards resume work. Every hull recalls what Hizuru lost."
+      },
+      "prerequisiteFocusIds": [],
+      "effects": [
+        {
+          "type": "resourceBonus",
+          "resource": "steel",
+          "amount": 20
+        },
+        {
+          "type": "resourceBonus",
+          "resource": "fuel",
+          "amount": 20
+        }
+      ]
+    },
+    {
+      "id": "HIZURU_INDUSTRIAL_PLAN",
+      "nationId": "hizuru",
+      "treeBranch": "industry",
+      "x": 4,
+      "y": 1,
+      "costDays": 105,
+      "name": {
+        "fr": "Plan industriel",
+        "en": "Industrial plan"
+      },
+      "description": {
+        "fr": "Un plan décennal fixe les priorités. Les campagnes fournissent la main-d'œuvre et en paient le prix.",
+        "en": "A ten-year plan sets priorities. The countryside supplies the labour and pays the price."
+      },
+      "prerequisiteFocusIds": [
+        "HIZURU_SHIPYARDS"
+      ],
+      "effects": [
+        {
+          "type": "resourceBonus",
+          "resource": "rareMaterials",
+          "amount": 30
+        },
+        {
+          "type": "modifyStability",
+          "delta": -5
+        }
+      ]
+    }
+  ]
+}

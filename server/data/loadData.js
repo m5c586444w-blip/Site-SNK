@@ -2,6 +2,7 @@ import { readFile, access } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { computeAdjacency } from './adjacency.js';
+import { compileEvents } from '../simulation/events.js';
 
 export const ROOT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 export const DATA_DIR = path.join(ROOT_DIR, 'data');
@@ -51,12 +52,30 @@ export async function loadScenario() {
   return readJson('scenario.json');
 }
 
+export async function loadFocuses() {
+  return readJson('focuses.json');
+}
+
+export async function loadEvents() {
+  return readJson('events.json');
+}
+
+export async function loadDiplomacy() {
+  return readJson('diplomacy.json');
+}
+
 /** Toutes les données statiques d'une partie. */
 export async function loadGameData() {
-  const [nations, map, technologies, economyRules, militaryRules, scenario] = await Promise.all([
+  const [nations, map, technologies, economyRules, militaryRules, scenario, focusData, eventData, diplomacyRules] = await Promise.all([
     loadNations(), loadMap(), loadTechnologies(), loadEconomyRules(), loadMilitaryRules(), loadScenario(),
+    loadFocuses(), loadEvents(), loadDiplomacy(),
   ]);
-  return { nations, map, technologies, economyRules, militaryRules, scenario };
+  return {
+    nations, map, technologies, economyRules, militaryRules, scenario,
+    focuses: focusData.focuses, focusBranches: focusData.branches,
+    events: compileEvents(eventData), eventValues: eventData.extensionValues ?? {},
+    diplomacyRules,
+  };
 }
 
 /**

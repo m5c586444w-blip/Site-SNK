@@ -5,9 +5,12 @@ import { WebSocketServer } from 'ws';
 import http from 'node:http';
 import path from 'node:path';
 import { ROOT_DIR, loadGameData } from './data/loadData.js';
-import { createGame, viewFor, economyView, militaryView } from './state/gameState.js';
+import { createGame, viewFor, economyView, militaryView, politicalView } from './state/gameState.js';
 import { Clock } from './simulation/clock.js';
-import { runDay } from './simulation/tick.js';
+import { runDay, effectContext } from './simulation/tick.js';
+import { startFocus } from './simulation/focus.js';
+import { diplomaticAction } from './simulation/diplomacy.js';
+import { resolveEvent } from './simulation/events.js';
 import { createLine, assignFactories, deleteLine, queueNewFactory, queueConversion } from './simulation/economy.js';
 import { assignResearch, cancelResearch } from './simulation/research.js';
 import { saveTemplate, deleteTemplate, createDivision, orderDivision, setFront } from './simulation/military.js';
@@ -31,11 +34,18 @@ const HTTP_STATUS = {
   INSUFFICIENT_MANPOWER: 409, INSUFFICIENT_EQUIPMENT: 409, INVALID_DIVISION: 404, NO_FRONT: 409,
   INVALID_ORDER: 400, INVALID_TARGET: 400, NOT_AT_WAR: 409, MOVEMENT_RULES_MISSING: 409, NO_RETREAT_PATH: 409,
   NO_MAP: 409,
+  INVALID_FOCUS: 404, FOCUS_SLOT_BUSY: 409, FOCUS_COMPLETED: 409, FOCUS_IN_PROGRESS: 409, MUTUALLY_EXCLUSIVE: 409,
+  TITAN_POWER_REQUIRED: 409, DATE_REQUIRED: 409,
+  INVALID_TARGET_NATION: 400, NATION_UNKNOWN: 409, ALREADY_AT_WAR: 409, TREATY_FORBIDS_WAR: 409, WARGOAL_EXISTS: 409,
+  NO_WARGOAL: 409, WARGOAL_NOT_READY: 409, INVALID_DIPLOMATIC_ACTION: 400, RELATION_TOO_LOW: 409,
+  POLITICAL_CAPITAL_UNKNOWN: 409, INSUFFICIENT_POLITICAL_CAPITAL: 409, AGREEMENT_EXISTS: 409,
+  EVENT_NOT_PENDING: 404, INVALID_CHOICE: 400, EVENT_PENDING: 409,
 };
 
 export async function createServer({ onQuit = () => process.exit(0) } = {}) {
   const data = await loadGameData();
-  const { nations, map, technologies, economyRules, militaryRules } = data;
+  const { nations, map, technologies, economyRules, militaryRules, focuses, focusBranches, events } = data;
+  const viewOpts = { technologies, economyRules, focuses, focusBranches, events };
 
   /** Une seule partie à la fois (le multijoueur, §15, relève d'une phase ultérieure). */
   let state = null;
@@ -43,7 +53,7 @@ export async function createServer({ onQuit = () => process.exit(0) } = {}) {
 
   const send = (ws, type, payload) => ws.readyState === 1 && ws.send(JSON.stringify({ type, payload }));
   const broadcast = (type, payload) => { for (const ws of sockets) send(ws, type, payload); };
-  const fullView = () => (state ? viewFor(state, state.settings.nationId, map, { technologies, economyRules }) : null);
+  const fullView = () => (state ? viewFor(state, state.settings.nationId, map, viewOpts) : null);
   const requireMap = () => { if (!map.available) throw Object.assign(new Error('carte'), { code: 'NO_MAP' }); };
   const player = () => state.nations.find((n) => n.id === state.settings.nationId);
   /** Diff joueur : sa nation (stocks, recherche) et son économie. Jamais l'état complet (§18). */
@@ -51,15 +61,19 @@ export async function createServer({ onQuit = () => process.exit(0) } = {}) {
     nation: player(),
     economy: economyView(state, state.settings.nationId, economyRules),
     military: militaryView(state, state.settings.nationId, map),
+    ...politicalView(state, state.settings.nationId, viewOpts),
   });
 
   const clock = new Clock({
     getState: () => state,
     onTick: async (s) => {
-      const { dailyNet, completedTechs, military } = await runDay(s, data);
+      const visibilityBefore = JSON.stringify(s.visibility);
+      const { dailyNet, completedTechs, military, firedEvents } = await runDay(s, data);
       s.lastDailyNet = dailyNet;
-      // Un changement de contrôle modifie la carte : on renvoie alors la vue complète.
-      if (military.captured.length) broadcast('state/full', fullView());
+      // Modale d'évènement bloquante (FEATURES §14.2) : la partie se met en pause.
+      if (s.pendingEvents.length && s.speed !== 0) { s.speed = 0; clock.stop(); }
+      // Changement de contrôle, de brouillard ou évènement : la carte change, vue complète.
+      if (military.captured.length || firedEvents.length || JSON.stringify(s.visibility) !== visibilityBefore) broadcast('state/full', fullView());
       else broadcast('state/delta', { date: formatDate(s.date), ...playerDelta() });
       const me = s.settings.nationId;
       for (const c of military.captured.filter((x) => x.from === me || x.to === me)) {
@@ -85,6 +99,7 @@ export async function createServer({ onQuit = () => process.exit(0) } = {}) {
   };
 
   const setSpeed = (level) => {
+    if (state?.pendingEvents?.length && level !== 0) throw Object.assign(new Error('évènement'), { code: 'EVENT_PENDING' });
     clock.setSpeed(level);
     broadcast('state/delta', { speed: state.speed });
   };
@@ -140,6 +155,9 @@ export async function createServer({ onQuit = () => process.exit(0) } = {}) {
     'division/create': (n, p) => { requireMap(); return createDivision(state, n, p.templateId, p.provinceId); },
     'division/order': (n, p) => { requireMap(); return orderDivision(state, map, n, p.divisionId, p.order, p.targetProvinceId, militaryRules); },
     'division/setFront': (n, p) => { requireMap(); return setFront(state, map, n, p.divisionId); },
+    'focus/start': (n, p) => startFocus(state, n, p.focusId, focuses),
+    'diplomacy/action': (n, p) => diplomaticAction(state, n, p.targetNationId, p.action),
+    'event/resolve': (n, p) => resolveEvent(state, n, p.eventId, p.choiceIndex, effectContext(state, data)),
   };
 
   function runNationAction(type, payload) {
@@ -148,7 +166,14 @@ export async function createServer({ onQuit = () => process.exit(0) } = {}) {
     if (!action) throw Object.assign(new Error(type), { code: 'UNKNOWN_ACTION' });
     // Le joueur n'agit que pour sa propre nation.
     if (payload?.nationId !== state.settings.nationId) throw Object.assign(new Error('nation'), { code: 'NOT_YOUR_NATION' });
+    const visibilityBefore = JSON.stringify(state.visibility);
     const result = action(payload.nationId, payload ?? {});
+    // Une action peut lever le brouillard ou déclencher un évènement : la vue complète est alors renvoyée.
+    if (JSON.stringify(state.visibility) !== visibilityBefore || type === 'event/resolve') {
+      const full = fullView();
+      broadcast('state/full', full);
+      return { result: result ?? null, full };
+    }
     const delta = playerDelta();
     broadcast('state/delta', delta);
     return { result: result ?? null, ...delta };

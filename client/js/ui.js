@@ -32,11 +32,12 @@ export function naValue() {
   return h('span.na', { title: t('common.naTooltip') }, t('common.na'));
 }
 
-export function modal({ title, body, actions }) {
+export function modal({ title, body, actions, blocking = false }) {
   return new Promise((resolve) => {
     const close = (v) => { overlay.remove(); document.removeEventListener('keydown', onKey); resolve(v); };
-    const onKey = (e) => { if (e.key === 'Escape') close(null); };
-    const overlay = h('div.modal-overlay', { onClick: (e) => { if (e.target === overlay) close(null); } },
+    // Modale bloquante (FEATURES §14.2) : ni Échap ni clic à l'extérieur ne la ferment.
+    const onKey = (e) => { if (e.key === 'Escape' && !blocking) close(null); };
+    const overlay = h(`div.modal-overlay${blocking ? '.blocking' : ''}`, { onClick: (e) => { if (e.target === overlay && !blocking) close(null); } },
       h('div.modal.panel', { role: 'dialog', 'aria-modal': 'true' },
         h('h2.modal-title', {}, title),
         h('div.modal-body', {}, body ?? ''),

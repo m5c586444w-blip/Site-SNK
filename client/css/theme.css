@@ -277,3 +277,33 @@ select, .text-input { font: 1rem var(--font-ui); padding: 0.4em; border: 1px sol
 .cost-list { margin: 0; padding-left: 1.2rem; font-size: 0.9rem; }
 .context-menu { position: absolute; z-index: 30; padding: 0.6rem; display: grid; gap: 0.35rem; min-width: 220px; }
 .combat-table th { font-family: var(--font-ui); font-size: 0.85rem; font-weight: 400; color: var(--ink-soft); }
+
+/* ---------- Phase 4 : focus, diplomatie, évènements, journal ---------- */
+.bell-btn { position: relative; background: none; border: 1px solid #6b5a40; color: inherit; padding: 0.2em 0.5em; cursor: pointer; font-size: 1rem; }
+.bell-badge { position: absolute; top: -6px; right: -8px; background: var(--danger); color: #fff; border-radius: 9px; font: 700 0.65rem/1 var(--font-ui); padding: 3px 5px; }
+.focus-scroll { overflow: auto; border: 1px solid var(--line); background: rgb(255 255 255 / 20%); padding: 0.4rem; }
+.focus-canvas { position: relative; }
+.focus-branches { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.4rem 0 0.8rem; }
+.focus-node { position: absolute; display: flex; flex-direction: column; gap: 0.2rem; text-align: left; padding: 0.45rem 0.55rem; border: 1px solid var(--accent); background: #f3e8cc; font: inherit; font-size: 0.8rem; border-radius: 3px; cursor: pointer; min-height: 62px; }
+.focus-node .focus-name { font-weight: 600; line-height: 1.2; }
+.focus-node .focus-days { font-size: 0.72rem; color: var(--ink-soft); }
+.focus-progress { height: 4px; background: #d9c9a2; margin-top: auto; }
+.focus-progress div { height: 100%; background: var(--marley-2); }
+.focus-node.available:hover { background: #e9d9b0; }
+.focus-node.completed { background: var(--ok); color: #f6eed9; border-color: var(--ok); }
+.focus-node.completed .focus-days { color: #dfe6d4; }
+.focus-node.in_progress { background: #f0dc9e; border-color: #8d6f1d; border-width: 2px; }
+.focus-node.locked { opacity: 0.55; cursor: not-allowed; }
+.focus-node:disabled { cursor: help; }
+.dipl-list { display: grid; gap: 0.6rem; }
+.dipl-nation { padding: 0.7rem 0.9rem; }
+.dipl-head { display: grid; grid-template-columns: minmax(10rem, 1fr) 2fr; gap: 1rem; align-items: center; }
+.relation-bar { position: relative; height: 16px; background: #d9c9a2; border: 1px solid var(--line); }
+.relation-bar::after { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; border-left: 1px solid var(--ink); }
+.relation-fill { position: absolute; top: 0; bottom: 0; }
+.log-list { list-style: none; padding: 0; margin: 0.4rem 0 0; display: grid; gap: 0.3rem; font-size: 0.9rem; }
+.log-list li { border-bottom: 1px dotted var(--line); padding: 0.2rem 0; }
+.journal-filters { margin-bottom: 0.8rem; flex-wrap: wrap; }
+.date-input { width: 9rem; margin-top: 0; }
+.modal-overlay.blocking { background: rgb(20 14 8 / 72%); }
+.event-text { font-family: var(--font-text); font-size: 1.15rem; line-height: 1.45; max-width: 60ch; }

@@ -8,6 +8,10 @@ import { saveList } from './menus.js';
 import { renderProduction } from './production.js';
 import { renderResearch } from './research.js';
 import { renderDivisions, orderButtons, provinceName, dragging } from './divisions.js';
+import { renderFocus } from './focus.js';
+import { renderDiplomacy } from './diplomacy.js';
+import { renderJournal, entryText } from './journal.js';
+import { effectText } from './effectText.js';
 import { SPEED_LEVELS, STABILITY_UNREST_THRESHOLD, MAP_MODES, RESOURCE_TYPES } from '/shared/constants.js';
 
 // Phase du cahier des charges (§12) où chaque écran/mode sera livré. null = phase non attribuée.
@@ -16,9 +20,12 @@ const SCREEN_PHASE = {
   titans: 5, politics: 5, warriors: 5, intelligence: null, journal: null,
 };
 const MAP_MODE_PHASE = { political: 1, fog_of_war: 1, resources: 2, supply: 2, front_combat: 3 };
-const CURRENT_PHASE = 3;
+const CURRENT_PHASE = 4;
 /** Écrans livrés : nom -> rendu (host, ctx). */
-const SCREENS = { production: renderProduction, research: renderResearch, divisions: renderDivisions };
+const SCREENS = {
+  production: renderProduction, research: renderResearch, divisions: renderDivisions,
+  focus: renderFocus, diplomacy: renderDiplomacy, journal: renderJournal,
+};
 const fmt = (x) => (Math.round(x * 10) / 10).toLocaleString();
 
 export async function gameScreen(root, nav) {
@@ -45,6 +52,10 @@ export async function gameScreen(root, nav) {
   const nationBtn = h('button.topbar-nation', { onClick: () => openCountry() });
   const modeBadge = h('span.tag.mode-badge');
   const menuBtn = h('button.btn.btn-small', { onClick: () => openGameMenu() }, t('game.menu'));
+  // Cloche de notifications avec compteur de non-lus (FEATURES §1) → journal (§14).
+  let seenJournal = 0;
+  const bellBadge = h('span.bell-badge.hidden');
+  const bellBtn = h('button.bell-btn', { title: t('screen.journal'), 'aria-label': t('screen.journal'), onClick: () => openScreen('journal') }, '🔔', bellBadge);
   const connBanner = h('div.conn-banner.hidden', { role: 'status' });
   // Pastilles de ressources + effectifs (FEATURES §1)
   const resourcePips = RESOURCE_TYPES.map((r) => h('span.pip', { 'data-resource': r }));
@@ -57,6 +68,7 @@ export async function gameScreen(root, nav) {
     h('div.topbar-spacer'),
     h('div.topbar-clock', {}, dateBtn, calendarPop),
     h('div.speed-control', { role: 'group' }, ...speedBtns),
+    bellBtn,
     menuBtn);
 
   function renderTopbar() {
@@ -74,6 +86,10 @@ export async function gameScreen(root, nav) {
         ? `${t(`resource.${r}`)} — ${t('topbar.dailyNet', { p: fmt(net.produced[r]), c: fmt(net.consumed[r]) })}`
         : `${t(`resource.${r}`)} — ${t('topbar.dailyNetNone')}`;
     }
+    const total = view.journal?.length ?? 0;
+    if (currentScreen === 'journal') seenJournal = total;
+    bellBadge.textContent = String(total - seenJournal);
+    bellBadge.classList.toggle('hidden', total - seenJournal <= 0);
     // Aucune valeur d'effectifs dans les specs : N/D
     clear(manpowerPip).append(h('span.pip-label', {}, t('topbar.manpower')), n?.manpower == null ? naValue() : h('strong', {}, n.manpower));
   }
@@ -250,7 +266,7 @@ export async function gameScreen(root, nav) {
     act: async (type, payload) => {
       try {
         const delta = await api.nationAction(view.viewerId, type, payload);
-        applyDelta(delta);
+        if (delta.full) await applyView(delta.full, { full: true }); else applyDelta(delta);
         return delta;
       } catch (e) { toast(errorText(e), 'error'); return null; }
     },
@@ -261,6 +277,7 @@ export async function gameScreen(root, nav) {
     countryPanel.classList.add('hidden');
     renderScreen({ force: true });
     screenPanel.classList.remove('hidden');
+    renderTopbar();
   }
 
   function renderScreen({ force = false } = {}) {
@@ -294,10 +311,39 @@ export async function gameScreen(root, nav) {
       view.military = payload.military;
       renderer?.setMilitary(view.military);
     }
+    for (const k of ['focus', 'diplomacy', 'pendingEvents']) if (payload[k]) view[k] = payload[k];
+    if (payload.journal) {
+      const before = view.journal?.length ?? 0;
+      view.journal = payload.journal;
+      for (const e of payload.journal.slice(before)) if (e.category === 'focus') toast(entryText(e, view));
+    }
+    showPendingEvent();
     renderTopbar();
     // Pas de re-rendu pendant qu'une modale de confirmation est ouverte.
     if (currentScreen && !document.querySelector('.modal-overlay')) renderScreen();
     if (!countryPanel.classList.contains('hidden')) openCountry();
+  }
+
+  // ---------- Évènements : modale bloquante (FEATURES §14.2) ----------
+  let eventOpen = null;
+  async function showPendingEvent() {
+    const ev = view.pendingEvents?.[0];
+    if (!ev || eventOpen === ev.id) return;
+    eventOpen = ev.id;
+    const choice = await modal({
+      title: loc(ev.title),
+      blocking: true,
+      body: h('div.event-body', {},
+        h('p.event-text', {}, loc(ev.body)),
+        h('p.small.muted', {}, t('event.blocking'))),
+      actions: ev.choices.map((c, i) => ({
+        label: `${loc(c.label)}${c.effects.length ? ` — ${c.effects.map((e) => effectText(e, view)).join(' · ')}` : ''}`,
+        value: i,
+        primary: i === 0,
+      })),
+    });
+    eventOpen = null;
+    await ctx.act('event/resolve', { eventId: ev.id, choiceIndex: choice });
   }
 
   // ---------- Menu en jeu : sauvegarde / chargement ----------
@@ -378,6 +424,7 @@ export async function gameScreen(root, nav) {
     if (full) {
       if (!countryPanel.classList.contains('hidden')) openCountry();
       if (currentScreen) renderScreen({ force: true });
+      showPendingEvent();
     }
   }
 

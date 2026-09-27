@@ -11,7 +11,7 @@ Hearts of Iron IV. Projet personnel non commercial. Les spécifications de réf�
 | `docs/MECHANICS_SPEC.md` | formules et valeurs numériques |
 | `docs/FEATURES_SPEC.md` | écrans, interactions, API |
 | `docs/HISTORICAL_EVENT_CHAIN_845_854.md` | évènements datés 845-854 (Mode historique) |
-| **`docs/PHASE1_GAPS.md`**, **`PHASE2_GAPS.md`**, **`PHASE3_GAPS.md`** | **données manquantes et points à trancher** |
+| **`docs/PHASE1_GAPS.md`** … **`PHASE4_GAPS.md`** | **données manquantes et points à trancher** |
 
 ## Lancer
 
@@ -79,12 +79,27 @@ de test abstraites** (`tests/fixtures/`), pas du contenu de jeu.
 - `supply_value` recalculé avec les divisions de front (§3.4).
 - Données absentes et choix d'interprétation : voir `docs/PHASE3_GAPS.md`.
 
+## Contenu de la Phase 4 (cahier des charges §12)
+
+- **Focus nationaux** (MECHANICS §5 ; FEATURES §6) : arbres des 4 nations, contenu **[EXTENSION]**
+  rédigé pour ce projet (`data/focuses.json`), états des nœuds, effets en langage clair, raisons de
+  blocage, focus d'évitement de la chaîne historique.
+- **Évènements** (§5.3 ; FEATURES §14.2) : conditions de la table évaluées chaque jour derrière le
+  verrou `historicalMode`, modale bloquante, choix, effets. **Mode libre = aucun évènement scripté**.
+- **Diplomatie** (§8 ; FEATURES §9) : relations, actions avec seuils et coûts (boutons désactivés
+  avec la raison), but de guerre sur 90 jours puis déclaration, alliés et garants entraînés, score
+  de guerre et paix à 100, historique filtrable.
+- **Brouillard progressif** (§10) : focus `EXPLORATION_`, contact diplomatique, brèche de 845 (qui
+  révèle Marley), découverte de l'océan (contours du monde).
+- **Journal** (FEATURES §14.3) filtrable par catégorie et par dates, cloche avec compteur de non-lus.
+- Contenu [EXTENSION], manques et choix : `docs/PHASE4_GAPS.md`.
+
 ## Structure
 
 ```
 server/launcher/   démarrage, choix du port, ouverture du navigateur
 server/state/      GameState, brouillard, sauvegardes, réglages
-server/simulation/ horloge, tick quotidien, économie/production, recherche, militaire
+server/simulation/ horloge, tick, économie, recherche, militaire, focus, évènements, diplomatie
 server/app.js      API REST + WebSocket
 client/            interface (JS natif, Canvas 2D), theme.css, polices OFL auto-hébergées
 shared/            constantes MECHANICS_SPEC, calendrier
