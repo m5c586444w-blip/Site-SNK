@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 140" role="img" aria-label="Blason de l'Empire marleyen">
+  <!-- [EXTENSION] Blason original : écu rouge sombre, chevron d'or et trois besants. -->
+  <path d="M10 8 H110 V70 C110 104 86 124 60 134 C34 124 10 104 10 70 Z" fill="#7A1F1F" stroke="#2b241b" stroke-width="4"/>
+  <path d="M16 92 L60 46 L104 92" fill="none" stroke="#B9962F" stroke-width="12" stroke-linejoin="round"/>
+  <circle cx="34" cy="28" r="8" fill="#B9962F"/><circle cx="86" cy="28" r="8" fill="#B9962F"/><circle cx="60" cy="108" r="8" fill="#B9962F"/>
+</svg>

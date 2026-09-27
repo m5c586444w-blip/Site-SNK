@@ -4,6 +4,7 @@ import { dateNum } from '../../shared/conditions.js';
 import { reveal } from '../state/fog.js';
 import { addJournal } from '../state/journal.js';
 import { applyEffects } from './effects.js';
+import { nationModifiers } from './modifiers.js';
 
 const fail = (code, details) => { throw Object.assign(new Error(code), { code, details }); };
 
@@ -27,15 +28,17 @@ export function focusBlockers(state, nation, focus) {
 }
 
 /** focus/start { nationId, focusId } — §5 focus_completion_check. */
-export function startFocus(state, nationId, focusId, focuses) {
+export function startFocus(state, nationId, focusId, focuses, politics = null) {
   const nation = state.nations.find((n) => n.id === nationId) ?? fail('INVALID_NATION');
   const focus = focuses.find((f) => f.id === focusId && f.nationId === nationId) ?? fail('INVALID_FOCUS');
   if (nation.activeFocusId != null && MAX_CONCURRENT_FOCUS <= 1) fail('FOCUS_SLOT_BUSY');
   const blockers = focusBlockers(state, nation, focus);
   if (blockers.length) fail(blockers[0].code, blockers);
   nation.activeFocusId = focus.id;
-  nation.focusDaysRemaining = focus.costDays;
-  return { focusId, daysRemaining: focus.costDays };
+  // TITAN_ATTACK : focusCostDaysReductionPct -10 (§7.3)
+  const days = Math.max(1, Math.round(focus.costDays * (1 + nationModifiers(state, nationId, politics).focusCostPct / 100)));
+  nation.focusDaysRemaining = days;
+  return { focusId, daysRemaining: days };
 }
 
 /** §5 on tick : décompte, puis à 0 effets dans l'ordre, completedFocusIds, slot libéré. */

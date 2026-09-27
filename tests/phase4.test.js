@@ -10,7 +10,8 @@ before(async () => {
   process.env.SNK_SAVES_DIR = path.join(tmp, 'saves');
   process.env.SNK_SETTINGS_FILE = path.join(tmp, 'settings.json');
   process.env.SNK_MAP_DIR = path.resolve('tests/fixtures/map');
-  delete process.env.SNK_DATA_OVERLAY; // vraies données : focus, évènements, scénario sans guerre
+  // Vraies données (focus, évènements, scénario) ; nations sans valeurs de départ pour tester les refus.
+  process.env.SNK_DATA_OVERLAY = path.resolve('tests/fixtures/overlay_nulls');
 });
 after(async () => { await rm(tmp, { recursive: true, force: true }); });
 
@@ -161,9 +162,10 @@ test('focus : effets appliqués ; stabilité absente = effet ignoré et signalé
   const { startFocus, focusDay } = await import('../server/simulation/focus.js');
   const { state, data, ctx } = await setup('marley', false);
   const m = nation(state, 'marley');
+  const steel0 = m.resourceStockpile.steel;
   startFocus(state, 'marley', 'MARLEY_COLONIAL_LEVIES', data.focuses);
   for (let i = 0; i < 70; i++) focusDay(state, 'marley', data.focuses, ctx);
-  assert.equal(m.resourceStockpile.steel, 40);
+  assert.equal(m.resourceStockpile.steel, steel0 + 40);
   assert.equal(m.stability, null);
   assert.ok(state.journal.some((j) => j.textKey === 'journal.effectsSkipped' && j.vars.list.includes('modifyStability')));
   assert.throws(() => startFocus(state, 'marley', 'PARADIS_WALL_WATCH', data.focuses), { code: 'INVALID_FOCUS' });

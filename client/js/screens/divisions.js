@@ -20,7 +20,7 @@ function battalionChip(type, extra = {}) {
 export function provinceName(view, id) {
   const p = view.provinces.find((x) => x.id === id);
   if (!p || p.visibility !== 'known') return t('map.menu.unknownTarget');
-  return p.name ?? id;
+  return loc(p.name) ?? id;
 }
 
 /** Provinces voisines attaquables (en guerre) ; les provinces inconnues sont proposées comme telles. */
@@ -39,7 +39,7 @@ export function orderButtons(view, ctx, divisionIds, provinceId) {
   const targets = advanceTargets(view, provinceId);
   const advance = h('select.order-select', { 'aria-label': t('oob.order.advance') },
     h('option', { value: '' }, `${t('oob.order.advance')}…`),
-    ...targets.map((p) => h('option', { value: p.id }, p.visibility === 'known' ? p.name : t('map.menu.unknownTarget'))));
+    ...targets.map((p) => h('option', { value: p.id }, p.visibility === 'known' ? loc(p.name) : t('map.menu.unknownTarget'))));
   advance.disabled = targets.length === 0;
   advance.title = targets.length === 0 ? t('map.menu.noTarget') : '';
   advance.addEventListener('change', () => { if (advance.value) act({ order: 'advance', targetProvinceId: advance.value }); });
@@ -193,7 +193,7 @@ async function raiseDivision(view, ctx, template, nation) {
     if (have < n) problems.push(t('div.insufficient', { what: t(`equipment.${eq}`), need: n, have }));
   }
   if (!provinces.length) problems.push(t('div.noProvince'));
-  const sel = h('select', { id: 'div-province' }, ...provinces.map((p) => h('option', { value: p.id }, p.name)));
+  const sel = h('select', { id: 'div-province' }, ...provinces.map((p) => h('option', { value: p.id }, loc(p.name))));
   const body = h('div.form-stack', {},
     h('label', { for: 'div-province' }, t('div.province')), sel,
     h('span.label', {}, t('div.cost')),

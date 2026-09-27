@@ -5,6 +5,7 @@ import { reveal } from '../state/fog.js';
 import { addJournal } from '../state/journal.js';
 import { changeRelation, startWar } from './diplomacy.js';
 import { provinceController } from './military.js';
+import { setTitanHolder } from './titans.js';
 
 const clamp = (x, [lo, hi]) => Math.min(hi, Math.max(lo, x));
 const nationOf = (state, id) => state.nations.find((n) => n.id === id);
@@ -51,8 +52,15 @@ export function applyEffects(state, nationId, effects, ctx) {
         break;
       case 'grantTitanPower':
         if (!TITAN_POWER_IDS.includes(e.titanId)) { skipped.push('grantTitanPower'); break; }
-        for (const n of state.nations) if (n.titanPowersHeld) n.titanPowersHeld = n.titanPowersHeld.filter((x) => x !== e.titanId);
-        nation.titanPowersHeld = [...(nation.titanPowersHeld ?? []), e.titanId];
+        setTitanHolder(state, e.titanId, nationId);
+        break;
+      case 'modifier':
+        // [EXTENSION] Effets de technologie : modificateurs permanents de la nation.
+        if (e.modifier === 'researchBonus') {
+          nation.baseCategoryBonus = { ...(nation.baseCategoryBonus ?? {}), [e.category]: (nation.baseCategoryBonus?.[e.category] ?? 0) + e.amount };
+        } else {
+          nation.modifiers = { ...(nation.modifiers ?? {}), [e.modifier]: (nation.modifiers?.[e.modifier] ?? 0) + e.amount };
+        }
         break;
 
       // ---------- [EXTENSION] effets d'évènements ----------
@@ -74,14 +82,12 @@ export function applyEffects(state, nationId, effects, ctx) {
       case 'transferTitanPowers': {
         // HISTORICAL_EVENT_CHAIN §1.3 : « two of Marley's Titan-holding infiltrators » sans préciser
         // lesquels ; la liste des Titans de Marley en 844 manque aussi (PHASE1_GAPS B5).
-        const from = nationOf(state, e.from);
         const ids = e.titanIds ?? null;
-        if (!ids || !from?.titanPowersHeld) { skipped.push('transferTitanPowers'); break; }
-        const to = nationOf(state, e.to);
+        if (!ids || !state.titans) { skipped.push('transferTitanPowers'); break; }
         for (const id of ids) {
-          if (!from.titanPowersHeld.includes(id)) continue;
-          from.titanPowersHeld = from.titanPowersHeld.filter((x) => x !== id);
-          to.titanPowersHeld = [...(to.titanPowersHeld ?? []), id];
+          if (state.titans[id]?.holderNationId !== e.from) continue;
+          setTitanHolder(state, id, e.to, { provinceId: state.states.find((s) => s.ownerId === e.to)?.provinceIds[0] ?? null });
+          addJournal(state, { visibleTo: [e.from, e.to], category: 'titan', textKey: 'journal.titanInherited', vars: { titanId: id } });
         }
         break;
       }

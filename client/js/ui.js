@@ -88,8 +88,12 @@ export function errorText(e) {
   return t(`error.${e?.code ?? 'INTERNAL'}`);
 }
 
-/** Blason provisoire (FEATURES_SPEC.md §0.4 « flag placeholder ») : couleurs de faction, initiale. */
+/** Blason original de faction (cahier des charges §9), repli sur un cartouche aux couleurs. */
+const BLASONS = new Set(['paradis', 'marley', 'mideast_alliance', 'hizuru']);
 export function flagPlaceholder(nation, size = 'md') {
+  if (nation && BLASONS.has(nation.id)) {
+    return h(`img.blason.flag-${size}`, { src: `/assets/blasons/${nation.id}.svg`, alt: '', 'aria-hidden': 'true' });
+  }
   const primary = nation?.colors?.primary ?? '#666';
   const secondary = nation?.colors?.secondary ?? '#ddd';
   const letter = (loc(nation?.name) ?? nation?.id ?? '?').normalize('NFD')[0].toUpperCase();

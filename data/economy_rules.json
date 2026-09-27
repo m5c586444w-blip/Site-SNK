@@ -1,16 +1,94 @@
 {
-  "_source": "Valeurs économiques ABSENTES de MECHANICS_SPEC.md. Tant qu'elles restent null, l'action correspondante est refusée avec un message explicite (voir docs/PHASE2_GAPS.md). Renseignez-les ici pour activer l'action : le moteur est déjà en place.",
+  "_source": "[EXTENSION] Valeurs économiques absentes de MECHANICS_SPEC.md, rédigées pour ce projet (à valider, docs/PHASE5_GAPS.md).",
   "factoryBuildCost": {
-    "civilian": null,
-    "military": null,
+    "civilian": 60,
+    "military": 45,
     "_unit": "civilian-factory-days (même unité que infrastructure_build_cost, §3.4)"
   },
-  "factoryConversionCost": null,
+  "factoryConversionCost": 20,
   "_factoryConversionCostUnit": "civilian-factory-days",
   "startingStockpiles": {
-    "_note": "Par nation : { resources: {steel, fuel, rareMaterials}, equipment: {<EQUIPMENT_TYPES>: n} }. Nation absente = stocks à 0.",
-    "byNation": {}
+    "byNation": {
+      "paradis": {
+        "resources": {
+          "steel": 50,
+          "fuel": 10,
+          "rareMaterials": 20
+        },
+        "equipment": {
+          "infantry_equipment": 400,
+          "artillery": 60
+        }
+      },
+      "marley": {
+        "resources": {
+          "steel": 600,
+          "fuel": 400,
+          "rareMaterials": 150
+        },
+        "equipment": {
+          "infantry_equipment": 3000,
+          "artillery": 400,
+          "light_armor": 150,
+          "medium_armor": 80,
+          "fighter_aircraft": 50,
+          "bomber_aircraft": 20,
+          "naval_hull_light": 20,
+          "naval_hull_heavy": 6
+        }
+      },
+      "mideast_alliance": {
+        "resources": {
+          "steel": 300,
+          "fuel": 500,
+          "rareMaterials": 80
+        },
+        "equipment": {
+          "infantry_equipment": 1500,
+          "artillery": 200,
+          "light_armor": 60
+        }
+      },
+      "hizuru": {
+        "resources": {
+          "steel": 200,
+          "fuel": 100,
+          "rareMaterials": 150
+        },
+        "equipment": {
+          "infantry_equipment": 800,
+          "artillery": 100,
+          "naval_hull_light": 10
+        }
+      }
+    }
   },
-  "resourceConsumption": null,
-  "_resourceConsumptionNote": "Aucune règle de consommation de ressources par les lignes de production dans les specs : la consommation vaut 0 tant que ce champ est null."
+  "resourceConsumption": {
+    "perAssignedMilitaryFactoryPerDay": {
+      "steel": 0.5
+    },
+    "extraByEquipment": {
+      "light_armor": {
+        "fuel": 0.3
+      },
+      "medium_armor": {
+        "fuel": 0.5
+      },
+      "fighter_aircraft": {
+        "fuel": 0.4,
+        "rareMaterials": 0.1
+      },
+      "bomber_aircraft": {
+        "fuel": 0.6,
+        "rareMaterials": 0.1
+      },
+      "naval_hull_light": {
+        "fuel": 0.3
+      },
+      "naval_hull_heavy": {
+        "fuel": 0.6
+      }
+    },
+    "_note": "Si le stock ne couvre pas la consommation du jour, la production de la ligne est réduite au prorata."
+  }
 }

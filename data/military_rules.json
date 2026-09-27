@@ -1,15 +1,23 @@
 {
-  "_source": "Valeurs militaires ABSENTES de MECHANICS_SPEC.md §6. Tant qu'elles restent null, l'action ou l'effet correspondant est désactivé avec un message explicite (voir docs/PHASE3_GAPS.md).",
+  "_source": "[EXTENSION] Valeurs militaires absentes de MECHANICS_SPEC.md §6, rédigées pour ce projet (à valider, docs/PHASE5_GAPS.md).",
   "battalionSpeeds": {
-    "infantry": null,
-    "artillery": null,
-    "light_armor": null,
-    "medium_armor": null
+    "infantry": 4,
+    "artillery": 4,
+    "light_armor": 8,
+    "medium_armor": 6
   },
-  "movementDaysPerProvince": null,
-  "_movementNote": "Aucune règle de déplacement (distance, durée) : tant que null, seuls les déplacements par victoire au combat (§6.3 « attacker wins province ») sont possibles ; la retraite et le redéploiement sont refusés.",
-  "terrainModifiers": {},
-  "_terrainNote": "TERRAIN_MODIFIER : aucune table ; §6.3 impose 1.0 par défaut, appliqué tel quel.",
-  "supplyAttritionPerDay": null,
-  "_supplyNote": "§3.4 renvoie à une pénalité d'attrition de §6.4 sous supplyValue < 0.5, mais §6.4 ne la chiffre pas."
+  "movementDistancePerProvince": 12,
+  "_movementNote": "Durée d'un déplacement vers une province voisine = ceil(movementDistancePerProvince / vitesse de la division) jours.",
+  "movementDaysPerProvince": 3,
+  "_movementDaysNote": "Valeur de repli si la vitesse d'une division est inconnue.",
+  "terrainModifiers": {
+    "plains": 1.0,
+    "forest": 1.15,
+    "mountain": 1.3,
+    "desert": 0.95,
+    "urban": 1.2
+  },
+  "supplyAttritionPerDay": 0.01,
+  "reinforcementPerDay": 0.02,
+  "_reinforcementNote": "Hors combat : +2 points d'effectif par jour, en consommant 2 % de l'équipement et des effectifs du modèle."
 }

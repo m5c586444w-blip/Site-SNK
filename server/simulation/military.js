@@ -141,7 +141,7 @@ export function setFront(state, map, nationId, divisionId) {
 }
 
 /** division/order { nationId, divisionId, order, targetProvinceId? } */
-export function orderDivision(state, map, nationId, divisionId, order, targetProvinceId, rules) {
+export function orderDivision(state, map, nationId, divisionId, order, targetProvinceId, rules, getMods = () => ({ speedPct: 0 })) {
   const d = ownDivision(state, nationId, divisionId);
   if (!DIVISION_ORDERS.includes(order)) fail('INVALID_ORDER');
   if (order === 'hold') {
@@ -151,20 +151,41 @@ export function orderDivision(state, map, nationId, divisionId, order, targetPro
   if (order === 'advance') {
     if (!neighbours(map, d.locationProvinceId).includes(targetProvinceId)) fail('INVALID_TARGET');
     const controller = provinceController(state, targetProvinceId);
+    // [EXTENSION] Avancer vers une province amie = se déplacer ; vers un ennemi en guerre = attaquer.
+    if (controller === nationId) {
+      Object.assign(d, { order, targetProvinceId, movement: { to: targetProvinceId, daysRemaining: movementDays(state, d, rules, getMods) } });
+      return d;
+    }
     if (!atWar(state, nationId, controller)) fail('NOT_AT_WAR');
     Object.assign(d, { order, targetProvinceId, movement: null });
     return d;
   }
-  // retreat : déplacement vers une province voisine contrôlée, impossible sans règle de mouvement.
-  if (rules?.movementDaysPerProvince == null) fail('MOVEMENT_RULES_MISSING');
+  // retreat : déplacement vers une province voisine contrôlée.
   const options = neighbours(map, d.locationProvinceId).filter((pid) => provinceController(state, pid) === nationId);
   const to = targetProvinceId ?? options[0];
   if (!to || !options.includes(to)) fail('NO_RETREAT_PATH');
-  Object.assign(d, { order, targetProvinceId: to, movement: { to, daysRemaining: rules.movementDaysPerProvince } });
+  Object.assign(d, { order, targetProvinceId: to, movement: { to, daysRemaining: movementDays(state, d, rules, getMods) } });
   return d;
 }
 
+/**
+ * [EXTENSION] Durée d'un déplacement : ceil(distance / vitesse) ; vitesse = computed.speed (§6.2)
+ * modulée par les Titans (Féminin, Mâchoire, §7.3). Refus explicite sans règle de mouvement.
+ */
+export function movementDays(state, d, rules, getMods = () => ({ speedPct: 0 })) {
+  const tpl = state.templates.find((x) => x.id === d.templateId);
+  const speed = tpl?.computedStats?.speed;
+  if (speed && rules?.movementDistancePerProvince) {
+    const eff = speed * (1 + (getMods(d.nationId).speedPct ?? 0) / 100);
+    return Math.max(1, Math.ceil(rules.movementDistancePerProvince / eff));
+  }
+  if (rules?.movementDaysPerProvince == null) fail('MOVEMENT_RULES_MISSING');
+  return rules.movementDaysPerProvince;
+}
+
 // ---------------------------------------------------------------- journée militaire
+
+const NO_MODS = { attackPct: 0, defensePct: 0, siegePct: 0, defenderOrgLossPct: 0, speedPct: 0, supplyFlat: 0 };
 
 function refreshStateControl(state, st) {
   if (!st) return;
@@ -173,7 +194,7 @@ function refreshStateControl(state, st) {
 }
 
 /** supply_value (§3.4) recalculé avec les divisions de front présentes dans chaque état. */
-function refreshSupply(state, map) {
+function refreshSupply(state, map, getMods) {
   const stateOf = new Map(map.provinces.map((p) => [p.id, p.stateId]));
   const frontline = {};
   for (const d of state.divisions) {
@@ -181,7 +202,11 @@ function refreshSupply(state, map) {
     const sid = stateOf.get(d.locationProvinceId);
     frontline[sid] = (frontline[sid] ?? 0) + 1;
   }
-  for (const st of state.states) st.supplyValue = supplyValue(st.infrastructureLevel, frontline[st.id] ?? 0);
+  for (const st of state.states) {
+    const base = supplyValue(st.infrastructureLevel, frontline[st.id] ?? 0);
+    // TITAN_CART : supplyValueFlat +0.1 sur les états de la nation porteuse (§7.3)
+    st.supplyValue = base == null ? null : Math.min(1, base + (getMods(st.ownerId).supplyFlat ?? 0));
+  }
 }
 
 function random(state) {
@@ -194,7 +219,7 @@ function random(state) {
  * Un jour de combat et d'attrition pour toutes les nations.
  * @returns {{ combats: object[], destroyed: object[], captured: object[] }}
  */
-export function militaryDay(state, map, rules) {
+export function militaryDay(state, map, rules, getMods = () => NO_MODS) {
   const templates = new Map(state.templates.map((t) => [t.id, t]));
   const stats = (d) => templates.get(d.templateId)?.computedStats ?? { attack: 0, defense: 0 };
   const inCombat = new Set();
@@ -215,7 +240,7 @@ export function militaryDay(state, map, rules) {
   // 2. Attaques : divisions en « advance » dont la cible est toujours valide
   const attacksByProvince = new Map();
   for (const d of state.divisions) {
-    if (d.order !== 'advance') continue;
+    if (d.order !== 'advance' || d.movement) continue;
     const target = d.targetProvinceId;
     const valid = neighbours(map, d.locationProvinceId).includes(target)
       && atWar(state, d.nationId, provinceController(state, target));
@@ -229,8 +254,12 @@ export function militaryDay(state, map, rules) {
     const controller = provinceController(state, provinceId);
     const meta = provinceMeta(map, state, provinceId, rules);
     const defenders = state.divisions.filter((d) => d.locationProvinceId === provinceId && d.nationId === controller);
-    const atk = attackers.reduce((s, d) => s + attackerPower(d, stats(d)), 0);
-    const def = defenders.reduce((s, d) => s + defenderPower(d, stats(d), meta), 0);
+    // Modificateurs (technologies/lois [EXTENSION], Titans §7.3) appliqués à la formule §6.3.
+    const fortified = meta.isWallFortified || (meta.state?.fortificationLevel ?? 0) > 0;
+    const atkMult = (d) => (1 + getMods(d.nationId).attackPct / 100) * (1 + (fortified ? getMods(d.nationId).siegePct : 0) / 100);
+    const defMult = (d) => 1 + getMods(d.nationId).defensePct / 100;
+    const atk = attackers.reduce((s, d) => s + attackerPower(d, stats(d)) * atkMult(d), 0);
+    const def = defenders.reduce((s, d) => s + defenderPower(d, stats(d), meta) * defMult(d), 0);
     const ratio = resultRatio(atk, def);
     const [lo, hi] = RANDOM_FACTOR_RANGE;
     const randomFactor = lo + (hi - lo) * random(state);
@@ -238,19 +267,26 @@ export function militaryDay(state, map, rules) {
     const result = outcome > COMBAT_WIN_THRESHOLD ? 'attacker_wins' : outcome < COMBAT_LOSS_THRESHOLD ? 'defender_holds' : 'inconclusive';
     for (const d of [...attackers, ...defenders]) inCombat.add(d.id);
 
-    if (result === 'attacker_wins') for (const d of defenders) d.organization = clamp(d.organization - ORG_LOSS_DECISIVE, 0, 100);
-    else if (result === 'defender_holds') for (const d of attackers) d.organization = clamp(d.organization - ORG_LOSS_DECISIVE, 0, 100);
-    else for (const d of [...attackers, ...defenders]) d.organization = clamp(d.organization - ORG_LOSS_INCONCLUSIVE, 0, 100);
-
     const powerByNation = {};
-    for (const d of attackers) powerByNation[d.nationId] = (powerByNation[d.nationId] ?? 0) + attackerPower(d, stats(d));
+    for (const d of attackers) powerByNation[d.nationId] = (powerByNation[d.nationId] ?? 0) + attackerPower(d, stats(d)) * atkMult(d);
     const winner = Object.entries(powerByNation).sort((a, b) => b[1] - a[1])[0][0];
+    // TITAN_COLOSSAL : defenderOrgLossOnAttackPct +5 (§7.3)
+    const defLoss = (base) => base * (1 + getMods(winner).defenderOrgLossPct / 100);
+
+    if (result === 'attacker_wins') for (const d of defenders) d.organization = clamp(d.organization - defLoss(ORG_LOSS_DECISIVE), 0, 100);
+    else if (result === 'defender_holds') for (const d of attackers) d.organization = clamp(d.organization - ORG_LOSS_DECISIVE, 0, 100);
+    else {
+      for (const d of attackers) d.organization = clamp(d.organization - ORG_LOSS_INCONCLUSIVE, 0, 100);
+      for (const d of defenders) d.organization = clamp(d.organization - defLoss(ORG_LOSS_INCONCLUSIVE), 0, 100);
+    }
 
     combats.push({
       provinceId, attackerNationId: winner, defenderNationId: controller,
       attackerIds: attackers.map((d) => d.id), defenderIds: defenders.map((d) => d.id),
       attackerPower: atk, defenderPower: def, resultRatio: ratio, randomFactor, outcome, result,
       terrainModifier: meta.terrainModifier, isWallFortified: meta.isWallFortified,
+      attackerModifierPct: Math.round((atkMult(attackers[0]) - 1) * 100),
+      defenderModifierPct: defenders.length ? Math.round((defMult(defenders[0]) - 1) * 100) : 0,
     });
 
     if (result === 'attacker_wins') {
@@ -280,13 +316,27 @@ export function militaryDay(state, map, rules) {
     if (rules?.supplyAttritionPerDay != null && sv != null && sv < 0.5) {
       d.strength = clamp(d.strength - rules.supplyAttritionPerDay * 100, 0, 100);
     }
+    // [EXTENSION] Renforts hors combat : consomment équipement et effectifs du modèle.
+    if (rules?.reinforcementPerDay && !inCombat.has(d.id) && d.strength < 100 && !hazard.has(d.locationProvinceId)) {
+      const tpl = templates.get(d.templateId);
+      const nation = state.nations.find((n) => n.id === d.nationId);
+      const f = rules.reinforcementPerDay;
+      const eqNeed = Object.entries(tpl?.computedStats?.equipmentCost ?? {}).map(([eq, n]) => [eq, n * f]);
+      const mpNeed = (tpl?.computedStats?.manpowerCost ?? 0) * f;
+      const ok = nation && eqNeed.every(([eq, n]) => (nation.equipmentStockpile?.[eq] ?? 0) >= n) && (nation.manpower ?? 0) >= mpNeed;
+      if (ok) {
+        for (const [eq, n] of eqNeed) nation.equipmentStockpile[eq] -= n;
+        nation.manpower -= mpNeed;
+        d.strength = clamp(d.strength + f * 100, 0, 100);
+      }
+    }
   }
 
   // 5. Divisions à effectif nul : détruites
   for (const d of state.divisions.filter((x) => x.strength <= 0)) destroyed.push({ id: d.id, nationId: d.nationId, provinceId: d.locationProvinceId });
   state.divisions = state.divisions.filter((x) => x.strength > 0);
 
-  refreshSupply(state, map);
+  refreshSupply(state, map, getMods);
   state.lastCombats = combats;
   return { combats, destroyed, captured };
 }

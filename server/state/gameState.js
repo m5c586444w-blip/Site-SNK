@@ -9,7 +9,11 @@ import { seedFromHex } from '../../shared/rng.js';
 import { initialRelations, relation, actionBlocker } from '../simulation/diplomacy.js';
 import { focusBlockers } from '../simulation/focus.js';
 import { journalFor } from './journal.js';
-import { ACTION_COSTS } from '../../shared/constants.js';
+import { ACTION_COSTS, TITAN_POWER_BONUS, ELDIAN_STATUS_MODIFIERS, WARRIOR_CANDIDATE_POOL_MAX, CANDIDATE_TRAINING_DAYS } from '../../shared/constants.js';
+import { initTitans, syncTitanLists } from '../simulation/titans.js';
+import { initialLaws, defectionChance } from '../simulation/politics.js';
+import { initialAgents, intelTargets } from '../simulation/intel.js';
+import { refreshCategoryBonus } from '../simulation/modifiers.js';
 
 const clone = (o) => structuredClone(o);
 
@@ -41,6 +45,9 @@ function buildNation(n, economyRules) {
   const nation = {
     ...clone(n),
     categoryBonus: clone(n.categoryBonus ?? {}),
+    baseCategoryBonus: clone(n.categoryBonus ?? {}),
+    modifiers: {},
+    flags: clone(n.flags ?? {}),
     activeResearch: [],
     completedTechIds: [],
     activeFocusId: null,
@@ -55,7 +62,7 @@ function buildNation(n, economyRules) {
  * Crée une partie — FEATURES_SPEC.md §0.4 : GameState initialisé depuis les valeurs par défaut de
  * MECHANICS_SPEC.md, CALENDAR_START et GameSettings.historicalMode (immuable ensuite, §0).
  */
-export function createGame({ nationId, historicalMode }, { nations, map, economyRules = null, militaryRules = null, scenario = null, diplomacyRules = null }) {
+export function createGame({ nationId, historicalMode, humanNations = null }, { nations, map, economyRules = null, militaryRules = null, scenario = null, diplomacyRules = null, politics = null }) {
   const playable = nations.filter((n) => n.isPlayable).map((n) => n.id);
   if (!playable.includes(nationId)) throw Object.assign(new Error('Nation inconnue'), { code: 'INVALID_NATION' });
   if (typeof historicalMode !== 'boolean') {
@@ -94,7 +101,17 @@ export function createGame({ nationId, historicalMode }, { nations, map, economy
     journal: [],
     journalSeq: 0,
     dynamicHazards: {},
+    humanNations: humanNations ?? [nationId],
+    titans: initTitans(gameNations, politics),
+    laws: initialLaws(gameNations, politics),
+    lawCooldowns: {},
+    warriorProgram: { candidates: [] },
+    agents: initialAgents(gameNations, politics),
+    intelLog: [],
+    pendingInheritances: [],
   };
+  syncTitanLists(game);
+  refreshCategoryBonus(game, politics);
   for (const [a, b] of scenario?.startingWars ?? []) {
     game.wars.push([a, b]);
     game.warInfo[[a, b].sort().join('|')] = { attacker: a, defender: b, startDate: '01/01/an-844', warscore: { [a]: 0, [b]: 0 } };
@@ -120,7 +137,7 @@ function applyStartingOrderOfBattle(game, scenario, militaryRules) {
  * sous brouillard (Paradis) ne reçoit jamais le nom, le propriétaire ni les stats d'une
  * province ou d'une nation qu'elle ne connaît pas.
  */
-export function viewFor(state, viewerId, map, { technologies = [], economyRules = null, focuses = [], focusBranches = {}, events = [] } = {}) {
+export function viewFor(state, viewerId, map, { technologies = [], economyRules = null, focuses = [], focusBranches = {}, events = [], politics = null } = {}) {
   const statesById = new Map(state.states.map((s) => [s.id, s]));
   const provinces = (map.available ? map.provinces : []).map((p) => {
     const visibility = provinceVisibility(state, viewerId, p.id);
@@ -161,12 +178,12 @@ export function viewFor(state, viewerId, map, { technologies = [], economyRules 
     economy: economyView(state, viewerId, economyRules),
     technologies,
     military: militaryView(state, viewerId, map),
-    ...politicalView(state, viewerId, { focuses, focusBranches, events }),
+    ...politicalView(state, viewerId, { focuses, focusBranches, events, politics }),
   };
 }
 
 /** Focus, diplomatie, évènements en attente, journal (phase 4) — filtrés pour la nation. */
-export function politicalView(state, viewerId, { focuses = [], focusBranches = {}, events = [] } = {}) {
+export function politicalView(state, viewerId, { focuses = [], focusBranches = {}, events = [], politics = null } = {}) {
   const nation = state.nations.find((n) => n.id === viewerId);
   const knownIds = state.nations.map((n) => n.id).filter((id) => id !== viewerId && nationVisibility(state, viewerId, id) === 'known');
   const involves = (x) => x.actor === viewerId || x.target === viewerId || x.a === viewerId || x.b === viewerId;
@@ -192,11 +209,61 @@ export function politicalView(state, viewerId, { focuses = [], focusBranches = {
       wars: Object.values(state.warInfo).filter((w) => w.attacker === viewerId || w.defender === viewerId),
       log: state.diplomacyLog.filter(involves),
     },
-    pendingEvents: state.pendingEvents
-      .map((id) => events.find((e) => e.id === id))
-      .filter((e) => e && e.nationId === viewerId)
-      .map(({ id, title, body, choices, category }) => ({ id, title, body, category, choices: choices.map((c) => ({ label: c.label, effects: c.effects })) })),
+    pendingEvents: [
+      ...state.pendingEvents
+        .map((id) => events.find((e) => e.id === id))
+        .filter((e) => e && e.nationId === viewerId)
+        .map(({ id, title, body, choices, category }) => ({ id, title, body, category, choices: choices.map((c) => ({ label: c.label, effects: c.effects })) })),
+      // TITAN_INHERITANCE (§7.5) : évènement dynamique pour la nation héritière
+      ...(state.pendingInheritances ?? []).filter((p) => p.nationId === viewerId).map((p) => ({
+        id: `TITAN_INHERITANCE:${p.id}`, kind: 'titan_inheritance', titanId: p.titanId, cause: p.cause, category: 'titan',
+      })),
+    ],
     journal: journalFor(state, viewerId),
+    titans: titansView(state, viewerId),
+    politics: politicsView(state, viewerId, politics),
+    intel: {
+      agents: state.agents?.[viewerId] ?? [],
+      targets: intelTargets(state, viewerId),
+      operations: politics?.intel?.operations ?? {},
+      log: (state.intelLog ?? []).filter((x) => x.nationId === viewerId),
+    },
+    warriorProgram: viewerId === 'marley' ? {
+      candidates: state.warriorProgram.candidates,
+      poolMax: WARRIOR_CANDIDATE_POOL_MAX,
+      trainingDays: CANDIDATE_TRAINING_DAYS,
+      defectionChancePerDay: defectionChance(nation),
+    } : null,
+  };
+}
+
+/** Écran des Neuf Titans (FEATURES §7) : « ??? » pour ce que le brouillard cache. */
+export function titansView(state, viewerId) {
+  return Object.entries(state.titans ?? {}).map(([id, t]) => {
+    const own = t.holderNationId === viewerId;
+    const holderKnown = own || !t.holderNationId || nationVisibility(state, viewerId, t.holderNationId) === 'known';
+    const locKnown = own || (t.provinceId && provinceVisibility(state, viewerId, t.provinceId) === 'known');
+    return {
+      id,
+      holderNationId: holderKnown ? t.holderNationId : '???',
+      provinceId: locKnown ? t.provinceId : (t.provinceId ? '???' : null),
+      status: holderKnown ? t.status : '???',
+      yearsRemaining: own ? Math.round((t.daysRemaining / 365) * 10) / 10 : null,
+      holderRole: own ? t.holderRole : null,
+      bonus: TITAN_POWER_BONUS[id],
+    };
+  });
+}
+
+/** Écran politique (FEATURES §10). */
+export function politicsView(state, viewerId, politics) {
+  const nation = state.nations.find((n) => n.id === viewerId);
+  return {
+    laws: state.laws?.[viewerId] ?? {},
+    lawDefs: politics?.laws ?? {},
+    cooldowns: state.lawCooldowns?.[viewerId] ?? {},
+    eldianStatusPolicy: nation.eldianStatusPolicy ?? null,
+    eldianModifiers: ELDIAN_STATUS_MODIFIERS,
   };
 }
 
@@ -245,6 +312,8 @@ export function economyView(state, viewerId, economyRules) {
  * pour un rejeu déterministe), `lastCombats`.
  * [EXTENSION TECHNIQUE, Phase 4] `warInfo`, `relations`, `agreements`, `wargoals`, `diplomacyLog`,
  * `eventLog`, `pendingEvents`, `journal`, `dynamicHazards`.
+ * [EXTENSION TECHNIQUE, Phase 5] `humanNations`, `titans`, `laws`, `lawCooldowns`, `warriorProgram`,
+ * `agents`, `intelLog`, `pendingInheritances`.
  * [EXTENSION TECHNIQUE À VALIDER] §11 ne contient ni GameSettings, ni la date courante, ni
  * l'état du brouillard. Sans eux, une sauvegarde rechargée perdrait le mode choisi (pourtant
  * immuable) et repartirait au 01/01/an-844. Ils sont ajoutés sous `settings`, `currentDate`
@@ -283,6 +352,14 @@ export function toSaveFile(state) {
     journal: clone(state.journal),
     journalSeq: state.journalSeq,
     dynamicHazards: clone(state.dynamicHazards),
+    humanNations: [...(state.humanNations ?? [])],
+    titans: clone(state.titans),
+    laws: clone(state.laws),
+    lawCooldowns: clone(state.lawCooldowns),
+    warriorProgram: clone(state.warriorProgram),
+    agents: clone(state.agents),
+    intelLog: clone(state.intelLog),
+    pendingInheritances: clone(state.pendingInheritances),
   };
 }
 
@@ -305,6 +382,9 @@ export function fromSaveFile(save) {
     n.categoryBonus ??= {};
     n.lockedEquipment ??= [];
     n.lockedResearchCategories ??= [];
+    n.modifiers ??= {};
+    n.baseCategoryBonus ??= { ...n.categoryBonus };
+    n.flags ??= {};
   }
   return {
     settings: Object.freeze({ historicalMode: s.historicalMode, nationId: s.nationId }),
@@ -336,5 +416,13 @@ export function fromSaveFile(save) {
     journal: clone(save.journal ?? []),
     journalSeq: save.journalSeq ?? 0,
     dynamicHazards: clone(save.dynamicHazards ?? {}),
+    humanNations: [...(save.humanNations ?? [s.nationId])],
+    titans: clone(save.titans ?? initTitans(nations, null)),
+    laws: clone(save.laws ?? {}),
+    lawCooldowns: clone(save.lawCooldowns ?? {}),
+    warriorProgram: clone(save.warriorProgram ?? { candidates: [] }),
+    agents: clone(save.agents ?? {}),
+    intelLog: clone(save.intelLog ?? []),
+    pendingInheritances: clone(save.pendingInheritances ?? []),
   };
 }

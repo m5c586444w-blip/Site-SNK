@@ -1,7 +1,260 @@
 {
-  "_source": "Situation militaire au 01/01/an 844. LORE_BIBLE.md §2.3 : aucune guerre ouverte en 844 (tension Marley / Alliance). Ordre de bataille de départ ABSENT des specs : aucun modèle ni aucune division n'est créé (voir docs/PHASE3_GAPS.md).",
+  "_source": "Situation au 01/01/an 844. Aucune guerre ouverte (LORE §2.3). Ordre de bataille : [EXTENSION] d'après LORE §2.1 (petite armée de campagne, garnison des Murs la plus nombreuse, branches d'exploration et de police, §4.1), §2.2 (armée mondiale de Marley), §2.3-2.4.",
   "startingWars": [],
-  "startingTemplates": [],
-  "startingDivisions": [],
+  "startingTemplates": [
+    {
+      "id": "tpl_pa_garrison",
+      "nationId": "paradis",
+      "name": "Garnison des Murs",
+      "battalions": [
+        {
+          "battalionType": "infantry",
+          "count": 6
+        },
+        {
+          "battalionType": "artillery",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "id": "tpl_pa_recon",
+      "nationId": "paradis",
+      "name": "Bataillon d'exploration",
+      "battalions": [
+        {
+          "battalionType": "infantry",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "id": "tpl_pa_police",
+      "nationId": "paradis",
+      "name": "Brigade de police intérieure",
+      "battalions": [
+        {
+          "battalionType": "infantry",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "id": "tpl_ma_inf",
+      "nationId": "marley",
+      "name": "Division d'infanterie",
+      "battalions": [
+        {
+          "battalionType": "infantry",
+          "count": 6
+        },
+        {
+          "battalionType": "artillery",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "id": "tpl_ma_arm",
+      "nationId": "marley",
+      "name": "Division blindée",
+      "battalions": [
+        {
+          "battalionType": "infantry",
+          "count": 2
+        },
+        {
+          "battalionType": "light_armor",
+          "count": 2
+        },
+        {
+          "battalionType": "medium_armor",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "id": "tpl_me_inf",
+      "nationId": "mideast_alliance",
+      "name": "Division de l'Alliance",
+      "battalions": [
+        {
+          "battalionType": "infantry",
+          "count": 6
+        },
+        {
+          "battalionType": "artillery",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "tpl_hz_inf",
+      "nationId": "hizuru",
+      "name": "Division de défense",
+      "battalions": [
+        {
+          "battalionType": "infantry",
+          "count": 5
+        },
+        {
+          "battalionType": "artillery",
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "startingDivisions": [
+    {
+      "id": "div_pa_1",
+      "nationId": "paradis",
+      "templateId": "tpl_pa_garrison",
+      "locationProvinceId": "pa_maria_nw"
+    },
+    {
+      "id": "div_pa_2",
+      "nationId": "paradis",
+      "templateId": "tpl_pa_garrison",
+      "locationProvinceId": "pa_maria_ne"
+    },
+    {
+      "id": "div_pa_3",
+      "nationId": "paradis",
+      "templateId": "tpl_pa_garrison",
+      "locationProvinceId": "pa_maria_sw"
+    },
+    {
+      "id": "div_pa_4",
+      "nationId": "paradis",
+      "templateId": "tpl_pa_garrison",
+      "locationProvinceId": "pa_maria_se"
+    },
+    {
+      "id": "div_pa_5",
+      "nationId": "paradis",
+      "templateId": "tpl_pa_garrison",
+      "locationProvinceId": "pa_rose_sw"
+    },
+    {
+      "id": "div_pa_6",
+      "nationId": "paradis",
+      "templateId": "tpl_pa_garrison",
+      "locationProvinceId": "pa_rose_ne"
+    },
+    {
+      "id": "div_pa_7",
+      "nationId": "paradis",
+      "templateId": "tpl_pa_recon",
+      "locationProvinceId": "pa_rose_nw"
+    },
+    {
+      "id": "div_pa_8",
+      "nationId": "paradis",
+      "templateId": "tpl_pa_police",
+      "locationProvinceId": "pa_mitras"
+    },
+    {
+      "id": "div_ma_9",
+      "nationId": "marley",
+      "templateId": "tpl_ma_inf",
+      "locationProvinceId": "mar_cap"
+    },
+    {
+      "id": "div_ma_10",
+      "nationId": "marley",
+      "templateId": "tpl_ma_inf",
+      "locationProvinceId": "mar_lib"
+    },
+    {
+      "id": "div_ma_11",
+      "nationId": "marley",
+      "templateId": "tpl_ma_inf",
+      "locationProvinceId": "mar_ne2"
+    },
+    {
+      "id": "div_ma_12",
+      "nationId": "marley",
+      "templateId": "tpl_ma_inf",
+      "locationProvinceId": "mar_c"
+    },
+    {
+      "id": "div_ma_13",
+      "nationId": "marley",
+      "templateId": "tpl_ma_inf",
+      "locationProvinceId": "mar_s2"
+    },
+    {
+      "id": "div_ma_14",
+      "nationId": "marley",
+      "templateId": "tpl_ma_inf",
+      "locationProvinceId": "eur_1"
+    },
+    {
+      "id": "div_ma_15",
+      "nationId": "marley",
+      "templateId": "tpl_ma_inf",
+      "locationProvinceId": "eur_2"
+    },
+    {
+      "id": "div_ma_16",
+      "nationId": "marley",
+      "templateId": "tpl_ma_inf",
+      "locationProvinceId": "mar_ne"
+    },
+    {
+      "id": "div_ma_17",
+      "nationId": "marley",
+      "templateId": "tpl_ma_arm",
+      "locationProvinceId": "mar_c"
+    },
+    {
+      "id": "div_ma_18",
+      "nationId": "marley",
+      "templateId": "tpl_ma_arm",
+      "locationProvinceId": "mar_ne2"
+    },
+    {
+      "id": "div_mi_19",
+      "nationId": "mideast_alliance",
+      "templateId": "tpl_me_inf",
+      "locationProvinceId": "me_nar1"
+    },
+    {
+      "id": "div_mi_20",
+      "nationId": "mideast_alliance",
+      "templateId": "tpl_me_inf",
+      "locationProvinceId": "me_nar2"
+    },
+    {
+      "id": "div_mi_21",
+      "nationId": "mideast_alliance",
+      "templateId": "tpl_me_inf",
+      "locationProvinceId": "me_men1"
+    },
+    {
+      "id": "div_mi_22",
+      "nationId": "mideast_alliance",
+      "templateId": "tpl_me_inf",
+      "locationProvinceId": "me_ran"
+    },
+    {
+      "id": "div_mi_23",
+      "nationId": "mideast_alliance",
+      "templateId": "tpl_me_inf",
+      "locationProvinceId": "me_sen"
+    },
+    {
+      "id": "div_hi_24",
+      "nationId": "hizuru",
+      "templateId": "tpl_hz_inf",
+      "locationProvinceId": "hz_capital"
+    },
+    {
+      "id": "div_hi_25",
+      "nationId": "hizuru",
+      "templateId": "tpl_hz_inf",
+      "locationProvinceId": "hz_daqomo"
+    }
+  ],
   "nationOverrides": {}
 }

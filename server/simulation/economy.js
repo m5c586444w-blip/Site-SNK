@@ -4,6 +4,7 @@ import {
   EQUIPMENT_TYPES, RESOURCE_TYPES, EFFICIENCY_START,
 } from '../../shared/constants.js';
 import { dailyOutput, efficiencyAfterDay, efficiencyAfterReassign, stateDailyOutputs } from '../../shared/economy.js';
+import { nationModifiers } from './modifiers.js';
 
 const fail = (code, message = code) => { throw Object.assign(new Error(message), { code }); };
 
@@ -135,16 +136,19 @@ function completeProject(state, nationId, project) {
 }
 
 /** Un jour d'économie pour une nation. Retourne le bilan net du jour (tooltip de la barre supérieure). */
-export function economyDay(state, nationId, rules) {
+export function economyDay(state, nationId, rules, politics = null) {
   const nation = nationOf(state, nationId);
+  const mods = nationModifiers(state, nationId, politics);
 
   // 1. Ressources (§3.5). Consommation : aucune règle dans les specs, donc 0.
+  // Modificateur [EXTENSION] de rendement (technologies, lois).
   const produced = zeroResources();
   for (const st of controlledStates(state, nationId)) {
     const out = stateDailyOutputs(st);
-    for (const r of RESOURCE_TYPES) produced[r] += out[r];
+    for (const r of RESOURCE_TYPES) produced[r] += out[r] * (1 + mods.resourceYieldPct / 100);
   }
   for (const r of RESOURCE_TYPES) nation.resourceStockpile[r] += produced[r];
+  const consumed = zeroResources();
 
   // 2. Construction : la capacité remplit la file dans l'ordre, le surplus passe au projet suivant.
   let capacity = constructionCapacity(state, nationId);
@@ -158,12 +162,25 @@ export function economyDay(state, nationId, rules) {
   }
 
   // 3. Lignes de production (§3.3) : production au rendement du jour, puis montée en efficacité.
+  // [EXTENSION] consommation : chaque usine affectée consomme des ressources ; si le stock ne suffit
+  // pas, la production de la ligne est réduite au prorata.
+  const cons = rules?.resourceConsumption;
   for (const line of state.productionLines) {
     if (line.nationId !== nationId || line.assignedFactoryIds.length === 0) continue;
-    nation.equipmentStockpile[line.equipmentType] += dailyOutput(line);
+    const need = {};
+    if (cons) {
+      const n = line.assignedFactoryIds.length;
+      for (const [r, v] of Object.entries(cons.perAssignedMilitaryFactoryPerDay ?? {})) need[r] = (need[r] ?? 0) + v * n;
+      for (const [r, v] of Object.entries(cons.extraByEquipment?.[line.equipmentType] ?? {})) need[r] = (need[r] ?? 0) + v * n;
+    }
+    let ratio = 1;
+    for (const [r, v] of Object.entries(need)) if (v > 0) ratio = Math.min(ratio, nation.resourceStockpile[r] / v);
+    ratio = Math.max(0, Math.min(1, ratio));
+    for (const [r, v] of Object.entries(need)) { nation.resourceStockpile[r] -= v * ratio; consumed[r] += v * ratio; }
+    nation.equipmentStockpile[line.equipmentType] += dailyOutput(line) * ratio * (1 + mods.productionOutputPct / 100);
     line.efficiency = efficiencyAfterDay(line.efficiency);
     line.daysActive += 1;
   }
 
-  return { produced, consumed: zeroResources() };
+  return { produced, consumed };
 }

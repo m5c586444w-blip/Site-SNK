@@ -29,6 +29,7 @@ export function effectText(e, view) {
     case 'abandonWallRing': return t('effect.abandonWallRing');
     case 'devastateMainland': return t('effect.devastateMainland');
     case 'globalShock': return t('effect.globalShock');
+    case 'modifier': return t(`mod.${e.modifier}`, { v: e.modifier === 'researchBonus' ? `${Math.round(e.amount * 100)}` : (e.amount > 0 ? `+${e.amount}` : e.amount), cat: e.category ? t(`research.category.${e.category}`) : '' });
     default: return e.type;
   }
 }

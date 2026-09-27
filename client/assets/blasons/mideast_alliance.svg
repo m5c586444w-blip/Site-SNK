@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 140" role="img" aria-label="Blason de l'Alliance du Moyen-Orient">
+  <!-- [EXTENSION] Blason original : écu indigo, chef sable, quatre losanges liés (membres fédérés). -->
+  <path d="M10 8 H110 V70 C110 104 86 124 60 134 C34 124 10 104 10 70 Z" fill="#3E4A56" stroke="#2b241b" stroke-width="4"/>
+  <path d="M10 8 H110 V36 H10 Z" fill="#C9A66B"/>
+  <g fill="#C9A66B" stroke="#2b241b" stroke-width="1.5">
+    <path d="M60 50 L72 66 L60 82 L48 66 Z"/><path d="M36 74 L48 90 L36 106 L24 90 Z"/><path d="M84 74 L96 90 L84 106 L72 90 Z"/><path d="M60 98 L72 114 L60 128 L48 114 Z"/>
+  </g>
+</svg>

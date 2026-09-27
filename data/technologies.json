@@ -1,4 +1,406 @@
 {
-  "_source": "Catalogue ABSENT des specs : MECHANICS_SPEC.md §4 donne les catégories et la formule de durée, mais aucune technologie. Schéma attendu : { id, name: {fr, en}, category (CATEGORIES §4), baseCostDays, prerequisiteTechIds: [] }. Voir docs/PHASE2_GAPS.md.",
-  "technologies": []
+  "_source": "[EXTENSION] Catalogue technologique rédigé pour ce projet (MECHANICS §4 : catégories et formule de durée seulement). Époque : fin XIXe – début XXe siècle, cohérente avec le monde de 844. Technologies propres au lore : équipement de manœuvre et canons anti-Titans (défense de l'île), armes anti-Titans (LORE §2.3). Effets : modificateurs [EXTENSION] (voir docs/PHASE5_GAPS.md).",
+  "technologies": [
+    {
+      "id": "inf_rifles",
+      "category": "infantry",
+      "baseCostDays": 90,
+      "name": {
+        "fr": "Fusils à répétition",
+        "en": "Repeating rifles"
+      },
+      "prerequisiteTechIds": [],
+      "effects": [
+        {
+          "type": "modifier",
+          "modifier": "attackPct",
+          "amount": 5
+        }
+      ]
+    },
+    {
+      "id": "inf_manoeuvre_gear",
+      "category": "infantry",
+      "baseCostDays": 150,
+      "name": {
+        "fr": "Équipement de manœuvre tridimensionnelle",
+        "en": "Three-dimensional manoeuvre gear"
+      },
+      "prerequisiteTechIds": [
+        "inf_rifles"
+      ],
+      "effects": [
+        {
+          "type": "modifier",
+          "modifier": "attackPct",
+          "amount": 8
+        }
+      ]
+    },
+    {
+      "id": "inf_trench",
+      "category": "infantry",
+      "baseCostDays": 120,
+      "name": {
+        "fr": "Tranchées et fortins",
+        "en": "Trenches and blockhouses"
+      },
+      "prerequisiteTechIds": [
+        "inf_rifles"
+      ],
+      "effects": [
+        {
+          "type": "modifier",
+          "modifier": "defensePct",
+          "amount": 8
+        }
+      ]
+    },
+    {
+      "id": "art_field_guns",
+      "category": "artillery",
+      "baseCostDays": 100,
+      "name": {
+        "fr": "Canons de campagne",
+        "en": "Field guns"
+      },
+      "prerequisiteTechIds": [],
+      "effects": [
+        {
+          "type": "modifier",
+          "modifier": "attackPct",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "id": "art_anti_titan",
+      "category": "artillery",
+      "baseCostDays": 160,
+      "name": {
+        "fr": "Canons anti-Titans",
+        "en": "Anti-Titan cannons"
+      },
+      "prerequisiteTechIds": [
+        "art_field_guns"
+      ],
+      "effects": [
+        {
+          "type": "modifier",
+          "modifier": "defensePct",
+          "amount": 6
+        },
+        {
+          "type": "modifier",
+          "modifier": "attackPct",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "id": "art_heavy",
+      "category": "artillery",
+      "baseCostDays": 180,
+      "name": {
+        "fr": "Artillerie lourde",
+        "en": "Heavy artillery"
+      },
+      "prerequisiteTechIds": [
+        "art_field_guns"
+      ],
+      "effects": [
+        {
+          "type": "modifier",
+          "modifier": "attackPct",
+          "amount": 8
+        }
+      ]
+    },
+    {
+      "id": "arm_armoured_trains",
+      "category": "armor",
+      "baseCostDays": 140,
+      "name": {
+        "fr": "Trains blindés",
+        "en": "Armoured trains"
+      },
+      "prerequisiteTechIds": [],
+      "effects": [
+        {
+          "type": "modifier",
+          "modifier": "defensePct",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "id": "arm_tanks",
+      "category": "armor",
+      "baseCostDays": 200,
+      "name": {
+        "fr": "Chars de rupture",
+        "en": "Breakthrough tanks"
+      },
+      "prerequisiteTechIds": [
+        "arm_armoured_trains"
+      ],
+      "effects": [
+        {
+          "type": "modifier",
+          "modifier": "attackPct",
+          "amount": 8
+        }
+      ]
+    },
+    {
+      "id": "arm_mechanised",
+      "category": "armor",
+      "baseCostDays": 240,
+      "name": {
+        "fr": "Infanterie mécanisée",
+        "en": "Mechanised infantry"
+      },
+      "prerequisiteTechIds": [
+        "arm_tanks"
+      ],
+      "effects": [
+        {
+          "type": "modifier",
+          "modifier": "attackPct",
+          "amount": 5
+        },
+        {
+          "type": "modifier",
+          "modifier": "defensePct",
+          "amount": 5
+        }
+      ]
+    },
+    {
+      "id": "air_airships",
+      "category": "aviation",
+      "baseCostDays": 150,
+      "name": {
+        "fr": "Dirigeables d'observation",
+        "en": "Observation airships"
+      },
+      "prerequisiteTechIds": [],
+      "effects": [
+        {
+          "type": "modifier",
+          "modifier": "researchBonus",
+          "amount": 0.1,
+          "category": "doctrine"
+        }
+      ]
+    },
+    {
+      "id": "air_biplanes",
+      "category": "aviation",
+      "baseCostDays": 200,
+      "name": {
+        "fr": "Biplans de chasse",
+        "en": "Fighter biplanes"
+      },
+      "prerequisiteTechIds": [
+        "air_airships"
+      ],
+      "effects": [
+        {
+          "type": "modifier",
+          "modifier": "attackPct",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "id": "air_bombers",
+      "category": "aviation",
+      "baseCostDays": 240,
+      "name": {
+        "fr": "Bombardiers lourds",
+        "en": "Heavy bombers"
+      },
+      "prerequisiteTechIds": [
+        "air_biplanes"
+      ],
+      "effects": [
+        {
+          "type": "modifier",
+          "modifier": "attackPct",
+          "amount": 6
+        }
+      ]
+    },
+    {
+      "id": "nav_steamships",
+      "category": "navy",
+      "baseCostDays": 150,
+      "name": {
+        "fr": "Navires à vapeur",
+        "en": "Steamships"
+      },
+      "prerequisiteTechIds": [],
+      "effects": [
+        {
+          "type": "modifier",
+          "modifier": "productionOutputPct",
+          "amount": 5
+        }
+      ]
+    },
+    {
+      "id": "nav_ironclads",
+      "category": "navy",
+      "baseCostDays": 200,
+      "name": {
+        "fr": "Cuirassés",
+        "en": "Ironclads"
+      },
+      "prerequisiteTechIds": [
+        "nav_steamships"
+      ],
+      "effects": [
+        {
+          "type": "modifier",
+          "modifier": "defensePct",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "id": "nav_carriers",
+      "category": "navy",
+      "baseCostDays": 260,
+      "name": {
+        "fr": "Porte-aéronefs",
+        "en": "Aircraft tenders"
+      },
+      "prerequisiteTechIds": [
+        "nav_ironclads"
+      ],
+      "effects": [
+        {
+          "type": "modifier",
+          "modifier": "attackPct",
+          "amount": 5
+        }
+      ]
+    },
+    {
+      "id": "ind_mechanised_mills",
+      "category": "industry",
+      "baseCostDays": 100,
+      "name": {
+        "fr": "Ateliers mécanisés",
+        "en": "Mechanised workshops"
+      },
+      "prerequisiteTechIds": [],
+      "effects": [
+        {
+          "type": "modifier",
+          "modifier": "productionOutputPct",
+          "amount": 10
+        }
+      ]
+    },
+    {
+      "id": "ind_mining",
+      "category": "industry",
+      "baseCostDays": 120,
+      "name": {
+        "fr": "Extraction minière",
+        "en": "Mining techniques"
+      },
+      "prerequisiteTechIds": [
+        "ind_mechanised_mills"
+      ],
+      "effects": [
+        {
+          "type": "modifier",
+          "modifier": "resourceYieldPct",
+          "amount": 10
+        }
+      ]
+    },
+    {
+      "id": "ind_assembly_lines",
+      "category": "industry",
+      "baseCostDays": 180,
+      "name": {
+        "fr": "Chaînes d'assemblage",
+        "en": "Assembly lines"
+      },
+      "prerequisiteTechIds": [
+        "ind_mechanised_mills"
+      ],
+      "effects": [
+        {
+          "type": "modifier",
+          "modifier": "productionOutputPct",
+          "amount": 15
+        }
+      ]
+    },
+    {
+      "id": "doc_defence_in_depth",
+      "category": "doctrine",
+      "baseCostDays": 120,
+      "name": {
+        "fr": "Défense en profondeur",
+        "en": "Defence in depth"
+      },
+      "prerequisiteTechIds": [],
+      "effects": [
+        {
+          "type": "modifier",
+          "modifier": "defensePct",
+          "amount": 6
+        }
+      ]
+    },
+    {
+      "id": "doc_combined_arms",
+      "category": "doctrine",
+      "baseCostDays": 160,
+      "name": {
+        "fr": "Armes combinées",
+        "en": "Combined arms"
+      },
+      "prerequisiteTechIds": [
+        "doc_defence_in_depth"
+      ],
+      "effects": [
+        {
+          "type": "modifier",
+          "modifier": "attackPct",
+          "amount": 6
+        }
+      ]
+    },
+    {
+      "id": "doc_titan_warfare",
+      "category": "doctrine",
+      "baseCostDays": 200,
+      "name": {
+        "fr": "Doctrine des Titans",
+        "en": "Titan warfare doctrine"
+      },
+      "prerequisiteTechIds": [
+        "doc_combined_arms"
+      ],
+      "effects": [
+        {
+          "type": "modifier",
+          "modifier": "attackPct",
+          "amount": 5
+        },
+        {
+          "type": "modifier",
+          "modifier": "defensePct",
+          "amount": 5
+        }
+      ]
+    }
+  ]
 }

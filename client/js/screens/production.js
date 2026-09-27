@@ -76,7 +76,7 @@ export function renderProduction(host, ctx) {
 
   // ---- Construction
   async function buildDialog() {
-    const stateSel = h('select', { id: 'build-state' }, ...eco.states.map((s) => h('option', { value: s.id }, s.name)));
+    const stateSel = h('select', { id: 'build-state' }, ...eco.states.map((s) => h('option', { value: s.id }, loc(s.name))));
     const typeSel = h('div.segmented', { role: 'radiogroup' }, ...['civilian', 'military'].map((v, i) =>
       h('label', {}, h('input', { type: 'radio', name: 'ftype', value: v, checked: i === 0 }), t(`prod.${v}`))));
     const costLine = h('p.muted');
@@ -103,14 +103,14 @@ export function renderProduction(host, ctx) {
   const stateRows = eco.states.map((s) => {
     const reason = s.civilian === 0 ? t('prod.noCivilian') : conversionCost == null ? t('prod.convertCostMissing') : null;
     return h('tr', {},
-      h('td', {}, s.name),
+      h('td', {}, loc(s.name)),
       h('td.num', {}, s.civilian),
       h('td.num', {}, s.military),
       h('td.num', {}, h('button.btn.btn-small', {
         disabled: Boolean(reason),
         title: reason,
         onClick: async () => {
-          if (await confirmModal(t('prod.convertTitle'), t('prod.convertConfirm', { state: s.name, n: conversionCost }))) {
+          if (await confirmModal(t('prod.convertTitle'), t('prod.convertConfirm', { state: loc(s.name), n: conversionCost }))) {
             await ctx.act('production/convertFactory', { stateId: s.id });
           }
         },
@@ -120,7 +120,7 @@ export function renderProduction(host, ctx) {
   const queue = eco.constructionQueue.map((p) => {
     const st = eco.states.find((s) => s.id === p.stateId);
     return h('li', {},
-      h('span', {}, `${t(`prod.kind.${p.kind}`)} — ${st?.name ?? p.stateId}`),
+      h('span', {}, `${t(`prod.kind.${p.kind}`)} — ${loc(st?.name) ?? p.stateId}`),
       h('div.bar', {}, h('div.bar-fill', { style: { width: `${Math.min(100, (p.progress / p.cost) * 100)}%` } }),
         h('span.bar-text', {}, `${fmt(p.progress, 0)} / ${p.cost}`)));
   });

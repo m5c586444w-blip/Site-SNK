@@ -12,6 +12,10 @@ import { renderFocus } from './focus.js';
 import { renderDiplomacy } from './diplomacy.js';
 import { renderJournal, entryText } from './journal.js';
 import { effectText } from './effectText.js';
+import { renderTitans } from './titans.js';
+import { renderPolitics } from './politics.js';
+import { renderIntel } from './intel.js';
+import { renderWarriors } from './warriors.js';
 import { SPEED_LEVELS, STABILITY_UNREST_THRESHOLD, MAP_MODES, RESOURCE_TYPES } from '/shared/constants.js';
 
 // Phase du cahier des charges (§12) où chaque écran/mode sera livré. null = phase non attribuée.
@@ -20,11 +24,12 @@ const SCREEN_PHASE = {
   titans: 5, politics: 5, warriors: 5, intelligence: null, journal: null,
 };
 const MAP_MODE_PHASE = { political: 1, fog_of_war: 1, resources: 2, supply: 2, front_combat: 3 };
-const CURRENT_PHASE = 4;
+const CURRENT_PHASE = 5;
 /** Écrans livrés : nom -> rendu (host, ctx). */
 const SCREENS = {
   production: renderProduction, research: renderResearch, divisions: renderDivisions,
   focus: renderFocus, diplomacy: renderDiplomacy, journal: renderJournal,
+  titans: renderTitans, politics: renderPolitics, intelligence: renderIntel, warriors: renderWarriors,
 };
 const fmt = (x) => (Math.round(x * 10) / 10).toLocaleString();
 
@@ -131,7 +136,7 @@ export async function gameScreen(root, nav) {
     if (p.visibility === 'partially_known') return [h('strong', {}, t('map.approxTerritory'))];
     const row = (k, v) => h('div.kv', {}, h('span', {}, t(k)), v == null ? naValue() : h('span', {}, v));
     return [
-      h('strong', {}, p.name ?? p.id),
+      h('strong', {}, loc(p.name) ?? p.id),
       row('province.owner', nationName(p.ownerId)),
       row('province.controller', nationName(p.controllerId)),
       row('province.infrastructure', p.infrastructureLevel),
@@ -157,8 +162,8 @@ export async function gameScreen(root, nav) {
       ...(p.visibility !== 'known'
         ? [h('h3', {}, t(p.visibility === 'hidden' ? 'map.unknownTerritory' : 'map.approxTerritory'))]
         : [
-          h('h3', {}, p.name ?? p.id),
-          p.stateName ? h('p.muted', {}, p.stateName) : null,
+          h('h3', {}, loc(p.name) ?? p.id),
+          p.stateName ? h('p.muted', {}, loc(p.stateName)) : null,
           row('province.owner', nationName(p.ownerId)),
           row('province.garrison', '—'),
           p.isWallState ? row('province.fortification', p.fortificationLevel == null ? null : `${p.fortificationLevel}/10`) : null,
@@ -244,7 +249,7 @@ export async function gameScreen(root, nav) {
         : titans.length === 0 ? h('p.muted', {}, t('country.titans.none'))
           : h('ul.titan-list', {}, ...titans.map((id) => h('li', {},
             h('span', {}, t(`titan.${id}`)),
-            h('button.link-btn', { disabled: true, title: t('common.phaseLater', { n: SCREEN_PHASE.titans }) }, t('screen.titans'))))),
+            h('button.link-btn', { onClick: () => openScreen('titans') }, t('screen.titans'))))),
       h('h3', {}, t('country.nav')),
       h('div.quick-nav', {}, ...Object.entries(SCREEN_PHASE)
         .filter(([k]) => k !== 'warriors' || n.id === 'marley') // FEATURES_SPEC.md §12 : Marley uniquement
@@ -290,10 +295,10 @@ export async function gameScreen(root, nav) {
     clear(screenPanel).append(
       h('header.screen-header', {},
         h('h2', {}, t(`screen.${currentScreen}`)),
-        h('div.screen-tabs', {}, ...Object.keys(SCREENS).map((k) => h(`button.btn.btn-small${k === currentScreen ? '.btn-primary' : ''}`, { onClick: () => openScreen(k) }, t(`screen.${k}`)))),
+        h('div.screen-tabs', {}, ...Object.keys(SCREENS).filter((k) => k !== 'warriors' || view.viewerId === 'marley').map((k) => h(`button.btn.btn-small${k === currentScreen ? '.btn-primary' : ''}`, { onClick: () => openScreen(k) }, t(`screen.${k}`)))),
         h('button.panel-close', { onClick: closeScreen, 'aria-label': t('common.close') }, '×')),
       body);
-    SCREENS[currentScreen](body, ctx);
+    SCREENS[currentScreen](body, ctx, { openPendingEvent: (ev) => { eventOpen = null; showEvent(ev); } });
     body.scrollTop = scroll;
   }
 
@@ -311,7 +316,7 @@ export async function gameScreen(root, nav) {
       view.military = payload.military;
       renderer?.setMilitary(view.military);
     }
-    for (const k of ['focus', 'diplomacy', 'pendingEvents']) if (payload[k]) view[k] = payload[k];
+    for (const k of ['focus', 'diplomacy', 'pendingEvents', 'titans', 'politics', 'intel', 'warriorProgram']) if (k in payload) view[k] = payload[k];
     if (payload.journal) {
       const before = view.journal?.length ?? 0;
       view.journal = payload.journal;
@@ -326,10 +331,30 @@ export async function gameScreen(root, nav) {
 
   // ---------- Évènements : modale bloquante (FEATURES §14.2) ----------
   let eventOpen = null;
-  async function showPendingEvent() {
+  function showPendingEvent() {
     const ev = view.pendingEvents?.[0];
-    if (!ev || eventOpen === ev.id) return;
+    if (!ev || eventOpen) return;
+    showEvent(ev);
+  }
+
+  async function showEvent(ev) {
+    if (eventOpen === ev.id) return;
     eventOpen = ev.id;
+    if (ev.kind === 'titan_inheritance') {
+      // TITAN_INHERITANCE (§7.5) : modale bloquante avec choix pour la nation héritière
+      const choice = await modal({
+        title: t('inherit.title', { titan: t(`titan.${ev.titanId}`) }),
+        blocking: true,
+        body: h('div.event-body', {}, h('p.event-text', {}, t(`inherit.body.${ev.cause}`)), h('p.small.muted', {}, t('event.blocking'))),
+        actions: [
+          { label: t(view.viewerId === 'marley' ? 'inherit.passMarley' : 'inherit.pass'), value: 0, primary: true },
+          { label: t('inherit.lapse'), value: 1 },
+        ],
+      });
+      eventOpen = null;
+      await ctx.act('event/resolve', { eventId: ev.id, choiceIndex: choice });
+      return;
+    }
     const choice = await modal({
       title: loc(ev.title),
       blocking: true,

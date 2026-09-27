@@ -159,7 +159,7 @@ export class MapRenderer {
           out = isBorder && ((x + y) >> 1) % 2 === 0 ? PARTIAL_BORDER : mix(base, FOG_HIDDEN, 0.35);
         } else {
           const fill = this.modeFill(p, x, y);
-          out = mix(base, fill, this.mode === 'political' ? 0.55 : 0.7);
+          out = mix(base, fill, this.mode === 'political' ? 0.68 : 0.7);
           if (p.formerPureTitanTerritory && (x + y) % 7 < 2) out = mix(out, HAZARD, 0.7);
           if (isBorder) {
             const nationEdge = nbrs.some((n) => n !== idx && (!known(n) || owner(n) !== p.ownerId));

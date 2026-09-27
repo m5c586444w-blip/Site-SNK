@@ -8,6 +8,7 @@ import { parseCondition, evaluate, gateHistorical } from '../../shared/condition
 import { formatDate } from '../../shared/calendar.js';
 import { addJournal } from '../state/journal.js';
 import { applyEffects } from './effects.js';
+import { resolveInheritance } from './titans.js';
 
 const fail = (code) => { throw Object.assign(new Error(code), { code }); };
 
@@ -49,7 +50,7 @@ export function fireEvent(state, ev, ctx) {
   if (state.eventLog[ev.id]?.fired && !ev.repeatable) return false;
   state.eventLog[ev.id] = { ...(state.eventLog[ev.id] ?? {}), fired: true, firedDate: formatDate(state.date) };
   addJournal(state, { visibleTo: [ev.nationId], category: ev.category ?? 'politics', text: ev.title, textKey: 'journal.event' });
-  if (ev.nationId === state.settings.nationId) {
+  if ((state.humanNations ?? [state.settings.nationId]).includes(ev.nationId)) {
     state.pendingEvents.push(ev.id);
   } else {
     applyEffects(state, ev.nationId, ev.choices[0]?.effects, ctx);
@@ -59,6 +60,15 @@ export function fireEvent(state, ev, ctx) {
 
 /** event/resolve { nationId, eventId, choiceIndex } */
 export function resolveEvent(state, nationId, eventId, choiceIndex, ctx) {
+  if (String(eventId).startsWith('TITAN_INHERITANCE:')) {
+    const id = Number(eventId.split(':')[1]);
+    const p = (state.pendingInheritances ?? []).find((x) => x.id === id) ?? fail('EVENT_NOT_PENDING');
+    if (p.nationId !== nationId) fail('NOT_YOUR_NATION');
+    if (![0, 1].includes(choiceIndex)) fail('INVALID_CHOICE');
+    state.pendingInheritances = state.pendingInheritances.filter((x) => x !== p);
+    resolveInheritance(state, p, choiceIndex);
+    return { eventId, choiceIndex };
+  }
   if (!state.pendingEvents.includes(eventId)) fail('EVENT_NOT_PENDING');
   const ev = ctx.events.find((e) => e.id === eventId) ?? fail('EVENT_NOT_PENDING');
   if (ev.nationId !== nationId) fail('NOT_YOUR_NATION');

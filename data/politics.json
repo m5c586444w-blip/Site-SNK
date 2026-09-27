@@ -1,0 +1,277 @@
+{
+  "_source": "[EXTENSION] Règles politiques et de renseignement rédigées pour ce projet. MECHANICS §9 ne donne que les catégories de lois, le délai de 90 jours et le tableau du statut eldien (§9.3) ; FEATURES §11 laisse les effets des opérations « TBD ». Voir docs/PHASE5_GAPS.md.",
+  "laws": {
+    "economic_mobilization": {
+      "civilian_economy": {
+        "name": {
+          "fr": "Économie civile",
+          "en": "Civilian economy"
+        },
+        "modifiers": {
+          "productionOutputPct": -10,
+          "resourceYieldPct": 5
+        },
+        "onSwitch": []
+      },
+      "partial_mobilization": {
+        "name": {
+          "fr": "Mobilisation partielle",
+          "en": "Partial mobilisation"
+        },
+        "modifiers": {},
+        "onSwitch": []
+      },
+      "war_economy": {
+        "name": {
+          "fr": "Économie de guerre",
+          "en": "War economy"
+        },
+        "modifiers": {
+          "productionOutputPct": 20,
+          "resourceYieldPct": -5
+        },
+        "onSwitch": [
+          {
+            "type": "modifyStability",
+            "delta": -8
+          },
+          {
+            "type": "modifyWarSupport",
+            "delta": 5
+          }
+        ]
+      }
+    },
+    "conscription": {
+      "volunteer": {
+        "name": {
+          "fr": "Volontariat",
+          "en": "Volunteer army"
+        },
+        "modifiers": {
+          "manpowerPerDay": 40
+        },
+        "onSwitch": []
+      },
+      "limited": {
+        "name": {
+          "fr": "Conscription limitée",
+          "en": "Limited conscription"
+        },
+        "modifiers": {
+          "manpowerPerDay": 120
+        },
+        "onSwitch": [
+          {
+            "type": "modifyStability",
+            "delta": -2
+          }
+        ]
+      },
+      "extensive": {
+        "name": {
+          "fr": "Conscription étendue",
+          "en": "Extensive conscription"
+        },
+        "modifiers": {
+          "manpowerPerDay": 300
+        },
+        "onSwitch": [
+          {
+            "type": "modifyStability",
+            "delta": -8
+          },
+          {
+            "type": "modifyWarSupport",
+            "delta": 3
+          }
+        ]
+      }
+    },
+    "trade_policy": {
+      "closed": {
+        "name": {
+          "fr": "Économie fermée",
+          "en": "Closed economy"
+        },
+        "modifiers": {
+          "resourceYieldPct": -5
+        },
+        "onSwitch": []
+      },
+      "limited_exports": {
+        "name": {
+          "fr": "Exportations limitées",
+          "en": "Limited exports"
+        },
+        "modifiers": {},
+        "onSwitch": []
+      },
+      "free_trade": {
+        "name": {
+          "fr": "Libre-échange",
+          "en": "Free trade"
+        },
+        "modifiers": {
+          "resourceYieldPct": 10,
+          "productionOutputPct": -5
+        },
+        "onSwitch": [
+          {
+            "type": "modifyStability",
+            "delta": -3
+          }
+        ]
+      }
+    }
+  },
+  "startingLaws": {
+    "paradis": {
+      "economic_mobilization": "civilian_economy",
+      "conscription": "volunteer",
+      "trade_policy": "closed"
+    },
+    "marley": {
+      "economic_mobilization": "partial_mobilization",
+      "conscription": "limited",
+      "trade_policy": "limited_exports"
+    },
+    "mideast_alliance": {
+      "economic_mobilization": "partial_mobilization",
+      "conscription": "limited",
+      "trade_policy": "limited_exports"
+    },
+    "hizuru": {
+      "economic_mobilization": "civilian_economy",
+      "conscription": "volunteer",
+      "trade_policy": "free_trade"
+    }
+  },
+  "_startingLawsNote": "Paradis : isolé (économie fermée), armée de volontaires (LORE §2.1). Marley : puissance militaire mobilisée. Hizuru : puissance commerçante.",
+  "unrestEffects": [
+    {
+      "type": "modifyStability",
+      "delta": -2
+    },
+    {
+      "type": "modifyWarSupport",
+      "delta": -1
+    }
+  ],
+  "eldianUnrestEffects": [
+    {
+      "type": "modifyStability",
+      "delta": -1
+    }
+  ],
+  "_unrestNote": "Effet d'un trouble (§9 : 1 %/jour sous 30 de stabilité) et d'un trouble eldien (§9.3 : eldianPopUnrestChancePerDay).",
+  "intel": {
+    "agentsByNation": {
+      "paradis": 1,
+      "marley": 3,
+      "mideast_alliance": 2,
+      "hizuru": 2
+    },
+    "operations": {
+      "reconnaissance": {
+        "politicalCapitalCost": 10,
+        "cooldownDays": 30,
+        "successChance": 0.7
+      },
+      "sabotage": {
+        "politicalCapitalCost": 25,
+        "cooldownDays": 60,
+        "successChance": 0.5,
+        "equipmentLossPct": 5
+      },
+      "support_faction": {
+        "politicalCapitalCost": 20,
+        "cooldownDays": 60,
+        "successChance": 0.5,
+        "stabilityDelta": -5
+      }
+    }
+  },
+  "titans": {
+    "_note": "Position (province) et années de vie restantes en 844, d'après la chronologie canon résumée par LORE §3 et HISTORICAL_EVENT_CHAIN (cycle de 13 ans, §7.1). Aucun porteur n'est nommé : ce sont des rôles.",
+    "start": {
+      "TITAN_FOUNDING": {
+        "provinceId": "pa_mitras",
+        "yearsRemaining": 10,
+        "holderRole": {
+          "fr": "Héritier du Titan Fondateur (lignée royale)",
+          "en": "Founding Titan heir (royal line)"
+        }
+      },
+      "TITAN_ATTACK": {
+        "provinceId": "pa_maria_sw",
+        "yearsRemaining": 1,
+        "holderRole": {
+          "fr": "Porteur réfugié au sud du Mur Maria",
+          "en": "Holder sheltering south of Wall Maria"
+        }
+      },
+      "TITAN_ARMORED": {
+        "provinceId": "mar_lib",
+        "yearsRemaining": 12,
+        "holderRole": {
+          "fr": "Guerrier infiltré",
+          "en": "Infiltrating Warrior"
+        }
+      },
+      "TITAN_COLOSSAL": {
+        "provinceId": "mar_lib",
+        "yearsRemaining": 12,
+        "holderRole": {
+          "fr": "Guerrier infiltré",
+          "en": "Infiltrating Warrior"
+        }
+      },
+      "TITAN_FEMALE": {
+        "provinceId": "mar_lib",
+        "yearsRemaining": 12,
+        "holderRole": {
+          "fr": "Guerrière infiltrée",
+          "en": "Infiltrating Warrior"
+        }
+      },
+      "TITAN_JAW": {
+        "provinceId": "mar_lib",
+        "yearsRemaining": 12,
+        "holderRole": {
+          "fr": "Guerrier du programme",
+          "en": "Program Warrior"
+        }
+      },
+      "TITAN_BEAST": {
+        "provinceId": "mar_cap",
+        "yearsRemaining": 7,
+        "holderRole": {
+          "fr": "Chef du programme des Guerriers",
+          "en": "Head of the Warrior program"
+        }
+      },
+      "TITAN_CART": {
+        "provinceId": "mar_c",
+        "yearsRemaining": 5,
+        "holderRole": {
+          "fr": "Guerrière de soutien",
+          "en": "Support Warrior"
+        }
+      },
+      "TITAN_WARHAMMER": {
+        "provinceId": "mar_cap",
+        "yearsRemaining": 10,
+        "holderRole": {
+          "fr": "Famille alliée de l'Empire",
+          "en": "Family allied with the Empire"
+        }
+      }
+    },
+    "canInheritNations": [
+      "paradis",
+      "marley"
+    ],
+    "_canInheritNote": "Seuls les Eldiens peuvent hériter d'un pouvoir (LORE §3.2) : Paradis et Marley (via les candidats du programme des Guerriers)."
+  }
+}

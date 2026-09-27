@@ -3,6 +3,7 @@ import { t, loc } from '../i18n.js';
 import { h, clear, confirmModal, toast } from '../ui.js';
 import { RESEARCH_CATEGORIES } from '/shared/constants.js';
 import { researchDays, researchSlotCount } from '/shared/research.js';
+import { effectText } from './effectText.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -64,9 +65,11 @@ export function renderResearch(host, ctx) {
         const missing = (tech.prerequisiteTechIds ?? []).filter((id) => !nation.completedTechIds?.includes(id));
         const status = completed ? 'completed' : running ? 'in_progress' : locked || missing.length ? 'blocked' : 'available';
         const days = Math.ceil(researchDays(tech, nation));
-        const title = status === 'blocked'
+        const effectsText = (tech.effects ?? []).map((e) => `• ${effectText(e, view)}`).join('\n');
+        const title0 = status === 'blocked'
           ? (locked ? t('research.categoryLocked') : t('research.missing', { list: missing.map(techName).join(', ') }))
           : status === 'available' ? null : t(`research.status.${status}`);
+        const title = [title0, effectsText ? `${t('research.effects')} :\n${effectsText}` : null].filter(Boolean).join('\n\n');
         const node = h(`button.tech-node.${status}`, {
           disabled: status !== 'available',
           title,

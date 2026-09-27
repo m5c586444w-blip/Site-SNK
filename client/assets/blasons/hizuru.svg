@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 140" role="img" aria-label="Blason de Hizuru">
+  <!-- [EXTENSION] Blason original : écu indigo profond, trois vagues blanc cassé et une île en pointe. -->
+  <path d="M10 8 H110 V70 C110 104 86 124 60 134 C34 124 10 104 10 70 Z" fill="#2B3A55" stroke="#2b241b" stroke-width="4"/>
+  <g fill="none" stroke="#EDE7DA" stroke-width="5" stroke-linecap="round">
+    <path d="M22 40 q10 -10 19 0 t19 0 t19 0 t19 0"/><path d="M22 60 q10 -10 19 0 t19 0 t19 0 t19 0"/><path d="M22 80 q10 -10 19 0 t19 0 t19 0 t19 0"/>
+  </g>
+  <path d="M38 118 Q60 92 82 118 Z" fill="#EDE7DA"/>
+</svg>

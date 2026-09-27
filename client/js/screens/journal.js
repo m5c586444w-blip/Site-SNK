@@ -13,6 +13,13 @@ export function entryText(e, view) {
   for (const k of ['a', 'b', 'winner', 'loser']) if (vars[k]) vars[k] = nationName(vars[k]);
   // Jamais d'identifiant technique à l'écran (FEATURES §6) : types d'effets traduits.
   if (vars.list) vars.list = vars.list.split(', ').map((x) => t(`skip.${x}`)).join(', ');
+  if (vars.titanId) vars.titan = t(`titan.${vars.titanId}`);
+  if (vars.operation) vars.operation = t(`intel.op.${vars.operation}`);
+  if (vars.target) vars.target = vars.target === '__unknown__' ? t('intel.unknown') : nationName(vars.target);
+  if (vars.value) {
+    const law = Object.values(view.politics?.lawDefs ?? {}).map((c) => c[vars.value]).find(Boolean);
+    vars.value = law ? loc(law.name) : ['strict', 'moderate', 'relaxed'].includes(vars.value) ? t(`pol.eldian.${vars.value}`) : vars.value;
+  }
   if (vars.focusId) vars.focus = loc(view.focus?.tree.find((f) => f.id === vars.focusId)?.name) ?? vars.focusId;
   return t(e.textKey, vars);
 }

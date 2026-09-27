@@ -1,0 +1,179 @@
+{
+  "_note": "POLITIQUE DE TEST : lois sans modificateurs par défaut, pour vérifier les formules de base",
+  "laws": {
+    "economic_mobilization": {
+      "civilian_economy": {
+        "name": {
+          "fr": "Économie civile",
+          "en": "Civilian economy"
+        },
+        "modifiers": {
+          "productionOutputPct": -10,
+          "resourceYieldPct": 5
+        },
+        "onSwitch": []
+      },
+      "partial_mobilization": {
+        "name": {
+          "fr": "Mobilisation partielle",
+          "en": "Partial mobilisation"
+        },
+        "modifiers": {},
+        "onSwitch": []
+      },
+      "war_economy": {
+        "name": {
+          "fr": "Économie de guerre",
+          "en": "War economy"
+        },
+        "modifiers": {
+          "productionOutputPct": 20,
+          "resourceYieldPct": -5
+        },
+        "onSwitch": [
+          {
+            "type": "modifyStability",
+            "delta": -8
+          },
+          {
+            "type": "modifyWarSupport",
+            "delta": 5
+          }
+        ]
+      }
+    },
+    "conscription": {
+      "volunteer": {
+        "name": {
+          "fr": "Volontariat",
+          "en": "Volunteer army"
+        },
+        "modifiers": {
+          "manpowerPerDay": 40
+        },
+        "onSwitch": []
+      },
+      "limited": {
+        "name": {
+          "fr": "Conscription limitée",
+          "en": "Limited conscription"
+        },
+        "modifiers": {
+          "manpowerPerDay": 120
+        },
+        "onSwitch": [
+          {
+            "type": "modifyStability",
+            "delta": -2
+          }
+        ]
+      },
+      "extensive": {
+        "name": {
+          "fr": "Conscription étendue",
+          "en": "Extensive conscription"
+        },
+        "modifiers": {
+          "manpowerPerDay": 300
+        },
+        "onSwitch": [
+          {
+            "type": "modifyStability",
+            "delta": -8
+          },
+          {
+            "type": "modifyWarSupport",
+            "delta": 3
+          }
+        ]
+      }
+    },
+    "trade_policy": {
+      "closed": {
+        "name": {
+          "fr": "Économie fermée",
+          "en": "Closed economy"
+        },
+        "modifiers": {
+          "resourceYieldPct": -5
+        },
+        "onSwitch": []
+      },
+      "limited_exports": {
+        "name": {
+          "fr": "Exportations limitées",
+          "en": "Limited exports"
+        },
+        "modifiers": {},
+        "onSwitch": []
+      },
+      "free_trade": {
+        "name": {
+          "fr": "Libre-échange",
+          "en": "Free trade"
+        },
+        "modifiers": {
+          "resourceYieldPct": 10,
+          "productionOutputPct": -5
+        },
+        "onSwitch": [
+          {
+            "type": "modifyStability",
+            "delta": -3
+          }
+        ]
+      }
+    }
+  },
+  "startingLaws": {},
+  "unrestEffects": [
+    {
+      "type": "modifyStability",
+      "delta": -2
+    },
+    {
+      "type": "modifyWarSupport",
+      "delta": -1
+    }
+  ],
+  "eldianUnrestEffects": [
+    {
+      "type": "modifyStability",
+      "delta": -1
+    }
+  ],
+  "intel": {
+    "agentsByNation": {
+      "paradis": 1,
+      "marley": 3,
+      "mideast_alliance": 2,
+      "hizuru": 2
+    },
+    "operations": {
+      "reconnaissance": {
+        "politicalCapitalCost": 10,
+        "cooldownDays": 30,
+        "successChance": 0.7
+      },
+      "sabotage": {
+        "politicalCapitalCost": 25,
+        "cooldownDays": 60,
+        "successChance": 0.5,
+        "equipmentLossPct": 5
+      },
+      "support_faction": {
+        "politicalCapitalCost": 20,
+        "cooldownDays": 60,
+        "successChance": 0.5,
+        "stabilityDelta": -5
+      }
+    }
+  },
+  "titans": {
+    "start": {},
+    "canInheritNations": [
+      "paradis",
+      "marley"
+    ]
+  }
+}

@@ -1,0 +1,1341 @@
+{
+  "_source": "[EXTENSION] Carte générée par tools/generate-map.js d'après la carte de référence et LORE §2 / cahier §4. Noms de régions des documents repris ; autres noms, découpage, gisements, infrastructures et usines : [EXTENSION] à valider.",
+  "maskFile": "provinces_mask.png",
+  "backgroundFile": "background.png",
+  "ignoredColors": [
+    "#000000"
+  ],
+  "homeLandmass": {
+    "paradis": "paradis_island"
+  },
+  "provinces": [
+    {
+      "id": "west_n",
+      "name": {
+        "fr": "Côte occidentale nord",
+        "en": "Western coast north"
+      },
+      "stateId": "marley_west",
+      "landmass": "western_continent",
+      "terrain": "forest",
+      "color": "#281e14"
+    },
+    {
+      "id": "west_c",
+      "name": {
+        "fr": "Côte occidentale centre",
+        "en": "Western coast centre"
+      },
+      "stateId": "marley_west",
+      "landmass": "western_continent",
+      "terrain": "plains",
+      "color": "#5d7fab"
+    },
+    {
+      "id": "west_s",
+      "name": {
+        "fr": "Côte occidentale sud",
+        "en": "Western coast south"
+      },
+      "stateId": "marley_west",
+      "landmass": "western_continent",
+      "terrain": "forest",
+      "color": "#92e066"
+    },
+    {
+      "id": "mar_nw",
+      "name": {
+        "fr": "Nidereldia ouest",
+        "en": "Nidereldia west"
+      },
+      "stateId": "nidereldia",
+      "landmass": "mainland",
+      "terrain": "plains",
+      "color": "#c76f21"
+    },
+    {
+      "id": "mar_n",
+      "name": {
+        "fr": "Nidereldia est",
+        "en": "Nidereldia east"
+      },
+      "stateId": "nidereldia",
+      "landmass": "mainland",
+      "terrain": "plains",
+      "color": "#34d0b8"
+    },
+    {
+      "id": "mar_ne",
+      "name": {
+        "fr": "Obereldia nord",
+        "en": "Obereldia north"
+      },
+      "stateId": "obereldia",
+      "landmass": "mainland",
+      "terrain": "forest",
+      "color": "#695f73"
+    },
+    {
+      "id": "mar_ne2",
+      "name": {
+        "fr": "Obereldia est",
+        "en": "Obereldia east"
+      },
+      "stateId": "obereldia",
+      "landmass": "mainland",
+      "terrain": "mountain",
+      "color": "#9ec02e"
+    },
+    {
+      "id": "mar_w",
+      "name": {
+        "fr": "Patria ouest",
+        "en": "Patria west"
+      },
+      "stateId": "patria",
+      "landmass": "mainland",
+      "terrain": "plains",
+      "color": "#d34fc5"
+    },
+    {
+      "id": "mar_cap",
+      "name": {
+        "fr": "Patria (capitale)",
+        "en": "Patria (capital)"
+      },
+      "stateId": "patria",
+      "landmass": "mainland",
+      "terrain": "urban",
+      "color": "#40b080"
+    },
+    {
+      "id": "mar_lib",
+      "name": {
+        "fr": "District d'internement",
+        "en": "Internment district"
+      },
+      "stateId": "liberio",
+      "landmass": "mainland",
+      "terrain": "urban",
+      "color": "#753f3b"
+    },
+    {
+      "id": "mar_c",
+      "name": {
+        "fr": "Plateau central",
+        "en": "Central plateau"
+      },
+      "stateId": "plateau",
+      "landmass": "mainland",
+      "terrain": "mountain",
+      "color": "#aaa0d2"
+    },
+    {
+      "id": "mar_sw",
+      "name": {
+        "fr": "Côte du Couchant",
+        "en": "Sunset coast"
+      },
+      "stateId": "coast_west",
+      "landmass": "mainland",
+      "terrain": "plains",
+      "color": "#df2f8d"
+    },
+    {
+      "id": "mar_s1",
+      "name": {
+        "fr": "Sudennland nord",
+        "en": "Sudennland north"
+      },
+      "stateId": "sudennland",
+      "landmass": "mainland",
+      "terrain": "plains",
+      "color": "#4c9048"
+    },
+    {
+      "id": "mar_s2",
+      "name": {
+        "fr": "Sudennland est",
+        "en": "Sudennland east"
+      },
+      "stateId": "sudennland",
+      "landmass": "mainland",
+      "terrain": "forest",
+      "color": "#811fdf"
+    },
+    {
+      "id": "mar_d1",
+      "name": {
+        "fr": "Désert méridional ouest",
+        "en": "Southern desert west"
+      },
+      "stateId": "desert_south",
+      "landmass": "mainland",
+      "terrain": "desert",
+      "color": "#b6809a"
+    },
+    {
+      "id": "mar_d2",
+      "name": {
+        "fr": "Désert méridional est",
+        "en": "Southern desert east"
+      },
+      "stateId": "desert_south",
+      "landmass": "mainland",
+      "terrain": "desert",
+      "color": "#ebe155"
+    },
+    {
+      "id": "eur_1",
+      "name": {
+        "fr": "Marley européenne nord",
+        "en": "European Marley north"
+      },
+      "stateId": "eur_marley",
+      "landmass": "mainland",
+      "terrain": "plains",
+      "color": "#5870ec"
+    },
+    {
+      "id": "eur_2",
+      "name": {
+        "fr": "Marley européenne est",
+        "en": "European Marley east"
+      },
+      "stateId": "eur_marley",
+      "landmass": "mainland",
+      "terrain": "forest",
+      "color": "#8dd1a7"
+    },
+    {
+      "id": "eur_3",
+      "name": {
+        "fr": "Marley européenne sud",
+        "en": "European Marley south"
+      },
+      "stateId": "eur_marley",
+      "landmass": "mainland",
+      "terrain": "mountain",
+      "color": "#c26062"
+    },
+    {
+      "id": "me_nar1",
+      "name": {
+        "fr": "Naranema nord",
+        "en": "Naranema north"
+      },
+      "stateId": "naranema",
+      "landmass": "mainland",
+      "terrain": "desert",
+      "color": "#2fc11d"
+    },
+    {
+      "id": "me_nar2",
+      "name": {
+        "fr": "Naranema sud",
+        "en": "Naranema south"
+      },
+      "stateId": "naranema",
+      "landmass": "mainland",
+      "terrain": "desert",
+      "color": "#6450b4"
+    },
+    {
+      "id": "me_men1",
+      "name": {
+        "fr": "Menoriana",
+        "en": "Menoriana"
+      },
+      "stateId": "menoriana",
+      "landmass": "mainland",
+      "terrain": "urban",
+      "color": "#99b16f"
+    },
+    {
+      "id": "me_men2",
+      "name": {
+        "fr": "Menoriana orientale",
+        "en": "Eastern Menoriana"
+      },
+      "stateId": "menoriana",
+      "landmass": "mainland",
+      "terrain": "desert",
+      "color": "#ce402a"
+    },
+    {
+      "id": "me_sen",
+      "name": {
+        "fr": "Sentari",
+        "en": "Sentari"
+      },
+      "stateId": "sentari",
+      "landmass": "mainland",
+      "terrain": "mountain",
+      "color": "#3ba1c1"
+    },
+    {
+      "id": "me_sen2",
+      "name": {
+        "fr": "Sentari occidentale",
+        "en": "Western Sentari"
+      },
+      "stateId": "sentari",
+      "landmass": "mainland",
+      "terrain": "desert",
+      "color": "#70307c"
+    },
+    {
+      "id": "me_ran",
+      "name": {
+        "fr": "Rannia",
+        "en": "Rannia"
+      },
+      "stateId": "rannia",
+      "landmass": "mainland",
+      "terrain": "plains",
+      "color": "#a59137"
+    },
+    {
+      "id": "me_ran2",
+      "name": {
+        "fr": "Rannia méridionale",
+        "en": "Southern Rannia"
+      },
+      "stateId": "rannia",
+      "landmass": "mainland",
+      "terrain": "desert",
+      "color": "#da20ce"
+    },
+    {
+      "id": "hz_njetni",
+      "name": {
+        "fr": "Njetni",
+        "en": "Njetni"
+      },
+      "stateId": "njetni",
+      "landmass": "hizuru_islands",
+      "terrain": "mountain",
+      "color": "#478189"
+    },
+    {
+      "id": "hz_capital",
+      "name": {
+        "fr": "Njetni méridional",
+        "en": "Southern Njetni"
+      },
+      "stateId": "njetni",
+      "landmass": "hizuru_islands",
+      "terrain": "urban",
+      "color": "#7ce244"
+    },
+    {
+      "id": "hz_daqomo",
+      "name": {
+        "fr": "Daqomo",
+        "en": "Daqomo"
+      },
+      "stateId": "daqomo",
+      "landmass": "hizuru_islands",
+      "terrain": "forest",
+      "color": "#b171db"
+    },
+    {
+      "id": "hz_daqomo2",
+      "name": {
+        "fr": "Daqomo côtier",
+        "en": "Coastal Daqomo"
+      },
+      "stateId": "daqomo",
+      "landmass": "hizuru_islands",
+      "terrain": "plains",
+      "color": "#e6d296"
+    },
+    {
+      "id": "hz_isl1",
+      "name": {
+        "fr": "Île Hizuzi nord",
+        "en": "North Hizuzi isle"
+      },
+      "stateId": "hizuzi",
+      "landmass": "hizuru_islands",
+      "terrain": "forest",
+      "color": "#536151"
+    },
+    {
+      "id": "hz_isl2",
+      "name": {
+        "fr": "Île Hizuzi sud",
+        "en": "South Hizuzi isle"
+      },
+      "stateId": "hizuzi",
+      "landmass": "hizuru_islands",
+      "terrain": "forest",
+      "color": "#88c2e8"
+    },
+    {
+      "id": "pa_mitras",
+      "name": {
+        "fr": "Mitras",
+        "en": "Mitras"
+      },
+      "stateId": "mitras",
+      "landmass": "paradis_island",
+      "terrain": "urban",
+      "formerPureTitanTerritory": false,
+      "color": "#bd51a3"
+    },
+    {
+      "id": "pa_mitras_e",
+      "name": {
+        "fr": "Mitras — districts orientaux",
+        "en": "Mitras — eastern districts"
+      },
+      "stateId": "mitras",
+      "landmass": "paradis_island",
+      "terrain": "urban",
+      "formerPureTitanTerritory": false,
+      "color": "#2ab25e"
+    },
+    {
+      "id": "pa_rose_nw",
+      "name": {
+        "fr": "Mur Rose — secteur nord-ouest",
+        "en": "Wall Rose — north-west sector"
+      },
+      "stateId": "rose_n",
+      "landmass": "paradis_island",
+      "terrain": "plains",
+      "formerPureTitanTerritory": false,
+      "color": "#5f4119"
+    },
+    {
+      "id": "pa_rose_ne",
+      "name": {
+        "fr": "Mur Rose — secteur nord-est",
+        "en": "Wall Rose — north-east sector"
+      },
+      "stateId": "rose_n",
+      "landmass": "paradis_island",
+      "terrain": "plains",
+      "formerPureTitanTerritory": false,
+      "color": "#94a2b0"
+    },
+    {
+      "id": "pa_rose_sw",
+      "name": {
+        "fr": "Mur Rose — secteur sud-ouest",
+        "en": "Wall Rose — south-west sector"
+      },
+      "stateId": "rose_s",
+      "landmass": "paradis_island",
+      "terrain": "plains",
+      "formerPureTitanTerritory": false,
+      "color": "#c9316b"
+    },
+    {
+      "id": "pa_rose_se",
+      "name": {
+        "fr": "Mur Rose — secteur sud-est",
+        "en": "Wall Rose — south-east sector"
+      },
+      "stateId": "rose_s",
+      "landmass": "paradis_island",
+      "terrain": "plains",
+      "formerPureTitanTerritory": false,
+      "color": "#369226"
+    },
+    {
+      "id": "pa_maria_nw",
+      "name": {
+        "fr": "Mur Maria — secteur nord-ouest",
+        "en": "Wall Maria — north-west sector"
+      },
+      "stateId": "maria_n",
+      "landmass": "paradis_island",
+      "terrain": "plains",
+      "formerPureTitanTerritory": false,
+      "color": "#6b21bd"
+    },
+    {
+      "id": "pa_maria_ne",
+      "name": {
+        "fr": "Mur Maria — secteur nord-est",
+        "en": "Wall Maria — north-east sector"
+      },
+      "stateId": "maria_n",
+      "landmass": "paradis_island",
+      "terrain": "forest",
+      "formerPureTitanTerritory": false,
+      "color": "#a08278"
+    },
+    {
+      "id": "pa_maria_sw",
+      "name": {
+        "fr": "Mur Maria — secteur sud-ouest",
+        "en": "Wall Maria — south-west sector"
+      },
+      "stateId": "maria_s",
+      "landmass": "paradis_island",
+      "terrain": "plains",
+      "formerPureTitanTerritory": false,
+      "color": "#d5e333"
+    },
+    {
+      "id": "pa_maria_se",
+      "name": {
+        "fr": "Mur Maria — secteur sud-est",
+        "en": "Wall Maria — south-east sector"
+      },
+      "stateId": "maria_s",
+      "landmass": "paradis_island",
+      "terrain": "plains",
+      "formerPureTitanTerritory": false,
+      "color": "#4272ca"
+    },
+    {
+      "id": "pa_titan_n",
+      "name": {
+        "fr": "Terres du nord",
+        "en": "Northern lands"
+      },
+      "stateId": "titan_n",
+      "landmass": "paradis_island",
+      "terrain": "forest",
+      "formerPureTitanTerritory": true,
+      "color": "#77d385"
+    },
+    {
+      "id": "pa_titan_s",
+      "name": {
+        "fr": "Terres du sud",
+        "en": "Southern lands"
+      },
+      "stateId": "titan_s",
+      "landmass": "paradis_island",
+      "terrain": "plains",
+      "formerPureTitanTerritory": true,
+      "color": "#ac6240"
+    }
+  ],
+  "states": [
+    {
+      "id": "marley_west",
+      "name": {
+        "fr": "Territoire colonial occidental",
+        "en": "Western colonial territory"
+      },
+      "ownerId": "marley",
+      "provinceIds": [
+        "west_n",
+        "west_c",
+        "west_s"
+      ],
+      "isWallState": false,
+      "wallRing": null,
+      "infrastructureLevel": 1,
+      "resourceDeposits": {
+        "steel": 1,
+        "fuel": 1,
+        "rareMaterials": 1
+      },
+      "factories": [
+        {
+          "id": "f_marley_west_c1",
+          "type": "civilian"
+        }
+      ]
+    },
+    {
+      "id": "nidereldia",
+      "name": {
+        "fr": "Nidereldia",
+        "en": "Nidereldia"
+      },
+      "ownerId": "marley",
+      "provinceIds": [
+        "mar_nw",
+        "mar_n"
+      ],
+      "isWallState": false,
+      "wallRing": null,
+      "infrastructureLevel": 3,
+      "resourceDeposits": {
+        "steel": 3,
+        "fuel": 1,
+        "rareMaterials": 0
+      },
+      "factories": [
+        {
+          "id": "f_nidereldia_c1",
+          "type": "civilian"
+        },
+        {
+          "id": "f_nidereldia_c2",
+          "type": "civilian"
+        },
+        {
+          "id": "f_nidereldia_c3",
+          "type": "civilian"
+        },
+        {
+          "id": "f_nidereldia_m1",
+          "type": "military"
+        },
+        {
+          "id": "f_nidereldia_m2",
+          "type": "military"
+        }
+      ]
+    },
+    {
+      "id": "obereldia",
+      "name": {
+        "fr": "Obereldia",
+        "en": "Obereldia"
+      },
+      "ownerId": "marley",
+      "provinceIds": [
+        "mar_ne",
+        "mar_ne2"
+      ],
+      "isWallState": false,
+      "wallRing": null,
+      "infrastructureLevel": 3,
+      "resourceDeposits": {
+        "steel": 4,
+        "fuel": 1,
+        "rareMaterials": 1
+      },
+      "factories": [
+        {
+          "id": "f_obereldia_c1",
+          "type": "civilian"
+        },
+        {
+          "id": "f_obereldia_c2",
+          "type": "civilian"
+        },
+        {
+          "id": "f_obereldia_m1",
+          "type": "military"
+        },
+        {
+          "id": "f_obereldia_m2",
+          "type": "military"
+        },
+        {
+          "id": "f_obereldia_m3",
+          "type": "military"
+        }
+      ]
+    },
+    {
+      "id": "patria",
+      "name": {
+        "fr": "Patria",
+        "en": "Patria"
+      },
+      "ownerId": "marley",
+      "provinceIds": [
+        "mar_w",
+        "mar_cap"
+      ],
+      "isWallState": false,
+      "wallRing": null,
+      "infrastructureLevel": 5,
+      "resourceDeposits": {
+        "steel": 2,
+        "fuel": 2,
+        "rareMaterials": 1
+      },
+      "factories": [
+        {
+          "id": "f_patria_c1",
+          "type": "civilian"
+        },
+        {
+          "id": "f_patria_c2",
+          "type": "civilian"
+        },
+        {
+          "id": "f_patria_c3",
+          "type": "civilian"
+        },
+        {
+          "id": "f_patria_c4",
+          "type": "civilian"
+        },
+        {
+          "id": "f_patria_c5",
+          "type": "civilian"
+        },
+        {
+          "id": "f_patria_c6",
+          "type": "civilian"
+        },
+        {
+          "id": "f_patria_m1",
+          "type": "military"
+        },
+        {
+          "id": "f_patria_m2",
+          "type": "military"
+        },
+        {
+          "id": "f_patria_m3",
+          "type": "military"
+        },
+        {
+          "id": "f_patria_m4",
+          "type": "military"
+        },
+        {
+          "id": "f_patria_m5",
+          "type": "military"
+        }
+      ]
+    },
+    {
+      "id": "liberio",
+      "name": {
+        "fr": "Zone d'internement eldienne",
+        "en": "Eldian internment zone"
+      },
+      "ownerId": "marley",
+      "provinceIds": [
+        "mar_lib"
+      ],
+      "isWallState": false,
+      "wallRing": null,
+      "infrastructureLevel": 2,
+      "resourceDeposits": {
+        "steel": 0,
+        "fuel": 0,
+        "rareMaterials": 0
+      },
+      "factories": [
+        {
+          "id": "f_liberio_c1",
+          "type": "civilian"
+        }
+      ]
+    },
+    {
+      "id": "plateau",
+      "name": {
+        "fr": "Plateau central",
+        "en": "Central plateau"
+      },
+      "ownerId": "marley",
+      "provinceIds": [
+        "mar_c"
+      ],
+      "isWallState": false,
+      "wallRing": null,
+      "infrastructureLevel": 2,
+      "resourceDeposits": {
+        "steel": 5,
+        "fuel": 0,
+        "rareMaterials": 2
+      },
+      "factories": [
+        {
+          "id": "f_plateau_c1",
+          "type": "civilian"
+        },
+        {
+          "id": "f_plateau_m1",
+          "type": "military"
+        }
+      ]
+    },
+    {
+      "id": "coast_west",
+      "name": {
+        "fr": "Côte du Couchant",
+        "en": "Sunset coast"
+      },
+      "ownerId": "marley",
+      "provinceIds": [
+        "mar_sw"
+      ],
+      "isWallState": false,
+      "wallRing": null,
+      "infrastructureLevel": 3,
+      "resourceDeposits": {
+        "steel": 1,
+        "fuel": 1,
+        "rareMaterials": 0
+      },
+      "factories": [
+        {
+          "id": "f_coast_west_c1",
+          "type": "civilian"
+        },
+        {
+          "id": "f_coast_west_c2",
+          "type": "civilian"
+        },
+        {
+          "id": "f_coast_west_m1",
+          "type": "military"
+        }
+      ]
+    },
+    {
+      "id": "sudennland",
+      "name": {
+        "fr": "Sudennland",
+        "en": "Sudennland"
+      },
+      "ownerId": "marley",
+      "provinceIds": [
+        "mar_s1",
+        "mar_s2"
+      ],
+      "isWallState": false,
+      "wallRing": null,
+      "infrastructureLevel": 3,
+      "resourceDeposits": {
+        "steel": 2,
+        "fuel": 2,
+        "rareMaterials": 1
+      },
+      "factories": [
+        {
+          "id": "f_sudennland_c1",
+          "type": "civilian"
+        },
+        {
+          "id": "f_sudennland_c2",
+          "type": "civilian"
+        },
+        {
+          "id": "f_sudennland_c3",
+          "type": "civilian"
+        },
+        {
+          "id": "f_sudennland_m1",
+          "type": "military"
+        },
+        {
+          "id": "f_sudennland_m2",
+          "type": "military"
+        }
+      ]
+    },
+    {
+      "id": "desert_south",
+      "name": {
+        "fr": "Désert méridional",
+        "en": "Southern desert"
+      },
+      "ownerId": "marley",
+      "provinceIds": [
+        "mar_d1",
+        "mar_d2"
+      ],
+      "isWallState": false,
+      "wallRing": null,
+      "infrastructureLevel": 1,
+      "resourceDeposits": {
+        "steel": 0,
+        "fuel": 4,
+        "rareMaterials": 1
+      },
+      "factories": [
+        {
+          "id": "f_desert_south_c1",
+          "type": "civilian"
+        }
+      ]
+    },
+    {
+      "id": "eur_marley",
+      "name": {
+        "fr": "Marley européenne",
+        "en": "European Marley"
+      },
+      "ownerId": "marley",
+      "provinceIds": [
+        "eur_1",
+        "eur_2",
+        "eur_3"
+      ],
+      "isWallState": false,
+      "wallRing": null,
+      "infrastructureLevel": 4,
+      "resourceDeposits": {
+        "steel": 3,
+        "fuel": 1,
+        "rareMaterials": 1
+      },
+      "factories": [
+        {
+          "id": "f_eur_marley_c1",
+          "type": "civilian"
+        },
+        {
+          "id": "f_eur_marley_c2",
+          "type": "civilian"
+        },
+        {
+          "id": "f_eur_marley_c3",
+          "type": "civilian"
+        },
+        {
+          "id": "f_eur_marley_c4",
+          "type": "civilian"
+        },
+        {
+          "id": "f_eur_marley_m1",
+          "type": "military"
+        },
+        {
+          "id": "f_eur_marley_m2",
+          "type": "military"
+        },
+        {
+          "id": "f_eur_marley_m3",
+          "type": "military"
+        }
+      ]
+    },
+    {
+      "id": "naranema",
+      "name": {
+        "fr": "Naranema",
+        "en": "Naranema"
+      },
+      "ownerId": "mideast_alliance",
+      "provinceIds": [
+        "me_nar1",
+        "me_nar2"
+      ],
+      "isWallState": false,
+      "wallRing": null,
+      "infrastructureLevel": 2,
+      "resourceDeposits": {
+        "steel": 1,
+        "fuel": 5,
+        "rareMaterials": 0
+      },
+      "factories": [
+        {
+          "id": "f_naranema_c1",
+          "type": "civilian"
+        },
+        {
+          "id": "f_naranema_c2",
+          "type": "civilian"
+        },
+        {
+          "id": "f_naranema_m1",
+          "type": "military"
+        },
+        {
+          "id": "f_naranema_m2",
+          "type": "military"
+        }
+      ]
+    },
+    {
+      "id": "menoriana",
+      "name": {
+        "fr": "Menoriana",
+        "en": "Menoriana"
+      },
+      "ownerId": "mideast_alliance",
+      "provinceIds": [
+        "me_men1",
+        "me_men2"
+      ],
+      "isWallState": false,
+      "wallRing": null,
+      "infrastructureLevel": 3,
+      "resourceDeposits": {
+        "steel": 2,
+        "fuel": 3,
+        "rareMaterials": 1
+      },
+      "factories": [
+        {
+          "id": "f_menoriana_c1",
+          "type": "civilian"
+        },
+        {
+          "id": "f_menoriana_c2",
+          "type": "civilian"
+        },
+        {
+          "id": "f_menoriana_c3",
+          "type": "civilian"
+        },
+        {
+          "id": "f_menoriana_m1",
+          "type": "military"
+        },
+        {
+          "id": "f_menoriana_m2",
+          "type": "military"
+        }
+      ]
+    },
+    {
+      "id": "sentari",
+      "name": {
+        "fr": "Sentari",
+        "en": "Sentari"
+      },
+      "ownerId": "mideast_alliance",
+      "provinceIds": [
+        "me_sen",
+        "me_sen2"
+      ],
+      "isWallState": false,
+      "wallRing": null,
+      "infrastructureLevel": 2,
+      "resourceDeposits": {
+        "steel": 3,
+        "fuel": 2,
+        "rareMaterials": 1
+      },
+      "factories": [
+        {
+          "id": "f_sentari_c1",
+          "type": "civilian"
+        },
+        {
+          "id": "f_sentari_m1",
+          "type": "military"
+        },
+        {
+          "id": "f_sentari_m2",
+          "type": "military"
+        }
+      ]
+    },
+    {
+      "id": "rannia",
+      "name": {
+        "fr": "Rannia",
+        "en": "Rannia"
+      },
+      "ownerId": "mideast_alliance",
+      "provinceIds": [
+        "me_ran",
+        "me_ran2"
+      ],
+      "isWallState": false,
+      "wallRing": null,
+      "infrastructureLevel": 2,
+      "resourceDeposits": {
+        "steel": 1,
+        "fuel": 3,
+        "rareMaterials": 0
+      },
+      "factories": [
+        {
+          "id": "f_rannia_c1",
+          "type": "civilian"
+        },
+        {
+          "id": "f_rannia_c2",
+          "type": "civilian"
+        },
+        {
+          "id": "f_rannia_m1",
+          "type": "military"
+        }
+      ]
+    },
+    {
+      "id": "njetni",
+      "name": {
+        "fr": "Njetni",
+        "en": "Njetni"
+      },
+      "ownerId": "hizuru",
+      "provinceIds": [
+        "hz_njetni",
+        "hz_capital"
+      ],
+      "isWallState": false,
+      "wallRing": null,
+      "infrastructureLevel": 3,
+      "resourceDeposits": {
+        "steel": 1,
+        "fuel": 0,
+        "rareMaterials": 2
+      },
+      "factories": [
+        {
+          "id": "f_njetni_c1",
+          "type": "civilian"
+        },
+        {
+          "id": "f_njetni_c2",
+          "type": "civilian"
+        },
+        {
+          "id": "f_njetni_c3",
+          "type": "civilian"
+        },
+        {
+          "id": "f_njetni_m1",
+          "type": "military"
+        }
+      ]
+    },
+    {
+      "id": "daqomo",
+      "name": {
+        "fr": "Daqomo",
+        "en": "Daqomo"
+      },
+      "ownerId": "hizuru",
+      "provinceIds": [
+        "hz_daqomo",
+        "hz_daqomo2"
+      ],
+      "isWallState": false,
+      "wallRing": null,
+      "infrastructureLevel": 2,
+      "resourceDeposits": {
+        "steel": 1,
+        "fuel": 1,
+        "rareMaterials": 2
+      },
+      "factories": [
+        {
+          "id": "f_daqomo_c1",
+          "type": "civilian"
+        },
+        {
+          "id": "f_daqomo_c2",
+          "type": "civilian"
+        },
+        {
+          "id": "f_daqomo_m1",
+          "type": "military"
+        }
+      ]
+    },
+    {
+      "id": "hizuzi",
+      "name": {
+        "fr": "Îles Hizuzi",
+        "en": "Hizuzi Islands"
+      },
+      "ownerId": "hizuru",
+      "provinceIds": [
+        "hz_isl1",
+        "hz_isl2"
+      ],
+      "isWallState": false,
+      "wallRing": null,
+      "infrastructureLevel": 1,
+      "resourceDeposits": {
+        "steel": 0,
+        "fuel": 0,
+        "rareMaterials": 2
+      },
+      "factories": [
+        {
+          "id": "f_hizuzi_c1",
+          "type": "civilian"
+        }
+      ]
+    },
+    {
+      "id": "mitras",
+      "name": {
+        "fr": "Mitras (Mur Sina)",
+        "en": "Mitras (Wall Sina)"
+      },
+      "ownerId": "paradis",
+      "provinceIds": [
+        "pa_mitras",
+        "pa_mitras_e"
+      ],
+      "isWallState": true,
+      "wallRing": "inner",
+      "infrastructureLevel": 3,
+      "resourceDeposits": {
+        "steel": 1,
+        "fuel": 0,
+        "rareMaterials": 1
+      },
+      "factories": [
+        {
+          "id": "f_mitras_c1",
+          "type": "civilian"
+        },
+        {
+          "id": "f_mitras_c2",
+          "type": "civilian"
+        },
+        {
+          "id": "f_mitras_c3",
+          "type": "civilian"
+        },
+        {
+          "id": "f_mitras_m1",
+          "type": "military"
+        }
+      ]
+    },
+    {
+      "id": "rose_n",
+      "name": {
+        "fr": "Mur Rose — nord",
+        "en": "Wall Rose — north"
+      },
+      "ownerId": "paradis",
+      "provinceIds": [
+        "pa_rose_nw",
+        "pa_rose_ne"
+      ],
+      "isWallState": true,
+      "wallRing": "middle",
+      "infrastructureLevel": 2,
+      "resourceDeposits": {
+        "steel": 1,
+        "fuel": 0,
+        "rareMaterials": 0
+      },
+      "factories": [
+        {
+          "id": "f_rose_n_c1",
+          "type": "civilian"
+        },
+        {
+          "id": "f_rose_n_m1",
+          "type": "military"
+        }
+      ]
+    },
+    {
+      "id": "rose_s",
+      "name": {
+        "fr": "Mur Rose — sud",
+        "en": "Wall Rose — south"
+      },
+      "ownerId": "paradis",
+      "provinceIds": [
+        "pa_rose_sw",
+        "pa_rose_se"
+      ],
+      "isWallState": true,
+      "wallRing": "middle",
+      "infrastructureLevel": 2,
+      "resourceDeposits": {
+        "steel": 1,
+        "fuel": 1,
+        "rareMaterials": 0
+      },
+      "factories": [
+        {
+          "id": "f_rose_s_c1",
+          "type": "civilian"
+        },
+        {
+          "id": "f_rose_s_m1",
+          "type": "military"
+        }
+      ]
+    },
+    {
+      "id": "maria_n",
+      "name": {
+        "fr": "Mur Maria — nord",
+        "en": "Wall Maria — north"
+      },
+      "ownerId": "paradis",
+      "provinceIds": [
+        "pa_maria_nw",
+        "pa_maria_ne"
+      ],
+      "isWallState": true,
+      "wallRing": "outer",
+      "infrastructureLevel": 1,
+      "resourceDeposits": {
+        "steel": 1,
+        "fuel": 1,
+        "rareMaterials": 0
+      },
+      "factories": [
+        {
+          "id": "f_maria_n_c1",
+          "type": "civilian"
+        }
+      ]
+    },
+    {
+      "id": "maria_s",
+      "name": {
+        "fr": "Mur Maria — sud",
+        "en": "Wall Maria — south"
+      },
+      "ownerId": "paradis",
+      "provinceIds": [
+        "pa_maria_sw",
+        "pa_maria_se"
+      ],
+      "isWallState": true,
+      "wallRing": "outer",
+      "infrastructureLevel": 1,
+      "resourceDeposits": {
+        "steel": 1,
+        "fuel": 0,
+        "rareMaterials": 1
+      },
+      "factories": [
+        {
+          "id": "f_maria_s_c1",
+          "type": "civilian"
+        }
+      ]
+    },
+    {
+      "id": "titan_n",
+      "name": {
+        "fr": "Terres nord (Titans purs)",
+        "en": "Northern lands (Pure Titans)"
+      },
+      "ownerId": "paradis",
+      "provinceIds": [
+        "pa_titan_n"
+      ],
+      "isWallState": false,
+      "wallRing": null,
+      "infrastructureLevel": 0,
+      "resourceDeposits": {
+        "steel": 1,
+        "fuel": 0,
+        "rareMaterials": 1
+      },
+      "factories": []
+    },
+    {
+      "id": "titan_s",
+      "name": {
+        "fr": "Terres sud (Titans purs)",
+        "en": "Southern lands (Pure Titans)"
+      },
+      "ownerId": "paradis",
+      "provinceIds": [
+        "pa_titan_s"
+      ],
+      "isWallState": false,
+      "wallRing": null,
+      "infrastructureLevel": 0,
+      "resourceDeposits": {
+        "steel": 0,
+        "fuel": 1,
+        "rareMaterials": 1
+      },
+      "factories": []
+    }
+  ]
+}

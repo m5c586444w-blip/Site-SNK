@@ -11,6 +11,9 @@ import { runDay, effectContext } from './simulation/tick.js';
 import { startFocus } from './simulation/focus.js';
 import { diplomaticAction } from './simulation/diplomacy.js';
 import { resolveEvent } from './simulation/events.js';
+import { changeLaw, changeEldianPolicy, recruitCandidate } from './simulation/politics.js';
+import { runOperation } from './simulation/intel.js';
+import { nationModifiers } from './simulation/modifiers.js';
 import { createLine, assignFactories, deleteLine, queueNewFactory, queueConversion } from './simulation/economy.js';
 import { assignResearch, cancelResearch } from './simulation/research.js';
 import { saveTemplate, deleteTemplate, createDivision, orderDivision, setFront } from './simulation/military.js';
@@ -40,12 +43,14 @@ const HTTP_STATUS = {
   NO_WARGOAL: 409, WARGOAL_NOT_READY: 409, INVALID_DIPLOMATIC_ACTION: 400, RELATION_TOO_LOW: 409,
   POLITICAL_CAPITAL_UNKNOWN: 409, INSUFFICIENT_POLITICAL_CAPITAL: 409, AGREEMENT_EXISTS: 409,
   EVENT_NOT_PENDING: 404, INVALID_CHOICE: 400, EVENT_PENDING: 409,
+  INVALID_LAW: 400, LAW_COOLDOWN: 409, LAW_ALREADY_ACTIVE: 409, MARLEY_ONLY: 403, POOL_FULL: 409,
+  INVALID_OPERATION: 400, INVALID_AGENT: 400, AGENT_BUSY: 409,
 };
 
 export async function createServer({ onQuit = () => process.exit(0) } = {}) {
   const data = await loadGameData();
-  const { nations, map, technologies, economyRules, militaryRules, focuses, focusBranches, events } = data;
-  const viewOpts = { technologies, economyRules, focuses, focusBranches, events };
+  const { nations, map, technologies, economyRules, militaryRules, focuses, focusBranches, events, politics } = data;
+  const viewOpts = { technologies, economyRules, focuses, focusBranches, events, politics };
 
   /** Une seule partie à la fois (le multijoueur, §15, relève d'une phase ultérieure). */
   let state = null;
@@ -71,7 +76,7 @@ export async function createServer({ onQuit = () => process.exit(0) } = {}) {
       const { dailyNet, completedTechs, military, firedEvents } = await runDay(s, data);
       s.lastDailyNet = dailyNet;
       // Modale d'évènement bloquante (FEATURES §14.2) : la partie se met en pause.
-      if (s.pendingEvents.length && s.speed !== 0) { s.speed = 0; clock.stop(); }
+      if ((s.pendingEvents.length || s.pendingInheritances.length) && s.speed !== 0) { s.speed = 0; clock.stop(); }
       // Changement de contrôle, de brouillard ou évènement : la carte change, vue complète.
       if (military.captured.length || firedEvents.length || JSON.stringify(s.visibility) !== visibilityBefore) broadcast('state/full', fullView());
       else broadcast('state/delta', { date: formatDate(s.date), ...playerDelta() });
@@ -99,7 +104,7 @@ export async function createServer({ onQuit = () => process.exit(0) } = {}) {
   };
 
   const setSpeed = (level) => {
-    if (state?.pendingEvents?.length && level !== 0) throw Object.assign(new Error('évènement'), { code: 'EVENT_PENDING' });
+    if ((state?.pendingEvents?.length || state?.pendingInheritances?.length) && level !== 0) throw Object.assign(new Error('évènement'), { code: 'EVENT_PENDING' });
     clock.setSpeed(level);
     broadcast('state/delta', { speed: state.speed });
   };
@@ -153,9 +158,13 @@ export async function createServer({ onQuit = () => process.exit(0) } = {}) {
     'template/save': (n, p) => saveTemplate(state, n, p.template, militaryRules),
     'template/delete': (n, p) => deleteTemplate(state, n, p.templateId),
     'division/create': (n, p) => { requireMap(); return createDivision(state, n, p.templateId, p.provinceId); },
-    'division/order': (n, p) => { requireMap(); return orderDivision(state, map, n, p.divisionId, p.order, p.targetProvinceId, militaryRules); },
+    'division/order': (n, p) => { requireMap(); return orderDivision(state, map, n, p.divisionId, p.order, p.targetProvinceId, militaryRules, (id) => nationModifiers(state, id, politics)); },
     'division/setFront': (n, p) => { requireMap(); return setFront(state, map, n, p.divisionId); },
-    'focus/start': (n, p) => startFocus(state, n, p.focusId, focuses),
+    'focus/start': (n, p) => startFocus(state, n, p.focusId, focuses, politics),
+    'law/change': (n, p) => changeLaw(state, n, p.category, p.newValue, politics, effectContext(state, data)),
+    'law/eldianPolicy': (n, p) => changeEldianPolicy(state, n, p.policy),
+    'warrior/recruit': (n) => recruitCandidate(state, n),
+    'intel/operation': (n, p) => { requireMap(); return runOperation(state, map, n, p.operationType, p.targetNationId, p.agentId, politics); },
     'diplomacy/action': (n, p) => diplomaticAction(state, n, p.targetNationId, p.action),
     'event/resolve': (n, p) => resolveEvent(state, n, p.eventId, p.choiceIndex, effectContext(state, data)),
   };

@@ -77,7 +77,11 @@ test('ordres : cible voisine en guerre, retraite refusée sans règle de mouveme
   const { state, data } = await newGame();
   const { map, militaryRules } = data;
   assert.throws(() => mil.orderDivision(state, map, 'marley', 'div_test_m1', 'advance', 'test_a1', militaryRules), { code: 'INVALID_TARGET' });
-  assert.throws(() => mil.orderDivision(state, map, 'marley', 'div_test_m1', 'advance', 'test_b1', militaryRules), { code: 'NOT_AT_WAR' });
+  // Avancer vers une province amie = se déplacer : refusé sans règle de mouvement
+  assert.throws(() => mil.orderDivision(state, map, 'marley', 'div_test_m1', 'advance', 'test_b1', militaryRules), { code: 'MOVEMENT_RULES_MISSING' });
+  state.wars = [];
+  assert.throws(() => mil.orderDivision(state, map, 'marley', 'div_test_m1', 'advance', 'test_a2', militaryRules), { code: 'NOT_AT_WAR' });
+  state.wars = [['paradis', 'marley']];
   mil.orderDivision(state, map, 'marley', 'div_test_m1', 'advance', 'test_a2', militaryRules);
   assert.throws(() => mil.orderDivision(state, map, 'paradis', 'div_test_m1', 'hold', null, militaryRules), { code: 'INVALID_DIVISION' });
   assert.throws(() => mil.orderDivision(state, map, 'paradis', 'div_test_p1', 'retreat', null, militaryRules), { code: 'MOVEMENT_RULES_MISSING' });
@@ -199,9 +203,17 @@ test('brouillard : Paradis ne voit pas les divisions ennemies en territoire inco
   assert.equal(m.military.divisions.length, 4);
 });
 
-test('scénario réel : aucune guerre en 844, aucun ordre de bataille inventé', async () => {
+test('scénario réel : aucune guerre en 844 ; ordre de bataille [EXTENSION] sur des provinces existantes', async () => {
   const { readFile } = await import('node:fs/promises');
   const sc = JSON.parse(await readFile('data/scenario.json', 'utf8'));
+  const map = JSON.parse(await readFile('data/map/provinces.json', 'utf8'));
   assert.deepEqual(sc.startingWars, []);
-  assert.deepEqual(sc.startingDivisions, []);
+  const provinces = new Set(map.provinces.map((p) => p.id));
+  const owner = Object.fromEntries(map.states.flatMap((s) => s.provinceIds.map((p) => [p, s.ownerId])));
+  const tpl = new Set(sc.startingTemplates.map((t) => t.id));
+  for (const d of sc.startingDivisions) {
+    assert.ok(provinces.has(d.locationProvinceId), d.locationProvinceId);
+    assert.equal(owner[d.locationProvinceId], d.nationId);
+    assert.ok(tpl.has(d.templateId));
+  }
 });

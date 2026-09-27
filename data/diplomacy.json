@@ -1,7 +1,12 @@
 {
-  "_source": "MECHANICS_SPEC.md §8 pour les coûts et seuils (dans le code). Valeurs ci-dessous ABSENTES des specs.",
-  "initialRelations": {},
-  "_initialRelationsNote": "Relations initiales non spécifiées : 0 (neutre) par défaut. Format : { \"marley|mideast_alliance\": -50 } (paire triée).",
-  "politicalCapitalPerDay": null,
-  "_politicalCapitalNote": "« accrues over time » (§2) sans taux : null = pas d'accumulation."
+  "_source": "[EXTENSION] Relations initiales et gain de capital politique déduits du lore (MECHANICS §8 ne donne que coûts et seuils).",
+  "initialRelations": {
+    "marley|mideast_alliance": -60,
+    "hizuru|marley": -30,
+    "hizuru|mideast_alliance": 20,
+    "marley|paradis": -100,
+    "hizuru|paradis": 10
+  },
+  "_initialRelationsNote": "Marley/Alliance : rivalité (LORE §2.3). Hizuru méfiant envers Marley, proche de l'Alliance. Marley hostile à l'île (population eldienne perçue comme ennemie). Hizuru favorable aux Eldiens (LORE §2.4). Paradis ne connaît personne (brouillard).",
+  "politicalCapitalPerDay": 1
 }

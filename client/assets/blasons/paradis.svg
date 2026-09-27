@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 140" role="img" aria-label="Blason de l'île du Paradis">
+  <!-- [EXTENSION] Blason original (cahier §9) : écu vert kaki, tour crénelée et trois enceintes en chef. -->
+  <path d="M10 8 H110 V70 C110 104 86 124 60 134 C34 124 10 104 10 70 Z" fill="#4B5D3A" stroke="#2b241b" stroke-width="4"/>
+  <path d="M22 26 H98 M28 38 H92 M34 50 H86" stroke="#E8DCC0" stroke-width="4" stroke-linecap="round"/>
+  <path d="M44 112 V76 H50 V68 H56 V76 H64 V68 H70 V76 H76 V112 Z" fill="#E8DCC0" stroke="#2b241b" stroke-width="2"/>
+  <rect x="56" y="92" width="8" height="20" fill="#4B5D3A"/>
+</svg>

@@ -121,3 +121,36 @@ export const WARSCORE_PER_OBJECTIVE_CAPTURED = 10;
 export const WARSCORE_PEACE_THRESHOLD = 100;
 /** FEATURES §14.3 */
 export const JOURNAL_CATEGORIES = ['military', 'diplomacy', 'politics', 'focus', 'titan', 'intel', 'historical_chain'];
+
+// ---------------- Phase 5 : Titans, Guerriers, politique (MECHANICS_SPEC.md §7, §9) ----------------
+/** §7.1 */
+export const SHIFTER_ACTIVE_LIFESPAN_YEARS = 13;
+/** §7.3 (bonus plats, non cumulables : chaque emplacement s'applique une fois) */
+export const TITAN_POWER_BONUS = {
+  TITAN_FOUNDING: { stabilityRegenPerDay: 1.0 },          // effet complet avec le drapeau de lignée royale, sinon divisé par deux
+  TITAN_ATTACK: { focusCostDaysReductionPct: -10 },
+  TITAN_COLOSSAL: { siegeBonusPct: 20, defenderOrgLossOnAttackPct: 5 },
+  TITAN_ARMORED: { divisionDefensePct: 8 },
+  TITAN_FEMALE: { divisionSpeedPct: 10 },
+  TITAN_BEAST: { researchBonusCategory: 'doctrine', researchBonusPct: 10 },
+  TITAN_CART: { supplyValueFlat: 0.1 },
+  TITAN_JAW: { divisionSpeedPct: 15, divisionDefensePct: -5 },
+  TITAN_WARHAMMER: { siegeBonusPct: 15 },
+};
+/** §7.4 */
+export const WARRIOR_CANDIDATE_POOL_MAX = 5;
+export const CANDIDATE_TRAINING_DAYS = 365;
+export const DEFECTION_CHANCE_PER_DAY_BASE = 0.0005;
+export const DEFECTION_STABILITY_HIT = -2;
+/** §9 */
+export const UNREST_EVENT_CHANCE_PER_DAY_BELOW_30_STABILITY = 0.01;
+export const LAW_SWITCH_COOLDOWN_DAYS = 90;
+export const LAW_CATEGORIES = ['economic_mobilization', 'conscription', 'trade_policy'];
+/** §9.3 */
+export const ELDIAN_STATUS_MODIFIERS = {
+  strict: { marleyanPopStabilityBonus: 5, eldianPopUnrestChancePerDay: 0.02, warriorProgramDefectionMultiplier: 0.5 },
+  moderate: { marleyanPopStabilityBonus: 0, eldianPopUnrestChancePerDay: 0.01, warriorProgramDefectionMultiplier: 1.0 },
+  relaxed: { marleyanPopStabilityBonus: -5, eldianPopUnrestChancePerDay: 0.002, warriorProgramDefectionMultiplier: 1.5 },
+};
+/** FEATURES §11 */
+export const INTEL_OPERATIONS = ['reconnaissance', 'sabotage', 'support_faction'];

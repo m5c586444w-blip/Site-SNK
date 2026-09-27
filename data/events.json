@@ -122,7 +122,10 @@
               "from": "marley",
               "to": "paradis",
               "count": 2,
-              "titanIds": null
+              "titanIds": [
+                "TITAN_COLOSSAL",
+                "TITAN_JAW"
+              ]
             }
           ]
         }
@@ -282,5 +285,6 @@
         "focusId": "AVERT_RUMBLING"
       }
     }
-  ]
+  ],
+  "_titanTransferNote": "[EXTENSION] Les deux pouvoirs passés à Paradis en 850 : Colossal et Mâchoire (lecture du canon résumé par HISTORICAL_EVENT_CHAIN §1.3)."
 }

@@ -64,17 +64,22 @@ export async function loadDiplomacy() {
   return readJson('diplomacy.json');
 }
 
+export async function loadPolitics() {
+  return readJson('politics.json');
+}
+
 /** Toutes les données statiques d'une partie. */
 export async function loadGameData() {
-  const [nations, map, technologies, economyRules, militaryRules, scenario, focusData, eventData, diplomacyRules] = await Promise.all([
+  const [nations, map, technologies, economyRules, militaryRules, scenario, focusData, eventData, diplomacyRules, politics] = await Promise.all([
     loadNations(), loadMap(), loadTechnologies(), loadEconomyRules(), loadMilitaryRules(), loadScenario(),
-    loadFocuses(), loadEvents(), loadDiplomacy(),
+    loadFocuses(), loadEvents(), loadDiplomacy(), loadPolitics(),
   ]);
   return {
     nations, map, technologies, economyRules, militaryRules, scenario,
     focuses: focusData.focuses, focusBranches: focusData.branches,
     events: compileEvents(eventData), eventValues: eventData.extensionValues ?? {},
     diplomacyRules,
+    politics,
   };
 }
 

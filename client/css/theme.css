@@ -307,3 +307,17 @@ select, .text-input { font: 1rem var(--font-ui); padding: 0.4em; border: 1px sol
 .date-input { width: 9rem; margin-top: 0; }
 .modal-overlay.blocking { background: rgb(20 14 8 / 72%); }
 .event-text { font-family: var(--font-text); font-size: 1.15rem; line-height: 1.45; max-width: 60ch; }
+
+/* ---------- Phase 5 : Titans, politique, renseignement ---------- */
+.law-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0.8rem; }
+.law-block { padding: 0.8rem 1rem; }
+.law-block h4 { font-family: var(--font-title); margin: 0 0 0.6rem; display: flex; gap: 0.5rem; align-items: center; }
+.law-row { display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; padding: 0.4rem 0; border-top: 1px dotted var(--line); }
+.law-row.active strong { color: var(--ok); }
+.titan-secure { color: var(--ok); border-color: var(--ok); }
+.titan-at-risk { color: #8d6f1d; border-color: #8d6f1d; }
+.titan-lost { color: var(--danger); border-color: var(--danger); }
+img.blason { object-fit: contain; border: none; flex: none; }
+img.blason.flag-sm { width: 22px; height: 26px; }
+img.blason.flag-md { width: 34px; height: 40px; }
+img.blason.flag-lg { width: 52px; height: 60px; }
