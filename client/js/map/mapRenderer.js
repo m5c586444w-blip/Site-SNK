@@ -75,6 +75,10 @@ export class MapRenderer {
       this.pixelProvince = new Int32Array(this.maskKeys.length);
       for (let i = 0; i < this.maskKeys.length; i++) this.pixelProvince[i] = byKey.get(this.maskKeys[i]) ?? -1;
     }
+    this.maxDeposit = Math.max(1, ...this.provinces.map((p) => {
+      const r = p.resourceDeposits;
+      return r ? (r.steel ?? 0) + (r.fuel ?? 0) + (r.rareMaterials ?? 0) : 0;
+    }));
     this.renderLayer();
     this.renderHighlight();
   }
@@ -121,8 +125,8 @@ export class MapRenderer {
           // contour approximatif en pointillés, ni remplissage ni propriétaire
           out = isBorder && ((x + y) >> 1) % 2 === 0 ? PARTIAL_BORDER : mix(base, FOG_HIDDEN, 0.35);
         } else {
-          const fill = this.nationColors.get(p.ownerId) ?? NEUTRAL;
-          out = mix(base, fill, 0.55);
+          const fill = this.modeFill(p, x, y);
+          out = mix(base, fill, this.mode === 'political' ? 0.55 : 0.7);
           if (p.formerPureTitanTerritory && (x + y) % 7 < 2) out = mix(out, HAZARD, 0.7);
           if (isBorder) {
             const nationEdge = nbrs.some((n) => n !== idx && (!known(n) || owner(n) !== p.ownerId));
@@ -141,6 +145,24 @@ export class MapRenderer {
     }
     lx.putImageData(img, 0, 0);
     this.draw();
+  }
+
+  /** Couleur de remplissage d'une province connue selon le mode de carte (FEATURES §2). */
+  modeFill(p, x, y) {
+    if (this.mode === 'resources') {
+      // Somme des gisements de l'état ; hachures neutres si la donnée n'est pas renseignée.
+      const r = p.resourceDeposits;
+      if (!r) return (x + y) % 6 < 3 ? NEUTRAL : SEA_NO_BACKGROUND;
+      const total = (r.steel ?? 0) + (r.fuel ?? 0) + (r.rareMaterials ?? 0);
+      return mix([236, 226, 196], [120, 70, 20], Math.min(1, total / this.maxDeposit));
+    }
+    if (this.mode === 'supply') {
+      // supply_value 0..1 (MECHANICS §3.4) ; < 0.5 = pénalité d'attrition (§6.4)
+      if (p.supplyValue == null) return (x + y) % 6 < 3 ? NEUTRAL : SEA_NO_BACKGROUND;
+      return p.supplyValue < 0.5 ? mix([150, 40, 25], [214, 170, 60], p.supplyValue / 0.5)
+        : mix([214, 170, 60], [75, 93, 58], (p.supplyValue - 0.5) / 0.5);
+    }
+    return this.nationColors.get(p.ownerId) ?? NEUTRAL;
   }
 
   renderHighlight() {

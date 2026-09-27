@@ -59,7 +59,25 @@
         "steel": 1,
         "fuel": 0,
         "rareMaterials": 0
-      }
+      },
+      "factories": [
+        {
+          "id": "tf_a1_c1",
+          "type": "civilian"
+        },
+        {
+          "id": "tf_a1_c2",
+          "type": "civilian"
+        },
+        {
+          "id": "tf_a1_m1",
+          "type": "military"
+        },
+        {
+          "id": "tf_a1_m2",
+          "type": "military"
+        }
+      ]
     },
     {
       "id": "test_state_a2",
@@ -67,6 +85,18 @@
       "ownerId": "paradis",
       "provinceIds": [
         "test_a2"
+      ],
+      "infrastructureLevel": 0,
+      "resourceDeposits": {
+        "steel": 0,
+        "fuel": 2,
+        "rareMaterials": 1
+      },
+      "factories": [
+        {
+          "id": "tf_a2_c1",
+          "type": "civilian"
+        }
       ]
     },
     {
@@ -84,6 +114,26 @@
       "provinceIds": [
         "test_b1",
         "test_b2"
+      ],
+      "infrastructureLevel": 4,
+      "resourceDeposits": {
+        "steel": 3,
+        "fuel": 3,
+        "rareMaterials": 0
+      },
+      "factories": [
+        {
+          "id": "tf_b_c1",
+          "type": "civilian"
+        },
+        {
+          "id": "tf_b_m1",
+          "type": "military"
+        },
+        {
+          "id": "tf_b_m2",
+          "type": "military"
+        }
       ]
     }
   ]

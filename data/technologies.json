@@ -1,0 +1,4 @@
+{
+  "_source": "Catalogue ABSENT des specs : MECHANICS_SPEC.md §4 donne les catégories et la formule de durée, mais aucune technologie. Schéma attendu : { id, name: {fr, en}, category (CATEGORIES §4), baseCostDays, prerequisiteTechIds: [] }. Voir docs/PHASE2_GAPS.md.",
+  "technologies": []
+}

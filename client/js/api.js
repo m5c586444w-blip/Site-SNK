@@ -31,3 +31,7 @@ export const api = {
   deleteSave: (id) => request('DELETE', `/api/saves/${encodeURIComponent(id)}`),
   quit: () => request('POST', '/api/quit'),
 };
+
+/** Action de nation (FEATURES §18), ex. nationAction('paradis', 'research/assign', { techId, slotIndex }). */
+api.nationAction = (nationId, type, payload = {}) =>
+  request('POST', `/api/nation/${encodeURIComponent(nationId)}/${type}`, payload);

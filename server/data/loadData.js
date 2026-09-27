@@ -14,9 +14,40 @@ async function exists(p) {
   try { await access(p); return true; } catch { return false; }
 }
 
+/**
+ * Fichier de données : data/<name>, sauf s'il existe dans le dossier SNK_DATA_OVERLAY. Ce dossier
+ * sert aux tests et au développement (tests/fixtures/overlay) sans toucher aux vraies données.
+ */
+async function dataFile(name) {
+  if (process.env.SNK_DATA_OVERLAY) {
+    const p = path.join(path.resolve(process.env.SNK_DATA_OVERLAY), name);
+    if (await exists(p)) return p;
+  }
+  return path.join(DATA_DIR, name);
+}
+
+async function readJson(name) {
+  return JSON.parse(await readFile(await dataFile(name), 'utf8'));
+}
+
 export async function loadNations() {
-  const raw = JSON.parse(await readFile(path.join(DATA_DIR, 'nations.json'), 'utf8'));
-  return raw.nations;
+  return (await readJson('nations.json')).nations;
+}
+
+export async function loadTechnologies() {
+  return (await readJson('technologies.json')).technologies ?? [];
+}
+
+export async function loadEconomyRules() {
+  return readJson('economy_rules.json');
+}
+
+/** Toutes les données statiques d'une partie. */
+export async function loadGameData() {
+  const [nations, map, technologies, economyRules] = await Promise.all([
+    loadNations(), loadMap(), loadTechnologies(), loadEconomyRules(),
+  ]);
+  return { nations, map, technologies, economyRules };
 }
 
 /**

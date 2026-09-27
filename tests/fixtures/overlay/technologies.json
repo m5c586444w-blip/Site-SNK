@@ -1,0 +1,59 @@
+{
+  "_note": "TECHNOLOGIES DE TEST ABSTRAITES — pas du contenu de jeu",
+  "technologies": [
+    {
+      "id": "test_infantry_1",
+      "name": {
+        "fr": "test infantry 1",
+        "en": "test infantry 1"
+      },
+      "category": "infantry",
+      "baseCostDays": 10,
+      "prerequisiteTechIds": []
+    },
+    {
+      "id": "test_infantry_2",
+      "name": {
+        "fr": "test infantry 2",
+        "en": "test infantry 2"
+      },
+      "category": "infantry",
+      "baseCostDays": 20,
+      "prerequisiteTechIds": [
+        "test_infantry_1"
+      ]
+    },
+    {
+      "id": "test_industry_1",
+      "name": {
+        "fr": "test industry 1",
+        "en": "test industry 1"
+      },
+      "category": "industry",
+      "baseCostDays": 5,
+      "prerequisiteTechIds": []
+    },
+    {
+      "id": "test_doctrine_1",
+      "name": {
+        "fr": "test doctrine 1",
+        "en": "test doctrine 1"
+      },
+      "category": "doctrine",
+      "baseCostDays": 30,
+      "prerequisiteTechIds": [
+        "test_industry_1"
+      ]
+    },
+    {
+      "id": "test_navy_1",
+      "name": {
+        "fr": "test navy 1",
+        "en": "test navy 1"
+      },
+      "category": "navy",
+      "baseCostDays": 10,
+      "prerequisiteTechIds": []
+    }
+  ]
+}

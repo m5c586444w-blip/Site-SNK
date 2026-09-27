@@ -1,0 +1,21 @@
+{
+  "_note": "RÈGLES DE TEST — valeurs arbitraires pour exercer le moteur, pas des valeurs de jeu",
+  "factoryBuildCost": {
+    "civilian": 20,
+    "military": 15
+  },
+  "factoryConversionCost": 10,
+  "startingStockpiles": {
+    "byNation": {
+      "paradis": {
+        "resources": {
+          "steel": 5
+        },
+        "equipment": {
+          "infantry_equipment": 100
+        }
+      }
+    }
+  },
+  "resourceConsumption": null
+}

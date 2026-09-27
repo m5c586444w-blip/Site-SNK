@@ -7,6 +7,7 @@
   "scripts": {
     "start": "node server/launcher/index.js",
     "start:no-open": "node server/launcher/index.js --no-open",
+    "start:fixture": "SNK_MAP_DIR=tests/fixtures/map SNK_DATA_OVERLAY=tests/fixtures/overlay node server/launcher/index.js",
     "test": "node --test tests/*.test.js",
     "validate-map": "node tools/validate-map.js"
   },

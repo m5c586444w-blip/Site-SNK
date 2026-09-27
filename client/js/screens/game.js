@@ -5,7 +5,9 @@ import { t, loc } from '../i18n.js';
 import { h, clear, modal, toast, errorText, flagPlaceholder, naValue } from '../ui.js';
 import { MapRenderer } from '../map/mapRenderer.js';
 import { saveList } from './menus.js';
-import { SPEED_LEVELS, STABILITY_UNREST_THRESHOLD, MAP_MODES } from '/shared/constants.js';
+import { renderProduction } from './production.js';
+import { renderResearch } from './research.js';
+import { SPEED_LEVELS, STABILITY_UNREST_THRESHOLD, MAP_MODES, RESOURCE_TYPES } from '/shared/constants.js';
 
 // Phase du cahier des charges (§12) où chaque écran/mode sera livré. null = phase non attribuée.
 const SCREEN_PHASE = {
@@ -13,6 +15,10 @@ const SCREEN_PHASE = {
   titans: 5, politics: 5, warriors: 5, intelligence: null, journal: null,
 };
 const MAP_MODE_PHASE = { political: 1, fog_of_war: 1, resources: 2, supply: 2, front_combat: 3 };
+const CURRENT_PHASE = 2;
+/** Écrans livrés : nom -> rendu (host, ctx). */
+const SCREENS = { production: renderProduction, research: renderResearch };
+const fmt = (x) => (Math.round(x * 10) / 10).toLocaleString();
 
 export async function gameScreen(root, nav) {
   let view = await api.state();
@@ -39,10 +45,14 @@ export async function gameScreen(root, nav) {
   const modeBadge = h('span.tag.mode-badge');
   const menuBtn = h('button.btn.btn-small', { onClick: () => openGameMenu() }, t('game.menu'));
   const connBanner = h('div.conn-banner.hidden', { role: 'status' });
+  // Pastilles de ressources + effectifs (FEATURES §1)
+  const resourcePips = RESOURCE_TYPES.map((r) => h('span.pip', { 'data-resource': r }));
+  const manpowerPip = h('span.pip', { title: t('topbar.manpower') });
 
   const topbar = h('header.topbar', {},
     nationBtn,
     modeBadge,
+    h('div.topbar-resources', {}, ...resourcePips, manpowerPip),
     h('div.topbar-spacer'),
     h('div.topbar-clock', {}, dateBtn, calendarPop),
     h('div.speed-control', { role: 'group' }, ...speedBtns),
@@ -54,6 +64,17 @@ export async function gameScreen(root, nav) {
     dateBtn.textContent = view.date;
     modeBadge.textContent = t(view.settings.historicalMode ? 'game.mode.historical' : 'game.mode.free');
     for (const b of speedBtns) b.classList.toggle('active', Number(b.dataset.level) === view.speed);
+    const net = view.economy?.dailyNet;
+    for (const pip of resourcePips) {
+      const r = pip.dataset.resource;
+      const total = n?.resourceStockpile?.[r];
+      clear(pip).append(h('span.pip-label', {}, t(`resource.${r}`)), h('strong', {}, total == null ? '—' : fmt(total)));
+      pip.title = net
+        ? `${t(`resource.${r}`)} — ${t('topbar.dailyNet', { p: fmt(net.produced[r]), c: fmt(net.consumed[r]) })}`
+        : `${t(`resource.${r}`)} — ${t('topbar.dailyNetNone')}`;
+    }
+    // Aucune valeur d'effectifs dans les specs : N/D
+    clear(manpowerPip).append(h('span.pip-label', {}, t('topbar.manpower')), n?.manpower == null ? naValue() : h('strong', {}, n.manpower));
   }
 
   async function setSpeed(level) {
@@ -77,10 +98,10 @@ export async function gameScreen(root, nav) {
     for (const m of MAP_MODES) {
       if (m === 'fog_of_war' && !view.fogOfWarEnabled) continue; // visible pour Paradis uniquement (§2)
       const phase = MAP_MODE_PHASE[m];
-      const enabled = phase === 1 && view.map.available;
+      const enabled = phase <= CURRENT_PHASE && view.map.available;
       modeBar.append(h(`button.map-mode-btn${m === mapMode ? '.active' : ''}`, {
         disabled: !enabled,
-        title: phase > 1 ? t('common.phaseLater', { n: phase }) : t(`map.mode.${m}`),
+        title: phase > CURRENT_PHASE ? t('common.phaseLater', { n: phase }) : t(`map.mode.${m}`),
         onClick: () => { mapMode = m; renderer?.setMode(m); renderModeBar(); },
       }, t(`map.mode.${m}`)));
     }
@@ -168,10 +189,62 @@ export async function gameScreen(root, nav) {
       h('div.quick-nav', {}, ...Object.entries(SCREEN_PHASE)
         .filter(([k]) => k !== 'warriors' || n.id === 'marley') // FEATURES_SPEC.md §12 : Marley uniquement
         .map(([k, phase]) => h('button.btn.btn-small', {
-          disabled: true,
-          title: phase ? t('common.phaseLater', { n: phase }) : t('common.naTooltip'),
+          disabled: !SCREENS[k],
+          title: SCREENS[k] ? null : phase ? t('common.phaseLater', { n: phase }) : t('common.naTooltip'),
+          onClick: () => openScreen(k),
         }, t(`screen.${k}`)))));
     countryPanel.classList.remove('hidden');
+  }
+
+  // ---------- Écrans (production, recherche…) : panneau par-dessus la carte ----------
+  const screenPanel = h('section.screen-overlay.panel.hidden');
+  let currentScreen = null;
+
+  const ctx = {
+    getView: () => view,
+    act: async (type, payload) => {
+      try {
+        const delta = await api.nationAction(view.viewerId, type, payload);
+        applyDelta(delta);
+      } catch (e) { toast(errorText(e), 'error'); }
+    },
+  };
+
+  function openScreen(name) {
+    currentScreen = name;
+    countryPanel.classList.add('hidden');
+    renderScreen();
+    screenPanel.classList.remove('hidden');
+  }
+
+  function renderScreen() {
+    if (!currentScreen) return;
+    const scroll = screenPanel.querySelector('.screen-body')?.scrollTop ?? 0;
+    const body = h('div.screen-body');
+    clear(screenPanel).append(
+      h('header.screen-header', {},
+        h('h2', {}, t(`screen.${currentScreen}`)),
+        h('div.screen-tabs', {}, ...Object.keys(SCREENS).map((k) => h(`button.btn.btn-small${k === currentScreen ? '.btn-primary' : ''}`, { onClick: () => openScreen(k) }, t(`screen.${k}`)))),
+        h('button.panel-close', { onClick: closeScreen, 'aria-label': t('common.close') }, '×')),
+      body);
+    SCREENS[currentScreen](body, ctx);
+    body.scrollTop = scroll;
+  }
+
+  function closeScreen() {
+    currentScreen = null;
+    screenPanel.classList.add('hidden');
+  }
+
+  function applyDelta(payload) {
+    if (payload.nation) view.nations = view.nations.map((n) => (n.id === payload.nation.id ? payload.nation : n));
+    if (payload.economy) view.economy = payload.economy;
+    if ('date' in payload) view.date = payload.date;
+    if ('speed' in payload) view.speed = payload.speed;
+    renderTopbar();
+    // Pas de re-rendu pendant qu'une modale de confirmation est ouverte.
+    if (currentScreen && !document.querySelector('.modal-overlay')) renderScreen();
+    if (!countryPanel.classList.contains('hidden')) openCountry();
   }
 
   // ---------- Menu en jeu : sauvegarde / chargement ----------
@@ -230,7 +303,7 @@ export async function gameScreen(root, nav) {
   clear(root).append(h('div.screen.game-screen', {},
     topbar,
     connBanner,
-    h('main.map-area', {}, modeBar, mapHost, tooltip, provincePanel, countryPanel)));
+    h('main.map-area', {}, modeBar, mapHost, tooltip, provincePanel, countryPanel, screenPanel)));
 
   async function applyView(next, { full }) {
     view = next;
@@ -238,9 +311,7 @@ export async function gameScreen(root, nav) {
     renderModeBar();
     if (!view.map.available) {
       if (!mapHost.contains(mapMissing)) clear(mapHost).append(mapMissing);
-      return;
-    }
-    if (full) {
+    } else if (full) {
       if (!renderer) {
         clear(mapHost);
         renderer = new MapRenderer(mapHost, { onHover, onSelect });
@@ -250,7 +321,10 @@ export async function gameScreen(root, nav) {
       renderer.mode = mapMode;
       renderer.setData(view);
       provincePanel.classList.add('hidden');
+    }
+    if (full) {
       if (!countryPanel.classList.contains('hidden')) openCountry();
+      if (currentScreen) renderScreen();
     }
   }
 
@@ -259,8 +333,13 @@ export async function gameScreen(root, nav) {
   const socket = connectSocket({
     onMessage: (type, payload) => {
       if (type === 'state/full' && payload) applyView(payload, { full: true });
-      else if (type === 'state/delta') { Object.assign(view, payload); renderTopbar(); }
+      else if (type === 'state/delta') applyDelta(payload);
       else if (type === 'error') toast(t(payload.messageKey), 'error');
+      else if (type === 'notification/toast') {
+        const vars = { ...(payload.vars ?? {}) };
+        if (vars.techId) vars.name = loc(view.technologies?.find((x) => x.id === vars.techId)?.name) ?? vars.techId;
+        toast(t(payload.textKey, vars));
+      }
     },
     onStatus: (s) => {
       connBanner.classList.toggle('hidden', s === 'connected');

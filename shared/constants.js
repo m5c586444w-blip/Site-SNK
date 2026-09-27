@@ -44,3 +44,38 @@ export const TITAN_POWER_IDS = [
 
 /** FEATURES_SPEC.md §2 — seuls political et fog_of_war relèvent de la Phase 1. */
 export const MAP_MODES = ['political', 'resources', 'supply', 'front_combat', 'fog_of_war'];
+
+// ---------------- Phase 2 : économie / production (MECHANICS_SPEC.md §3) ----------------
+
+/** §3.1 */
+export const RESOURCE_TYPES = ['steel', 'fuel', 'rareMaterials'];
+
+/** §3.2 */
+export const EQUIPMENT_TYPES = [
+  'infantry_equipment', 'artillery', 'light_armor', 'medium_armor',
+  'fighter_aircraft', 'bomber_aircraft',
+  'naval_hull_light', 'naval_hull_heavy',
+];
+export const BASE_OUTPUT_PER_MILITARY_FACTORY_PER_DAY = {
+  infantry_equipment: 3.0, artillery: 1.5, light_armor: 0.8, medium_armor: 0.5,
+  fighter_aircraft: 0.6, bomber_aircraft: 0.3,
+  naval_hull_light: 0.2, naval_hull_heavy: 0.05,
+};
+/** §3.2 : verrouillés pour Paradis jusqu'à un effet de focus unlockEquipment. */
+export const PARADIS_LOCKED_EQUIPMENT = ['fighter_aircraft', 'bomber_aircraft', 'naval_hull_light', 'naval_hull_heavy'];
+
+/** §3.3 */
+export const EFFICIENCY_START = 0.15;
+export const EFFICIENCY_GAIN_PER_DAY = 0.01;
+export const EFFICIENCY_CAP = 1.0;
+export const EFFICIENCY_LOSS_ON_REASSIGN = 0.30;
+
+/** §3.5 */
+export const BASE_YIELD_PER_DEPOSIT_POINT = { steel: 1.0, fuel: 1.0, rareMaterials: 1.0 };
+
+// ---------------- Phase 2 : recherche (MECHANICS_SPEC.md §4) ----------------
+export const RESEARCH_SLOTS_DEFAULT = { major: 4, minor: 2 };
+export const RESEARCH_SLOTS_PARADIS_OVERRIDE = 3;
+export const RESEARCH_CATEGORIES = ['infantry', 'artillery', 'armor', 'aviation', 'navy', 'industry', 'doctrine'];
+/** §4 : navy et aviation fermées pour Paradis jusqu'à l'effet de focus unlockTech correspondant. */
+export const PARADIS_LOCKED_RESEARCH_CATEGORIES = ['aviation', 'navy'];

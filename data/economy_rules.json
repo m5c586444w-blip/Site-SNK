@@ -1,0 +1,16 @@
+{
+  "_source": "Valeurs économiques ABSENTES de MECHANICS_SPEC.md. Tant qu'elles restent null, l'action correspondante est refusée avec un message explicite (voir docs/PHASE2_GAPS.md). Renseignez-les ici pour activer l'action : le moteur est déjà en place.",
+  "factoryBuildCost": {
+    "civilian": null,
+    "military": null,
+    "_unit": "civilian-factory-days (même unité que infrastructure_build_cost, §3.4)"
+  },
+  "factoryConversionCost": null,
+  "_factoryConversionCostUnit": "civilian-factory-days",
+  "startingStockpiles": {
+    "_note": "Par nation : { resources: {steel, fuel, rareMaterials}, equipment: {<EQUIPMENT_TYPES>: n} }. Nation absente = stocks à 0.",
+    "byNation": {}
+  },
+  "resourceConsumption": null,
+  "_resourceConsumptionNote": "Aucune règle de consommation de ressources par les lignes de production dans les specs : la consommation vaut 0 tant que ce champ est null."
+}

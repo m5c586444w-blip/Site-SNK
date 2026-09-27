@@ -4,9 +4,12 @@ import express from 'express';
 import { WebSocketServer } from 'ws';
 import http from 'node:http';
 import path from 'node:path';
-import { ROOT_DIR, loadNations, loadMap } from './data/loadData.js';
-import { createGame, viewFor } from './state/gameState.js';
+import { ROOT_DIR, loadGameData } from './data/loadData.js';
+import { createGame, viewFor, economyView } from './state/gameState.js';
 import { Clock } from './simulation/clock.js';
+import { runDay } from './simulation/tick.js';
+import { createLine, assignFactories, deleteLine, queueNewFactory, queueConversion } from './simulation/economy.js';
+import { assignResearch, cancelResearch } from './simulation/research.js';
 import { listSaves, createSave, loadSave, deleteSave, autosave } from './state/saves.js';
 import { readSettings, writeSettings } from './state/settings.js';
 import { AUTOSAVE_INTERVAL_DAYS } from '../shared/constants.js';
@@ -16,11 +19,17 @@ const HTTP_STATUS = {
   INVALID_NATION: 400, INVALID_HISTORICAL_MODE: 400, INVALID_SPEED: 400, INVALID_SETTINGS: 400,
   INVALID_SAVE_NAME: 400, RESERVED_SAVE_NAME: 400, INCOMPATIBLE_SAVE: 422,
   NO_GAME: 409, SAVE_EXISTS: 409, SAVE_NOT_FOUND: 404,
+  NOT_YOUR_NATION: 403, UNKNOWN_ACTION: 404,
+  INVALID_EQUIPMENT: 400, EQUIPMENT_LOCKED: 409, INVALID_FACTORIES: 400, FACTORY_NOT_MILITARY: 409, FACTORY_BUSY: 409,
+  INVALID_LINE: 404, INVALID_FACTORY_TYPE: 400, INVALID_STATE: 400, FACTORY_COST_MISSING: 409,
+  NO_CIVILIAN_FACTORY: 409, CONVERSION_COST_MISSING: 409,
+  RESEARCH_SLOTS_UNKNOWN: 409, INVALID_SLOT: 400, SLOT_BUSY: 409, INVALID_TECH: 404, CATEGORY_LOCKED: 409,
+  TECH_COMPLETED: 409, TECH_IN_PROGRESS: 409, PREREQUISITES_MISSING: 409,
 };
 
 export async function createServer({ onQuit = () => process.exit(0) } = {}) {
-  const nations = await loadNations();
-  const map = await loadMap();
+  const data = await loadGameData();
+  const { nations, map, technologies, economyRules } = data;
 
   /** Une seule partie à la fois (le multijoueur, §15, relève d'une phase ultérieure). */
   let state = null;
@@ -28,12 +37,20 @@ export async function createServer({ onQuit = () => process.exit(0) } = {}) {
 
   const send = (ws, type, payload) => ws.readyState === 1 && ws.send(JSON.stringify({ type, payload }));
   const broadcast = (type, payload) => { for (const ws of sockets) send(ws, type, payload); };
-  const fullView = () => (state ? viewFor(state, state.settings.nationId, map) : null);
+  const fullView = () => (state ? viewFor(state, state.settings.nationId, map, { technologies, economyRules }) : null);
+  const player = () => state.nations.find((n) => n.id === state.settings.nationId);
+  /** Diff joueur : sa nation (stocks, recherche) et son économie. Jamais l'état complet (§18). */
+  const playerDelta = () => ({ nation: player(), economy: economyView(state, state.settings.nationId, economyRules) });
 
   const clock = new Clock({
     getState: () => state,
     onTick: async (s) => {
-      broadcast('state/delta', { date: formatDate(s.date) });
+      const { dailyNet, completedTechs } = await runDay(s, data);
+      s.lastDailyNet = dailyNet;
+      broadcast('state/delta', { date: formatDate(s.date), ...playerDelta() });
+      for (const techId of completedTechs[s.settings.nationId] ?? []) {
+        broadcast('notification/toast', { id: `tech_${techId}`, category: 'research', textKey: 'toast.researchDone', vars: { techId } });
+      }
       if (s.daysSinceAutosave >= AUTOSAVE_INTERVAL_DAYS) {
         s.daysSinceAutosave = 0;
         try { await autosave(s); } catch (e) { broadcast('error', { code: 'AUTOSAVE_FAILED', messageKey: 'error.AUTOSAVE_FAILED' }); console.error(e); }
@@ -75,7 +92,7 @@ export async function createServer({ onQuit = () => process.exit(0) } = {}) {
 
   app.post('/api/game/new', wrap((req) => {
     const { nationId, historicalMode } = req.body ?? {};
-    setState(createGame({ nationId, historicalMode }, { nations, map }));
+    setState(createGame({ nationId, historicalMode }, { nations, map, economyRules }));
     return fullView();
   }));
 
@@ -88,6 +105,32 @@ export async function createServer({ onQuit = () => process.exit(0) } = {}) {
     setSpeed(req.body?.level);
     return { speed: state.speed };
   }));
+
+  // Actions de nation (FEATURES §18). Même table pour REST et WebSocket, validation serveur.
+  const nationActions = {
+    'production/newLine': (n, p) => createLine(state, n, p.equipmentType),
+    'production/assign': (n, p) => assignFactories(state, n, p.lineId, p.factoryIds),
+    'production/deleteLine': (n, p) => deleteLine(state, n, p.lineId),
+    'production/newFactory': (n, p) => queueNewFactory(state, n, p.stateId, p.type, economyRules),
+    'production/convertFactory': (n, p) => queueConversion(state, n, p.stateId, economyRules),
+    'research/assign': (n, p) => assignResearch(state, n, p.techId, p.slotIndex, technologies),
+    'research/cancel': (n, p) => cancelResearch(state, n, p.slotIndex),
+  };
+
+  function runNationAction(type, payload) {
+    if (!state) throw Object.assign(new Error('Aucune partie'), { code: 'NO_GAME' });
+    const action = nationActions[type];
+    if (!action) throw Object.assign(new Error(type), { code: 'UNKNOWN_ACTION' });
+    // Le joueur n'agit que pour sa propre nation.
+    if (payload?.nationId !== state.settings.nationId) throw Object.assign(new Error('nation'), { code: 'NOT_YOUR_NATION' });
+    const result = action(payload.nationId, payload ?? {});
+    const delta = playerDelta();
+    broadcast('state/delta', delta);
+    return { result: result ?? null, ...delta };
+  }
+
+  app.post('/api/nation/:nationId/:system/:action', wrap((req) =>
+    runNationAction(`${req.params.system}/${req.params.action}`, { ...(req.body ?? {}), nationId: req.params.nationId })));
 
   app.get('/api/saves', wrap(() => listSaves()));
   app.post('/api/saves', wrap((req) => {
@@ -124,6 +167,7 @@ export async function createServer({ onQuit = () => process.exit(0) } = {}) {
     },
     'save/load': async ({ saveId }) => setState(await loadSave(saveId)),
   };
+  for (const type of Object.keys(nationActions)) wsHandlers[type] = (payload) => { runNationAction(type, payload); };
 
   wss.on('connection', (ws) => {
     sockets.add(ws);

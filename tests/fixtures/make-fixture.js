@@ -1,6 +1,6 @@
 // Génère la carte de TEST abstraite (grille), utilisée uniquement par les tests et le développement.
 // Ce n'est PAS du contenu de jeu : aucune géographie, aucun nom de lieu réel du monde du jeu.
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PNG } from 'pngjs';
@@ -38,10 +38,42 @@ const def = {
     { id: 'test_b2', name: 'Test B2', color: '#ff00ff', stateId: 'test_state_b', landmass: 'test_continent_b' },
   ],
   states: [
-    { id: 'test_state_a1', name: 'Test State A1', ownerId: 'paradis', provinceIds: ['test_a1'], isWallState: true, infrastructureLevel: 2, resourceDeposits: { steel: 1, fuel: 0, rareMaterials: 0 } },
-    { id: 'test_state_a2', name: 'Test State A2', ownerId: 'paradis', provinceIds: ['test_a2'] },
+    {
+      id: 'test_state_a1', name: 'Test State A1', ownerId: 'paradis', provinceIds: ['test_a1'], isWallState: true,
+      infrastructureLevel: 2, resourceDeposits: { steel: 1, fuel: 0, rareMaterials: 0 },
+      factories: [{ id: 'tf_a1_c1', type: 'civilian' }, { id: 'tf_a1_c2', type: 'civilian' }, { id: 'tf_a1_m1', type: 'military' }, { id: 'tf_a1_m2', type: 'military' }],
+    },
+    { id: 'test_state_a2', name: 'Test State A2', ownerId: 'paradis', provinceIds: ['test_a2'], infrastructureLevel: 0, resourceDeposits: { steel: 0, fuel: 2, rareMaterials: 1 }, factories: [{ id: 'tf_a2_c1', type: 'civilian' }] },
     { id: 'test_state_a3', name: 'Test State A3', ownerId: 'paradis', provinceIds: ['test_a3'] },
-    { id: 'test_state_b', name: 'Test State B', ownerId: 'marley', provinceIds: ['test_b1', 'test_b2'] },
+    {
+      id: 'test_state_b', name: 'Test State B', ownerId: 'marley', provinceIds: ['test_b1', 'test_b2'], infrastructureLevel: 4,
+      resourceDeposits: { steel: 3, fuel: 3, rareMaterials: 0 },
+      factories: [{ id: 'tf_b_c1', type: 'civilian' }, { id: 'tf_b_m1', type: 'military' }, { id: 'tf_b_m2', type: 'military' }],
+    },
   ],
 };
 writeFileSync(path.join(dir, 'provinces.json'), JSON.stringify(def, null, 2) + '\n');
+
+// Données de test « overlay » (SNK_DATA_OVERLAY) : technologies et règles économiques ABSTRAITES.
+const overlay = path.join(path.dirname(fileURLToPath(import.meta.url)), 'overlay');
+mkdirSync(overlay, { recursive: true });
+const tech = (id, category, baseCostDays, prerequisiteTechIds = []) => ({
+  id, name: { fr: id.replace(/_/g, ' '), en: id.replace(/_/g, ' ') }, category, baseCostDays, prerequisiteTechIds,
+});
+writeFileSync(path.join(overlay, 'technologies.json'), JSON.stringify({
+  _note: 'TECHNOLOGIES DE TEST ABSTRAITES — pas du contenu de jeu',
+  technologies: [
+    tech('test_infantry_1', 'infantry', 10),
+    tech('test_infantry_2', 'infantry', 20, ['test_infantry_1']),
+    tech('test_industry_1', 'industry', 5),
+    tech('test_doctrine_1', 'doctrine', 30, ['test_industry_1']),
+    tech('test_navy_1', 'navy', 10),
+  ],
+}, null, 2) + '\n');
+writeFileSync(path.join(overlay, 'economy_rules.json'), JSON.stringify({
+  _note: 'RÈGLES DE TEST — valeurs arbitraires pour exercer le moteur, pas des valeurs de jeu',
+  factoryBuildCost: { civilian: 20, military: 15 },
+  factoryConversionCost: 10,
+  startingStockpiles: { byNation: { paradis: { resources: { steel: 5 }, equipment: { infantry_equipment: 100 } } } },
+  resourceConsumption: null,
+}, null, 2) + '\n');

@@ -40,7 +40,13 @@ export async function validateMap(dir = mapDir()) {
     if (p.stateId && !stateIds.has(p.stateId)) errors.push(`province ${p.id} : état inconnu ${p.stateId}`);
     if (!p.stateId) warnings.push(`province ${p.id} : aucun état`);
   }
+  const factoryIds = new Set();
   for (const s of states) {
+    for (const f of s.factories ?? []) {
+      if (!['civilian', 'military'].includes(f.type)) errors.push(`état ${s.id} : usine ${f.id} de type invalide ${f.type}`);
+      if (!f.id || factoryIds.has(f.id)) errors.push(`état ${s.id} : id d'usine manquant ou en double (${f.id})`);
+      factoryIds.add(f.id);
+    }
     if (!nations.has(s.ownerId)) errors.push(`état ${s.id} : propriétaire inconnu ${s.ownerId}`);
     if (s.controllerId && !nations.has(s.controllerId)) errors.push(`état ${s.id} : contrôleur inconnu ${s.controllerId}`);
     for (const pid of s.provinceIds ?? []) {

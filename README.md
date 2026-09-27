@@ -11,7 +11,7 @@ Hearts of Iron IV. Projet personnel non commercial. Les spécifications de réf�
 | `docs/MECHANICS_SPEC.md` | formules et valeurs numériques |
 | `docs/FEATURES_SPEC.md` | écrans, interactions, API |
 | `docs/HISTORICAL_EVENT_CHAIN_845_854.md` | évènements datés 845-854 (Mode historique) |
-| **`docs/PHASE1_GAPS.md`** | **données manquantes et points à trancher** |
+| **`docs/PHASE1_GAPS.md`**, **`docs/PHASE2_GAPS.md`** | **données manquantes et points à trancher** |
 
 ## Lancer
 
@@ -28,8 +28,9 @@ npm run validate-map # vérifie le masque de la carte et sa table (data/map/)
 Le launcher affiche l'adresse locale et l'adresse sur le réseau local. Les sauvegardes vont dans
 `saves/` (JSON) et les réglages dans `settings.json`.
 
-Pour tester le moteur de carte sans la vraie carte, qui n'est pas encore fournie :
-`SNK_MAP_DIR=tests/fixtures/map npm start`. C'est une grille abstraite de test.
+Pour voir les moteurs tourner sans la vraie carte ni les vraies données, qui ne sont pas encore
+fournies : `npm run start:fixture`. Carte, usines, technologies et coûts sont alors des **données
+de test abstraites** (`tests/fixtures/`), pas du contenu de jeu.
 
 ## Contenu de la Phase 1 (cahier des charges §12)
 
@@ -47,12 +48,27 @@ Pour tester le moteur de carte sans la vraie carte, qui n'est pas encore fournie
   est refusée (§16, §17).
 - Fiche pays minimale (§3).
 
+## Contenu de la Phase 2 (cahier des charges §12)
+
+- **Économie** (MECHANICS §3) : rendement des gisements par état, lignes de production
+  (production quotidienne, rampe d'efficacité, pénalité de réaffectation), file de construction
+  alimentée par les usines civiles, conversion civile → militaire, équipements verrouillés pour
+  Paradis.
+- **Écran Production** (FEATURES §4) et compteurs de ressources et d'effectifs dans la barre
+  supérieure (§1), avec le bilan du jour en infobulle.
+- **Recherche** (MECHANICS §4 ; FEATURES §5) : slots (Paradis = 3), durée
+  `baseCostDays / (1 + bonus)`, prérequis, catégories fermées pour Paradis (aviation, marine),
+  annulation avec perte de la progression, notification de fin.
+- **Modes de carte** Ressources et Ravitaillement (`supply_value`, §3.4).
+- Données absentes (catalogue de technologies, coûts d'usine, stocks initiaux, etc.) : voir
+  `docs/PHASE2_GAPS.md`.
+
 ## Structure
 
 ```
 server/launcher/   démarrage, choix du port, ouverture du navigateur
 server/state/      GameState, brouillard, sauvegardes, réglages
-server/simulation/ horloge (les systèmes de jeu s'y brancheront)
+server/simulation/ horloge, tick quotidien, économie/production, recherche
 server/app.js      API REST + WebSocket
 client/            interface (JS natif, Canvas 2D), theme.css, polices OFL auto-hébergées
 shared/            constantes MECHANICS_SPEC, calendrier
