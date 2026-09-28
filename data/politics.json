@@ -273,5 +273,7 @@
       "marley"
     ],
     "_canInheritNote": "Seuls les Eldiens peuvent hériter d'un pouvoir (LORE §3.2) : Paradis et Marley (via les candidats du programme des Guerriers)."
-  }
+  },
+  "stabilityDriftPerDay": 0.05,
+  "_stabilityDriftNote": "[EXTENSION] La stabilité revient lentement (0,05/jour) vers sa valeur de départ. Sans cette dérive, les troubles (§9, §9.3) la feraient baisser sans jamais remonter. Le bonus du Titan Fondateur (§7.3) s'y ajoute."
 }

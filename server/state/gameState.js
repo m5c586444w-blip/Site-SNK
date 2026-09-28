@@ -46,6 +46,7 @@ function buildNation(n, economyRules) {
     ...clone(n),
     categoryBonus: clone(n.categoryBonus ?? {}),
     baseCategoryBonus: clone(n.categoryBonus ?? {}),
+    baselineStability: n.stability ?? null,
     modifiers: {},
     flags: clone(n.flags ?? {}),
     activeResearch: [],
@@ -385,6 +386,7 @@ export function fromSaveFile(save) {
     n.modifiers ??= {};
     n.baseCategoryBonus ??= { ...n.categoryBonus };
     n.flags ??= {};
+    n.baselineStability ??= n.stability ?? null;
   }
   return {
     settings: Object.freeze({ historicalMode: s.historicalMode, nationId: s.nationId }),

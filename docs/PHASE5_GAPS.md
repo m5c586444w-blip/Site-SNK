@@ -57,6 +57,7 @@ présentes (§0.5) ; aucun emblème officiel (cahier §9).
 | B8 | IA de Marley et programme des Guerriers. | Marley joué par l'IA garde son vivier plein, sinon ses Titans se perdraient à la fin de leur cycle. |
 | B9 | Multijoueur : qui règle la vitesse ? (§15 ne le dit pas) | L'hôte seul. La sauvegarde et le chargement sont aussi réservés à l'hôte. |
 | B10 | Multijoueur : invité sans nation attribuée. | Il ne reçoit aucune vue de partie, pour ne rien divulguer du monde. |
+| B12 | La stabilité ne fait que baisser (troubles §9 et §9.3), sans mécanisme de remontée dans la spec. Sur 11 ans simulés, Marley tombait à 0 même en Mode libre. | [EXTENSION] Dérive de 0,05 par jour vers la stabilité de départ (`data/politics.json` → `stabilityDriftPerDay`). Le bonus du Fondateur (§7.3) s'y ajoute. |
 | B11 | Déconnexion (§15.3). | La nation repasse à l'IA et ses évènements en attente prennent le premier choix. Avec le même jeton, le joueur retrouve sa nation en se reconnectant. |
 
 ## 4. Messages ajoutés (FEATURES §18)
@@ -73,7 +74,18 @@ catalogue.
 - Les textures CC0 et les icônes CC-BY de §10 ne sont **pas** intégrées (aucun téléchargement
   externe) : les équipements et bataillons restent en pastilles texte. Voir `CREDITS.md`.
 
-## 6. Limites connues
+## 6. Vérification de bout en bout
+
+Deux simulations de 844 à 855 (4 015 jours, toutes les nations à l'IA) tournent en moins d'une
+seconde chacune :
+
+- **Mode historique** : la chaîne se déroule entièrement. Brèche au 01/01/an-845 ; Trost, perte des
+  Titans marleyens, coup d'État, découverte de l'océan et guerre Marley/Alliance au 01/01/an-850 ;
+  la guerre est résolue en 854 et le Grondement se déclenche. À la fin, Colossal et Mâchoire
+  appartiennent à Paradis et le continent a perdu ses usines.
+- **Mode libre** : aucun évènement scripté, et le monde de 844 évolue seul.
+
+## 7. Limites connues
 
 - **IA décisionnelle** : les nations IA ne choisissent ni focus, ni recherches, ni guerres. Elles
   n'entretiennent que les automatismes décrits ci-dessus. Le cahier §6 laisse l'IA « simplifiée »

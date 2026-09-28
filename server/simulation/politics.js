@@ -79,6 +79,11 @@ export function politicsDay(state, nationId, politics, ctx) {
   }
   // Réserve d'effectifs [EXTENSION] : croissance selon la loi de conscription
   if (nation.manpower != null) nation.manpower += mods.manpowerPerDay;
+  // [EXTENSION] Dérive lente vers la stabilité de départ (data/politics.json → stabilityDriftPerDay)
+  if (nation.stability != null && nation.baselineStability != null && politics?.stabilityDriftPerDay) {
+    const gap = nation.baselineStability - nation.stability;
+    nation.stability += Math.sign(gap) * Math.min(Math.abs(gap), politics.stabilityDriftPerDay);
+  }
   // Titan Fondateur : +1 stabilité/jour (moitié sans lignée royale), §7.3
   if (nation.stability != null && mods.stabilityRegen) nation.stability = clamp(nation.stability + mods.stabilityRegen, STABILITY_RANGE);
   // Troubles sous 30 de stabilité (§9)
