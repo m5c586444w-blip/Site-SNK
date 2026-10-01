@@ -11,21 +11,21 @@
   },
   "wallRings": {
     "center": [
-      1111,
-      355
+      1114,
+      347
     ],
     "rings": [
       {
         "ring": "inner",
-        "radius": 5.5
+        "radius": 9
       },
       {
         "ring": "middle",
-        "radius": 10.5
+        "radius": 18
       },
       {
         "ring": "outer",
-        "radius": 16
+        "radius": 28
       }
     ]
   },
@@ -35,7 +35,15 @@
       "pa_titan_s"
     ],
     [
-      "mar_ne2",
+      "mar_w",
+      "pa_titan_s"
+    ],
+    [
+      "hz_zia",
+      "pa_titan_s"
+    ],
+    [
+      "hz_zia",
       "pa_titan_n"
     ],
     [
@@ -43,8 +51,8 @@
       "pa_titan_s"
     ],
     [
-      "me_nar1",
-      "pa_titan_n"
+      "me_men3",
+      "pa_titan_s"
     ],
     [
       "hz_daqomo2",
@@ -107,7 +115,11 @@
       "me_men2"
     ],
     [
-      "hz_zia",
+      "hz_nj2",
+      "pa_titan_s"
+    ],
+    [
+      "hz_njetni",
       "pa_titan_s"
     ],
     [
@@ -917,6 +929,7 @@
       "stateId": "mitras",
       "terrain": "urban",
       "formerPureTitanTerritory": false,
+      "illustrated": true,
       "landmass": "paradis_island",
       "color": "#281e14"
     },
@@ -929,6 +942,7 @@
       "stateId": "mitras",
       "terrain": "urban",
       "formerPureTitanTerritory": false,
+      "illustrated": true,
       "landmass": "paradis_island",
       "color": "#5d7fab"
     },
@@ -941,6 +955,7 @@
       "stateId": "rose_n",
       "terrain": "plains",
       "formerPureTitanTerritory": false,
+      "illustrated": true,
       "landmass": "paradis_island",
       "color": "#92e066"
     },
@@ -953,6 +968,7 @@
       "stateId": "rose_n",
       "terrain": "plains",
       "formerPureTitanTerritory": false,
+      "illustrated": true,
       "landmass": "paradis_island",
       "color": "#c76f21"
     },
@@ -965,6 +981,7 @@
       "stateId": "rose_s",
       "terrain": "plains",
       "formerPureTitanTerritory": false,
+      "illustrated": true,
       "landmass": "paradis_island",
       "color": "#34d0b8"
     },
@@ -977,6 +994,7 @@
       "stateId": "rose_s",
       "terrain": "plains",
       "formerPureTitanTerritory": false,
+      "illustrated": true,
       "landmass": "paradis_island",
       "color": "#695f73"
     },
@@ -989,6 +1007,7 @@
       "stateId": "maria_n",
       "terrain": "plains",
       "formerPureTitanTerritory": false,
+      "illustrated": true,
       "landmass": "paradis_island",
       "color": "#9ec02e"
     },
@@ -1001,6 +1020,7 @@
       "stateId": "maria_n",
       "terrain": "forest",
       "formerPureTitanTerritory": false,
+      "illustrated": true,
       "landmass": "paradis_island",
       "color": "#d34fc5"
     },
@@ -1013,6 +1033,7 @@
       "stateId": "maria_s",
       "terrain": "plains",
       "formerPureTitanTerritory": false,
+      "illustrated": true,
       "landmass": "paradis_island",
       "color": "#40b080"
     },
@@ -1025,6 +1046,7 @@
       "stateId": "maria_s",
       "terrain": "plains",
       "formerPureTitanTerritory": false,
+      "illustrated": true,
       "landmass": "paradis_island",
       "color": "#753f3b"
     },
@@ -1037,6 +1059,7 @@
       "stateId": "titan_n",
       "terrain": "forest",
       "formerPureTitanTerritory": true,
+      "illustrated": true,
       "landmass": "paradis_island",
       "color": "#aaa0d2"
     },
@@ -1049,6 +1072,7 @@
       "stateId": "titan_s",
       "terrain": "plains",
       "formerPureTitanTerritory": true,
+      "illustrated": true,
       "landmass": "paradis_island",
       "color": "#df2f8d"
     }

@@ -158,6 +158,7 @@ export function viewFor(state, viewerId, map, { technologies = [], economyRules 
       isWallState: st?.isWallState ?? false,
       supplyValue: st?.supplyValue ?? null,
       formerPureTitanTerritory: Boolean(p.formerPureTitanTerritory || state.dynamicHazards?.[p.id]),
+      illustrated: Boolean(p.illustrated),
     };
   });
   const nations = state.nations

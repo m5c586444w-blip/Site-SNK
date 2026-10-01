@@ -160,8 +160,9 @@ export class MapRenderer {
           out = isBorder && ((x + y) >> 1) % 2 === 0 ? PARTIAL_BORDER : mix(base, FOG_HIDDEN, 0.35);
         } else {
           const fill = this.modeFill(p, x, y);
-          out = mix(base, fill, this.mode === 'political' ? 0.68 : 0.7);
-          if (p.formerPureTitanTerritory && (x + y) % 7 < 2) out = mix(out, HAZARD, 0.7);
+          // Provinces au fond illustré (île du Paradis) : teinte plus légère pour laisser voir le dessin.
+          out = mix(base, fill, p.illustrated ? 0.42 : this.mode === 'political' ? 0.68 : 0.7);
+          if (p.formerPureTitanTerritory && (x + y) % 7 < 2) out = mix(out, HAZARD, p.illustrated ? 0.4 : 0.7);
           if (isBorder) {
             const nationEdge = nbrs.some((n) => n !== idx && (!known(n) || owner(n) !== p.ownerId));
             out = nationEdge ? NATION_BORDER : mix(out, PROVINCE_BORDER, 0.6);

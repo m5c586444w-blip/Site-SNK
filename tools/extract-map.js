@@ -149,6 +149,88 @@ for (const c of Object.values(NATION_CLASSES)) {
 }
 fillUnknown(cls, UNKNOWN);
 
+// ------------------------------------------------------------------ 2b. île du Paradis
+// La silhouette de l'île vient de la carte de l'île (PARADIS.shape) : on détoure le contour sombre
+// (tout ce qui n'est pas joignable depuis le bord du cadrage sans franchir un trait sombre), on garde
+// la plus grande tache, puis on la pose à l'échelle à la place de l'île de la carte du monde.
+const isle = (() => {
+  const S = PARADIS.shape;
+  const img = PNG.sync.read(readFileSync(path.join(path.dirname(SRC), S.file)));
+  const [x0, y0, x1, y1] = S.crop;
+  const w = x1 - x0; const h = y1 - y0;
+  const dark = (x, y) => {
+    const o = ((y0 + y) * img.width + x0 + x) * 4;
+    return 0.3 * img.data[o] + 0.59 * img.data[o + 1] + 0.11 * img.data[o + 2] < 92;
+  };
+  const outside = new Uint8Array(w * h);
+  const stack = [];
+  for (let x = 0; x < w; x++) stack.push([x, 0], [x, h - 1]);
+  for (let y = 0; y < h; y++) stack.push([0, y], [w - 1, y]);
+  while (stack.length) {
+    const [x, y] = stack.pop();
+    if (x < 0 || y < 0 || x >= w || y >= h || outside[y * w + x] || dark(x, y)) continue;
+    outside[y * w + x] = 1;
+    stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
+  }
+  // ouverture morphologique (rayon 2) : retire les traits du quadrillage et les écritures accrochés
+  const inside = (m, x, y) => x >= 0 && y >= 0 && x < w && y < h && m[y * w + x];
+  let m = Uint8Array.from(outside, (v) => 1 - v);
+  const morph = (src, keep) => Uint8Array.from(src, (_, k) => {
+    const x = k % w; const y = (k / w) | 0;
+    let all = true; let any = false;
+    for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
+      if (dx * dx + dy * dy > 4) continue;
+      const v = inside(src, x + dx, y + dy);
+      all &&= v; any ||= v;
+    }
+    return keep === 'erode' ? (all ? 1 : 0) : (any ? 1 : 0);
+  });
+  m = morph(morph(m, 'erode'), 'dilate');
+  // plus grande tache
+  const seen = new Uint8Array(w * h);
+  let best = [];
+  for (let s = 0; s < w * h; s++) {
+    if (!m[s] || seen[s]) continue;
+    const comp = []; const st = [s]; seen[s] = 1;
+    while (st.length) {
+      const p = st.pop(); comp.push(p);
+      const x = p % w;
+      for (const q of [p - w, p + w, x > 0 ? p - 1 : -1, x < w - 1 ? p + 1 : -1]) if (q >= 0 && q < w * h && m[q] && !seen[q]) { seen[q] = 1; st.push(q); }
+    }
+    if (comp.length > best.length) best = comp;
+  }
+  const shape = new Uint8Array(w * h);
+  let top = h; let bottom = 0;
+  for (const p of best) { shape[p] = 1; top = Math.min(top, (p / w) | 0); bottom = Math.max(bottom, (p / w) | 0); }
+  const scale = S.height / (bottom - top + 1);
+  const toWorld = ([sx, sy]) => [Math.round(S.at[0] + (sx - S.mitras[0]) * scale), Math.round(S.at[1] + (sy - S.mitras[1]) * scale)];
+  return { w, h, x0, y0, shape, scale, toWorld, center: S.at };
+})();
+for (let i = 0; i < N; i++) if (cls[i] === NATION_CLASSES.paradis) cls[i] = SEA;
+{
+  const [cx, cy] = isle.center;
+  const [ox, oy] = PARADIS.shape.mitras;
+  const R = Math.ceil(Math.max(isle.w, isle.h) * isle.scale);
+  const clash = [];
+  for (let y = cy - R; y <= cy + R; y++) {
+    for (let x = cx - R; x <= cx + R; x++) {
+      if (x < 0 || y < 0 || x >= W || y >= H) continue;
+      // pixel du monde -> pixel de la carte de l'île (échantillonnage au plus proche)
+      const sx = Math.round(ox + (x - cx) / isle.scale) - isle.x0;
+      const sy = Math.round(oy + (y - cy) / isle.scale) - isle.y0;
+      if (sx < 0 || sy < 0 || sx >= isle.w || sy >= isle.h || !isle.shape[sy * isle.w + sx]) continue;
+      const i = y * W + x;
+      // l'île ne doit toucher aucune autre terre : sinon elle aurait une frontière terrestre
+      for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) {
+        const k = i + dy * W + dx;
+        if (cls[k] !== SEA && cls[k] !== NATION_CLASSES.paradis) clash.push(`${x},${y}`);
+      }
+      cls[i] = NATION_CLASSES.paradis;
+    }
+  }
+  if (clash.length) throw new Error(`l'île du Paradis touche une autre terre (${clash.slice(0, 5).join(' ; ')}…) : déplacez PARADIS.shape.at`);
+}
+
 if (DEBUG) {
   mkdirSync(DEBUG, { recursive: true });
   const pal = { [SEA]: [60, 80, 110], [WHITE]: [255, 255, 255], 2: [160, 94, 107], 3: [171, 143, 104], 4: [199, 199, 158], 5: [220, 60, 30] };
@@ -182,10 +264,10 @@ const PROV_NONE = 0xffff;
 const provAt = new Uint16Array(N).fill(PROV_NONE);
 
 // 3a. Paradis : anneaux autour de Mitras, secteurs par quadrant.
-const [pcx, pcy] = PARADIS.center;
+const [pcx, pcy] = isle.center;
 const { sina, rose, maria } = PARADIS.rings;
 for (const [id, fr, en, stateId, terrain] of PARADIS.provinces) {
-  addProvince({ id, name: { fr, en }, stateId, terrain, formerPureTitanTerritory: stateId.startsWith('titan') });
+  addProvince({ id, name: { fr, en }, stateId, terrain, formerPureTitanTerritory: stateId.startsWith('titan'), illustrated: true });
 }
 for (let i = 0; i < N; i++) {
   if (cls[i] !== NATION_CLASSES.paradis) continue;
@@ -293,11 +375,75 @@ for (let i = 0; i < N; i++) {
     for (const k of [i - 3, i + 3, i - 3 * W, i + 3 * W]) if (k >= 0 && k < N && landAt(k)) near = true;
     if (near) c = c.map((v) => v - 10);
   }
-  // Murs : cercles sombres (le jeu dessine aussi les états de Mur)
-  const r = Math.hypot(x - pcx, y - pcy);
-  if (cls[i] === NATION_CLASSES.paradis && [sina, rose, maria].some((Rr) => Math.abs(r - Rr) < 0.9)) c = [70, 60, 48];
   bg.data[i * 4] = Math.max(0, Math.min(255, c[0])); bg.data[i * 4 + 1] = Math.max(0, Math.min(255, c[1]));
   bg.data[i * 4 + 2] = Math.max(0, Math.min(255, c[2])); bg.data[i * 4 + 3] = 255;
+}
+
+// Île du Paradis dessinée à la manière de la carte de l'île fournie : terre olive pointillée,
+// pointillé plus serré et hachures courtes le long de la côte, contour d'encre brune doublé d'une
+// ombre sur la mer, arbres. (Dessin refait au pixel, l'image n'est pas reprise.)
+{
+  const isIsle = (k) => cls[k] === NATION_CLASSES.paradis;
+  const dist = new Int32Array(N).fill(-1);
+  const source = new Int32Array(N).fill(-1);
+  let frontier = [];
+  let sx = 0; let sy = 0; let count = 0;
+  for (let i = 0; i < N; i++) {
+    if (!isIsle(i)) continue;
+    sx += i % W; sy += (i / W) | 0; count += 1;
+    if ([i - 1, i + 1, i - W, i + W].some((k) => !isIsle(k))) { dist[i] = 0; source[i] = i; frontier.push(i); }
+  }
+  const coastLength = frontier.length;
+  const gx = sx / count; const gy = sy / count;
+  for (let d = 1; frontier.length; d++) {
+    const next = [];
+    for (const p of frontier) for (const q of [p - 1, p + 1, p - W, p + W]) {
+      if (!isIsle(q) || dist[q] !== -1) continue;
+      dist[q] = d; source[q] = source[p]; next.push(q);
+    }
+    frontier = next;
+  }
+  const hash = (x, y) => Math.abs(Math.sin(x * 127.1 + y * 311.7) * 43758.5453) % 1;
+  const put = (i, c) => { bg.data[i * 4] = c[0]; bg.data[i * 4 + 1] = c[1]; bg.data[i * 4 + 2] = c[2]; };
+  for (let i = 0; i < N; i++) {
+    const x = i % W; const y = (i / W) | 0;
+    if (!isIsle(i)) {
+      // ombre portée de l'île sur la mer (2 px)
+      let near = false;
+      for (let dy = -2; dy <= 2 && !near; dy++) for (let dx = -2; dx <= 2; dx++) if (isIsle(i + dy * W + dx)) { near = true; break; }
+      if (near) put(i, [118, 104, 82]);
+      continue;
+    }
+    const d = dist[i];
+    let c = [176, 160, 104];
+    // hachures : traits perpendiculaires à la côte, un tous les 3 px de littoral
+    const s = source[i];
+    const angle = Math.atan2(((s / W) | 0) - gy, (s % W) - gx) + Math.PI;
+    const bin = Math.floor((angle / (2 * Math.PI)) * coastLength / 1.5);
+    if (d === 0) c = [62, 42, 22];
+    else if (d <= 4 && bin % 3 === 0) c = [72, 50, 26];
+    else if (hash(x, y) < (d <= 5 ? 0.42 : 0.14)) c = [128, 116, 66]; // pointillé
+    put(i, c);
+  }
+  // arbres : feuillage ovale sombre et tronc
+  for (const t of PARADIS.shape.trees) {
+    const [tx, ty] = isle.toWorld(t);
+    for (let dy = -5; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) {
+      const inside = (dx * dx) / 6.5 + ((dy + 1) * (dy + 1)) / 16 <= 1;
+      if (inside) put((ty + dy) * W + tx + dx, Math.abs(dx) === 2 || dy === -5 ? [74, 70, 36] : [100, 98, 52]);
+    }
+    for (let dy = 3; dy <= 5; dy++) put((ty + dy) * W + tx, [70, 50, 26]);
+  }
+  // Murs : cercles d'encre
+  for (let i = 0; i < N; i++) {
+    if (!isIsle(i)) continue;
+    const r = Math.hypot((i % W) - pcx, ((i / W) | 0) - pcy);
+    if ([sina, rose, maria].some((Rr) => Math.abs(r - Rr) < 0.8)) put(i, [70, 46, 30]);
+  }
+  // Murs à l'intérieur des terres : le Mur Maria doit laisser une bande côtière
+  let minCoast = Infinity;
+  for (let i = 0; i < N; i++) if (isIsle(i) && dist[i] === 0) minCoast = Math.min(minCoast, Math.hypot((i % W) - pcx, ((i / W) | 0) - pcy));
+  if (maria > minCoast - 3) throw new Error(`le Mur Maria (${maria} px) touche la côte (à ${minCoast.toFixed(1)} px de Mitras)`);
 }
 
 // ------------------------------------------------------------------ 6. états
@@ -372,7 +518,7 @@ writeFileSync(path.join(OUT, 'provinces.json'), `${JSON.stringify({
   ignoredColors: ['#000000', '#ffffff'],
   homeLandmass: { paradis: 'paradis_island' },
   // Tracé des Murs (cercles autour de Mitras), dessiné en vectoriel par le client.
-  wallRings: { center: PARADIS.center, rings: [{ ring: 'inner', radius: sina }, { ring: 'middle', radius: rose }, { ring: 'outer', radius: maria }] },
+  wallRings: { center: isle.center, rings: [{ ring: 'inner', radius: sina }, { ring: 'middle', radius: rose }, { ring: 'outer', radius: maria }] },
   seaLanes,
   provinces: sortedProvinces,
   states,

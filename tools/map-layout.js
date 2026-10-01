@@ -77,14 +77,24 @@ export const LAND_SEEDS = [
   [1773, 547, 'hz_isl2', 'Îles Hizuzi du sud', 'Southern Hizuzi isles', 'hizuzi', 'forest'],
 ];
 
-// Île du Paradis : trois Murs concentriques autour de Mitras (cercles tracés sur la référence autour
-// de l'étoile de Mitras). Les Murs sont à l'intérieur des terres : la côte la plus proche est à
-// 20 px de Mitras, le Mur Maria (16 px) laisse une bande côtière. Au-delà du Mur Maria, les terres
-// du nord et du sud de l'île (côtes comprises) sont l'ancien territoire des Titans purs (LORE §3.1).
-// Rayons en pixels.
+// Île du Paradis. Sa silhouette vient de la carte de l'île fournie à part
+// (data/map/source/paradis_reference.png, carte ancienne illustrée) : contour sombre détouré dans
+// `crop`, mis à l'échelle (`height` px de haut) et posé dans la mer à l'emplacement de l'île sur la
+// carte du monde (`at` = position de Mitras). Mitras est au symbole des Murs de cette carte (`mitras`).
+// Trois Murs concentriques autour de Mitras, à l'intérieur des terres ; au-delà du Mur Maria, les
+// terres du nord et du sud de l'île (côtes comprises) sont l'ancien territoire des Titans purs
+// (LORE §3.1). Rayons en pixels de la carte du monde.
 export const PARADIS = {
-  center: [1111, 355],
-  rings: { sina: 5.5, rose: 10.5, maria: 16 },
+  shape: {
+    file: 'paradis_reference.png',
+    crop: [420, 140, 760, 570],
+    mitras: [590, 343],
+    at: [1114, 347],
+    height: 150,
+    // arbres de la carte de l'île (coordonnées de cette carte), redessinés sur le fond
+    trees: [[527, 240], [628, 425], [663, 460]],
+  },
+  rings: { sina: 9, rose: 18, maria: 28 },
   provinces: [
     ['pa_mitras', 'Mitras', 'Mitras', 'mitras', 'urban'],
     ['pa_mitras_e', 'Mitras — districts orientaux', 'Mitras — eastern districts', 'mitras', 'urban'],
