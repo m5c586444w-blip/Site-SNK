@@ -19,5 +19,14 @@
   },
   "supplyAttritionPerDay": 0.01,
   "reinforcementPerDay": 0.02,
-  "_reinforcementNote": "Hors combat : +2 points d'effectif par jour, en consommant 2 % de l'équipement et des effectifs du modèle."
+  "_reinforcementNote": "Hors combat : +2 points d'effectif par jour, en consommant 2 % de l'équipement et des effectifs du modèle.",
+  "navalInvasion": {
+    "transitDays": 10,
+    "hullCostPerDivision": {
+      "naval_hull_light": 2
+    },
+    "landingAttackPenaltyPct": -50,
+    "abortOrganization": 10
+  },
+  "_navalInvasionNote": "[EXTENSION] MECHANICS ne décrit que le combat terrestre. Débarquement le long des routes maritimes de la carte : 10 jours de transit, 2 coques légères consommées par division, attaque à −50 % tant que la tête de pont n'est pas prise, abandon sous 10 d'organisation."
 }

@@ -13,6 +13,7 @@ import { titansDay, onProvincesCaptured, resolveInheritance } from './titans.js'
 import { intelDay } from './intel.js';
 import { nationModifiers, refreshCategoryBonus } from './modifiers.js';
 import { addJournal } from '../state/journal.js';
+import { aiDay } from './ai.js';
 
 const yieldToLoop = () => new Promise((r) => setImmediate(r));
 
@@ -54,17 +55,21 @@ export async function runDay(state, data) {
     politicsDay(state, nationId, politics, ctx);
   }
   titansDay(state, queueInheritance);
-  // Combat et attrition : résolus une fois pour toutes les nations (les deux camps d'un combat
-  // doivent être traités ensemble).
-  await yieldToLoop();
   const modsCache = new Map();
   const getMods = (id) => {
     if (!modsCache.has(id)) modsCache.set(id, nationModifiers(state, id, politics));
     return modsCache.get(id);
   };
+  // [EXTENSION] IA des nations non jouées par un humain
+  for (const n of state.nations) {
+    if (!(state.humanNations ?? [player]).includes(n.id)) aiDay(state, n.id, data, getMods);
+  }
+  // Combat et attrition : résolus une fois pour toutes les nations (les deux camps d'un combat
+  // doivent être traités ensemble).
+  await yieldToLoop();
   const military = map?.available ? militaryDay(state, map, militaryRules, getMods) : { combats: [], destroyed: [], captured: [] };
   recordCaptures(state, military.captured);
-  onProvincesCaptured(state, military.captured, politics, queueInheritance);
+  onProvincesCaptured(state, military.captured, politics, queueInheritance, map);
   intelDay(state);
   diplomacyDay(state, data.diplomacyRules);
   const firedEvents = eventsDay(state, ctx);

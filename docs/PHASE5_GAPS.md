@@ -85,12 +85,28 @@ seconde chacune :
   appartiennent à Paradis et le continent a perdu ses usines.
 - **Mode libre** : aucun évènement scripté, et le monde de 844 évolue seul.
 
+
+## 8. Ajouts après la phase 5 : IA, débarquements, équilibrage
+
+| Ajout [EXTENSION] | Fichier | Règle |
+|---|---|---|
+| **IA décisionnelle** (cahier §6 : « comportement scripté simplifié », sans règles) | `server/simulation/ai.js` | Chaque semaine : premier focus disponible de l'arbre, slots de recherche remplis avec la technologie la plus rapide, une ligne par équipement utilisé par ses modèles, usines militaires libres affectées, construction quand la file est vide, recrutement jusqu'à un plafond (nombre de provinces contrôlées). Chaque jour en guerre : attaque de la province ennemie voisine la moins défendue (organisation ≥ 60), repli sous 30, un débarquement à la fois s'il n'y a pas de frontière terrestre. |
+| IA et Mode historique | idem | Conformément à HISTORICAL_EVENT_CHAIN §0, l'IA ne prend **aucun focus d'évitement** et ne déclare **aucune guerre d'elle-même**. En Mode libre, une rivalité forte (relations ≤ −50, soutien de guerre ≥ 60, armée 1,5 fois plus nombreuse) peut mener à un but de guerre, avec 0,5 % de chances par semaine. L'IA ne choisit jamais le focus de fin de partie « Activer les Titans des Murs ». |
+| **Débarquements** (MECHANICS ne décrit que le combat terrestre) | `data/map/provinces.json` → `seaLanes`, `data/military_rules.json` → `navalInvasion` | 13 routes maritimes entre provinces côtières, dont une route marleyenne vers l'île. Chaque débarquement consomme 2 coques légères, demande 10 jours de transit, et l'assaut se fait à −50 % tant que la tête de pont n'est pas prise ; abandon sous 10 d'organisation. Paradis ne peut pas débarquer tant que sa marine est verrouillée (focus « Chantiers navals côtiers »). |
+| **Emplacements d'usines** | `data/economy_rules.json` → `factorySlotsPerState` | 2 + 2 × infrastructure par état. Sans limite, la construction devenait exponentielle : 1 874 usines en 11 ans. |
+| **Guerre historique Marley/Alliance** | `server/simulation/diplomacy.js` | Elle se termine au 01/01/an-854 (« soft target end date », §5.3) par la victoire de Marley, quel que soit le score. Sans cela, l'Alliance l'emportait en 5 jours, à l'inverse du canon. |
+| **Repli des porteurs de Titans** | `server/simulation/titans.js` | Comme les divisions, un porteur se replie vers une province amie voisine ; il ne tombe que s'il est encerclé. Sans cela, Marley perdait 5 Titans pendant la guerre de 850-854, à l'encontre du canon. |
+
+**Résultat sur 11 ans simulés en Mode historique, toutes nations à l'IA** : en 855, Paradis détient
+le Fondateur, l'Attaque, le Colossal et la Mâchoire, et Marley détient le Cuirassé, le Féminin, le
+Bestial, la Charrette et le Marteau de Guerre. Cette répartition correspond au canon de la fin de la
+période. En Mode libre, l'histoire diverge : Marley, hostile à l'île, y tente des débarquements.
+
 ## 7. Limites connues
 
-- **IA décisionnelle** : les nations IA ne choisissent ni focus, ni recherches, ni guerres. Elles
-  n'entretiennent que les automatismes décrits ci-dessus. Le cahier §6 laisse l'IA « simplifiée »
-  sans la spécifier.
-- **Combat naval et aérien** : non spécifiés (MECHANICS ne décrit que le combat terrestre). Les
-  navires et avions produits servent de stocks et de débouchés technologiques.
+- **IA** : volontairement simple (section 8). Elle ne fait pas de diplomatie (alliances, garanties)
+  et n'a pas de stratégie de front au-delà de la province voisine.
+- **Combat naval et aérien** : il n'y a ni batailles navales ni aviation (non spécifiées). Les coques
+  servent aux débarquements (section 8), les avions ne sont que des stocks.
 - **Population** : aucun modèle. Les pertes démographiques de la brèche et du Grondement ne sont
   représentées que par leurs effets économiques et politiques.

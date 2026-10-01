@@ -91,6 +91,13 @@ function queueFor(state, nationId) {
   return state.constructionQueues[nationId];
 }
 
+/** Nombre maximal d'usines d'un état, ou null si aucune limite n'est configurée. */
+export function factorySlots(st, rules) {
+  const cfg = rules?.factorySlotsPerState;
+  if (!cfg) return null;
+  return cfg.base + cfg.perInfrastructureLevel * (st.infrastructureLevel ?? 0);
+}
+
 /** production/newFactory { nationId, stateId, type } */
 export function queueNewFactory(state, nationId, stateId, type, rules) {
   nationOf(state, nationId);
@@ -98,6 +105,10 @@ export function queueNewFactory(state, nationId, stateId, type, rules) {
   const st = controlledStates(state, nationId).find((s) => s.id === stateId) ?? fail('INVALID_STATE');
   const cost = rules?.factoryBuildCost?.[type];
   if (cost == null) fail('FACTORY_COST_MISSING');
+  // [EXTENSION] emplacements d'usines par état (data/economy_rules.json → factorySlotsPerState)
+  const slots = factorySlots(st, rules);
+  const queued = queueFor(state, nationId).filter((p) => p.stateId === st.id && p.kind.startsWith('factory_')).length;
+  if (slots != null && st.factories.length + queued >= slots) fail('STATE_FULL');
   const project = { id: nextId(state, 'proj'), kind: `factory_${type}`, stateId: st.id, cost, progress: 0 };
   queueFor(state, nationId).push(project);
   return project;

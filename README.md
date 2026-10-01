@@ -115,6 +115,8 @@ lore : voir `docs/PHASE5_GAPS.md`. Pour régénérer la carte : `node tools/gene
   brouillard.
 - **Multijoueur** (FEATURES §15), **blasons originaux** et fond de carte d'état-major (cahier §9).
 - **Données complètes en [EXTENSION]** d'après le lore : `docs/PHASE5_GAPS.md`.
+- **IA des nations non jouées**, **débarquements** par routes maritimes (mode Fronts : pointillés),
+  emplacements d'usines par état : `docs/PHASE5_GAPS.md` §8.
 
 ## Structure
 
@@ -122,7 +124,7 @@ lore : voir `docs/PHASE5_GAPS.md`. Pour régénérer la carte : `node tools/gene
 server/launcher/   démarrage, choix du port, ouverture du navigateur
 server/state/      GameState, brouillard, journal, session multijoueur, sauvegardes, réglages
 server/simulation/ horloge, tick, économie, recherche, militaire, focus, évènements, diplomatie,
-                   Titans, politique, renseignement, modificateurs
+                   Titans, politique, renseignement, modificateurs, IA
 server/app.js      API REST + WebSocket
 client/            interface (JS natif, Canvas 2D), theme.css, polices OFL auto-hébergées
 shared/            constantes MECHANICS_SPEC, calendrier

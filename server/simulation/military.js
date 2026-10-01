@@ -45,6 +45,7 @@ function provinceMeta(map, state, provinceId, rules) {
 }
 
 const neighbours = (map, provinceId) => map.adjacency?.[provinceId] ?? [];
+const seaNeighbours = (map, provinceId) => map.seaAdjacency?.[provinceId] ?? [];
 
 // ---------------------------------------------------------------- modèles (§6.2, FEATURES §8)
 
@@ -148,6 +149,10 @@ export function orderDivision(state, map, nationId, divisionId, order, targetPro
     Object.assign(d, { order, targetProvinceId: null, movement: null });
     return d;
   }
+  if (order === 'advance' && !neighbours(map, d.locationProvinceId).includes(targetProvinceId)
+    && seaNeighbours(map, d.locationProvinceId).includes(targetProvinceId)) {
+    return orderNavalInvasion(state, nationId, d, targetProvinceId, rules);
+  }
   if (order === 'advance') {
     if (!neighbours(map, d.locationProvinceId).includes(targetProvinceId)) fail('INVALID_TARGET');
     const controller = provinceController(state, targetProvinceId);
@@ -165,6 +170,22 @@ export function orderDivision(state, map, nationId, divisionId, order, targetPro
   const to = targetProvinceId ?? options[0];
   if (!to || !options.includes(to)) fail('NO_RETREAT_PATH');
   Object.assign(d, { order, targetProvinceId: to, movement: { to, daysRemaining: movementDays(state, d, rules, getMods) } });
+  return d;
+}
+
+/**
+ * [EXTENSION] Débarquement par une route maritime (data/military_rules.json → navalInvasion) :
+ * consomme des coques légères, transit de quelques jours, puis assaut amphibie.
+ */
+function orderNavalInvasion(state, nationId, d, targetProvinceId, rules) {
+  const cfg = rules?.navalInvasion ?? fail('MOVEMENT_RULES_MISSING');
+  if (!atWar(state, nationId, provinceController(state, targetProvinceId))) fail('NOT_AT_WAR');
+  const nation = state.nations.find((n) => n.id === nationId);
+  if (Object.keys(cfg.hullCostPerDivision).some((eq) => nation.lockedEquipment?.includes(eq))) fail('NO_NAVY');
+  const missing = Object.entries(cfg.hullCostPerDivision).filter(([eq, n]) => (nation.equipmentStockpile?.[eq] ?? 0) < n);
+  if (missing.length) fail('INSUFFICIENT_EQUIPMENT', missing.map(([eq, n]) => ({ kind: 'equipment', equipment: eq, need: n, have: Math.floor(nation.equipmentStockpile?.[eq] ?? 0) })));
+  for (const [eq, n] of Object.entries(cfg.hullCostPerDivision)) nation.equipmentStockpile[eq] -= n;
+  Object.assign(d, { order: 'advance', targetProvinceId, amphibious: false, movement: { to: targetProvinceId, daysRemaining: cfg.transitDays, naval: true } });
   return d;
 }
 
@@ -231,6 +252,11 @@ export function militaryDay(state, map, rules, getMods = () => NO_MODS) {
   for (const d of state.divisions) {
     if (!d.movement) continue;
     d.movement.daysRemaining -= 1;
+    if (d.movement.daysRemaining <= 0 && d.movement.naval) {
+      // Fin du transit : la division reste en mer et donne l'assaut à la côte visée.
+      Object.assign(d, { movement: null, amphibious: true });
+      continue;
+    }
     if (d.movement.daysRemaining <= 0) {
       if (provinceController(state, d.movement.to) === d.nationId) d.locationProvinceId = d.movement.to;
       Object.assign(d, { movement: null, order: 'hold', targetProvinceId: null });
@@ -242,9 +268,12 @@ export function militaryDay(state, map, rules, getMods = () => NO_MODS) {
   for (const d of state.divisions) {
     if (d.order !== 'advance' || d.movement) continue;
     const target = d.targetProvinceId;
-    const valid = neighbours(map, d.locationProvinceId).includes(target)
-      && atWar(state, d.nationId, provinceController(state, target));
-    if (!valid) { Object.assign(d, { order: 'hold', targetProvinceId: null }); continue; }
+    const reachable = neighbours(map, d.locationProvinceId).includes(target)
+      || (d.amphibious && seaNeighbours(map, d.locationProvinceId).includes(target));
+    const valid = reachable && atWar(state, d.nationId, provinceController(state, target));
+    // Assaut amphibie abandonné : cible perdue ou organisation effondrée (retour au port d'origine).
+    const abort = d.amphibious && d.organization < (rules?.navalInvasion?.abortOrganization ?? 0);
+    if (!valid || abort) { Object.assign(d, { order: 'hold', targetProvinceId: null, amphibious: false }); continue; }
     if (!attacksByProvince.has(target)) attacksByProvince.set(target, []);
     attacksByProvince.get(target).push(d);
   }
@@ -256,7 +285,9 @@ export function militaryDay(state, map, rules, getMods = () => NO_MODS) {
     const defenders = state.divisions.filter((d) => d.locationProvinceId === provinceId && d.nationId === controller);
     // Modificateurs (technologies/lois [EXTENSION], Titans §7.3) appliqués à la formule §6.3.
     const fortified = meta.isWallFortified || (meta.state?.fortificationLevel ?? 0) > 0;
-    const atkMult = (d) => (1 + getMods(d.nationId).attackPct / 100) * (1 + (fortified ? getMods(d.nationId).siegePct : 0) / 100);
+    const landing = 1 + (rules?.navalInvasion?.landingAttackPenaltyPct ?? 0) / 100;
+    const atkMult = (d) => (1 + getMods(d.nationId).attackPct / 100) * (1 + (fortified ? getMods(d.nationId).siegePct : 0) / 100)
+      * (d.amphibious ? landing : 1);
     const defMult = (d) => 1 + getMods(d.nationId).defensePct / 100;
     const atk = attackers.reduce((s, d) => s + attackerPower(d, stats(d)) * atkMult(d), 0);
     const def = defenders.reduce((s, d) => s + defenderPower(d, stats(d), meta) * defMult(d), 0);
@@ -300,7 +331,7 @@ export function militaryDay(state, map, rules, getMods = () => NO_MODS) {
       }
       for (const d of attackers) {
         if (d.nationId === winner) d.locationProvinceId = provinceId;
-        Object.assign(d, { order: 'hold', targetProvinceId: null });
+        Object.assign(d, { order: 'hold', targetProvinceId: null, amphibious: false });
       }
       refreshStateControl(state, meta.state);
     }

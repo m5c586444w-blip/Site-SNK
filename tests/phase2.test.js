@@ -18,7 +18,9 @@ async function newGame(nationId = 'paradis') {
   const { loadGameData } = await import('../server/data/loadData.js');
   const { createGame } = await import('../server/state/gameState.js');
   const data = await loadGameData();
-  return { data, state: createGame({ nationId, historicalMode: true }, data) };
+  // Tests économiques : toutes les nations « humaines » pour neutraliser l'IA
+  const state = createGame({ nationId, historicalMode: true, humanNations: data.nations.map((n) => n.id) }, data);
+  return { data, state };
 }
 
 test('formules §3.3 : production, rampe, pénalité, plancher et plafond', async () => {

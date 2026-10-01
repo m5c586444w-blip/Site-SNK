@@ -282,6 +282,7 @@ export function militaryView(state, viewerId, map) {
     wars: visibleWars,
     combats: (state.lastCombats ?? []).filter((c) => known(c.provinceId)),
     adjacency: map.available ? map.adjacency : {},
+    seaAdjacency: map.available ? map.seaAdjacency ?? {} : {},
   };
 }
 

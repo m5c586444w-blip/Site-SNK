@@ -154,8 +154,13 @@ export function diplomacyDay(state, rules) {
   for (const [a, b] of [...state.wars]) {
     const info = state.warInfo[warKey(a, b)];
     if (!info) continue;
+    // Guerre scriptée de la chaîne historique : elle suit le rythme canon (MECHANICS §5.3, « soft
+    // target end date ») et se termine à cette date. Le seuil de score n'y met pas fin plus tôt.
+    if (info.softEndDate) {
+      if (today >= dateNum(info.softEndDate)) endWar(state, a, b, info.softEndWinner);
+      continue;
+    }
     const top = Object.entries(info.warscore).find(([, s]) => s >= WARSCORE_PEACE_THRESHOLD);
     if (top) endWar(state, a, b, top[0]);
-    else if (info.softEndDate && today >= dateNum(info.softEndDate)) endWar(state, a, b, info.softEndWinner);
   }
 }

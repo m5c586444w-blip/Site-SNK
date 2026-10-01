@@ -1198,6 +1198,22 @@ Object.assign(STRINGS.EN, {
   "error.NATION_TAKEN": "Nation already assigned to another player.",
 });
 
+// ---------------- IA, débarquements ----------------
+Object.assign(STRINGS.FR, {
+  "map.menu.naval": "débarquement",
+  "oob.amphibious": "assaut amphibie",
+  "oob.naval": "en mer ({n} j)",
+  "error.NO_NAVY": "Aucune marine disponible (coques verrouillées).",
+  "error.STATE_FULL": "Plus d'emplacement d'usine dans cet état.",
+});
+Object.assign(STRINGS.EN, {
+  "map.menu.naval": "naval landing",
+  "oob.amphibious": "amphibious assault",
+  "oob.naval": "at sea ({n} d)",
+  "error.NO_NAVY": "No navy available (hulls locked).",
+  "error.STATE_FULL": "No factory slot left in this state.",
+});
+
 let lang = 'FR';
 
 export function setLanguage(l) {

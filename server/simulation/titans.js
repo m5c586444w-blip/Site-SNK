@@ -47,11 +47,15 @@ function capitalProvince(state, nationId) {
  * sienne. Si cette nation peut hériter (Eldiens : LORE §3.2), l'évènement TITAN_INHERITANCE lui est
  * proposé ; sinon le pouvoir est perdu.
  */
-export function onProvincesCaptured(state, captured, politics, queueInheritance) {
+export function onProvincesCaptured(state, captured, politics, queueInheritance, map = null) {
   const canInherit = politics?.titans?.canInheritNations ?? [];
   for (const c of captured) {
     for (const [id, t] of Object.entries(state.titans)) {
       if (t.provinceId !== c.provinceId || t.holderNationId !== c.from) continue;
+      // Comme les divisions (PHASE3_GAPS B3) : le porteur se replie vers une province amie voisine ;
+      // il n'est tué que s'il est encerclé.
+      const escape = (map?.adjacency?.[c.provinceId] ?? []).find((p) => state.provinceControl?.[p] === c.from);
+      if (escape) { t.provinceId = escape; continue; }
       if (canInherit.includes(c.to)) queueInheritance({ titanId: id, nationId: c.to, cause: 'killed', provinceId: c.provinceId });
       else {
         setTitanHolder(state, id, null);

@@ -269,6 +269,7 @@ export class MapRenderer {
       if (!c) continue;
       const s = this.toScreen(c);
       let offset = -((nations.size - 1) * 26) / 2;
+      const naval = (this.military.divisions ?? []).some((d) => d.locationProvinceId === pid && (d.amphibious || d.movement?.naval));
       for (const [nid, count] of nations) {
         const col = this.nationColors.get(nid) ?? NEUTRAL;
         const x = s.x + offset; const y = s.y + 14;
@@ -278,9 +279,32 @@ export class MapRenderer {
         ctx.fillRect(x - 12, y - 8, 24, 16);
         ctx.strokeRect(x - 12, y - 8, 24, 16);
         ctx.fillStyle = '#fff';
-        ctx.fillText(String(count), x, y + 0.5);
+        ctx.fillText(naval && nid === this.viewerId ? `${count}⚓` : String(count), x, y + 0.5);
         offset += 26;
       }
+    }
+    // Routes maritimes (débarquements) en mode Fronts
+    if (this.mode === 'front_combat') {
+      ctx.save();
+      ctx.setLineDash([6, 6]);
+      ctx.strokeStyle = 'rgba(43, 58, 85, 0.75)';
+      ctx.lineWidth = 2;
+      const drawn = new Set();
+      for (const [a, list] of Object.entries(this.military.seaAdjacency ?? {})) {
+        for (const b of list) {
+          const key = [a, b].sort().join('|');
+          if (drawn.has(key)) continue;
+          drawn.add(key);
+          const pa = this.provinces.find((p) => p.id === a);
+          const pb = this.provinces.find((p) => p.id === b);
+          if (pa?.visibility !== 'known' || pb?.visibility !== 'known') continue;
+          const ca = this.centroids.get(a); const cb = this.centroids.get(b);
+          if (!ca || !cb) continue;
+          const sa = this.toScreen(ca); const sb = this.toScreen(cb);
+          ctx.beginPath(); ctx.moveTo(sa.x, sa.y); ctx.lineTo(sb.x, sb.y); ctx.stroke();
+        }
+      }
+      ctx.restore();
     }
     this.combatHits = [];
     for (const c of this.military.combats ?? []) {

@@ -109,5 +109,11 @@ export async function loadMap() {
     homeLandmass: def.homeLandmass ?? { paradis: 'paradis_island' },
     provinces,
     states: def.states ?? [],
+    seaLanes: def.seaLanes ?? [],
+    seaAdjacency: (def.seaLanes ?? []).reduce((acc, [a, b]) => {
+      (acc[a] ??= []).push(b);
+      (acc[b] ??= []).push(a);
+      return acc;
+    }, {}),
   };
 }

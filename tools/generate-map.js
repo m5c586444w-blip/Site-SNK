@@ -240,6 +240,46 @@ const states = Object.entries(STATES).map(([id, s]) => {
   };
 });
 
+// ------------------------------------------------------------------ routes maritimes [EXTENSION]
+// Liaisons de débarquement entre provinces côtières de masses terrestres différentes : pour chaque
+// paire de masses, les 3 couples de provinces côtières les plus proches (à moins de 320 px).
+const coastal = new Map();
+for (let y = 1; y < H - 1; y++) {
+  for (let x = 1; x < W - 1; x++) {
+    const id = provAt[y * W + x];
+    if (!id) continue;
+    if ([provAt[y * W + x - 1], provAt[y * W + x + 1], provAt[(y - 1) * W + x], provAt[(y + 1) * W + x]].some((n) => n == null)) {
+      const c = coastal.get(id) ?? { sx: 0, sy: 0, n: 0 };
+      c.sx += x; c.sy += y; c.n += 1;
+      coastal.set(id, c);
+    }
+  }
+}
+const landOf = new Map(provinces.map((p) => [p.id, p.landmass === 'paradis_island' ? 'paradis_island' : p.landmass]));
+const coastPts = [...coastal].map(([id, c]) => ({ id, x: c.sx / c.n, y: c.sy / c.n, land: landOf.get(id) }));
+const byPair = new Map();
+for (let i = 0; i < coastPts.length; i++) {
+  for (let j = i + 1; j < coastPts.length; j++) {
+    const a = coastPts[i]; const b = coastPts[j];
+    if (a.land === b.land) continue;
+    const d = Math.hypot(a.x - b.x, a.y - b.y);
+    if (d > 320) continue;
+    const key = [a.land, b.land].sort().join('|');
+    if (!byPair.has(key)) byPair.set(key, []);
+    byPair.get(key).push({ a: a.id, b: b.id, d });
+  }
+}
+const seaLanes = [];
+for (const list of byPair.values()) {
+  for (const l of list.sort((x, y) => x.d - y.d).slice(0, 3)) seaLanes.push([l.a, l.b].sort());
+}
+
+// Route ajoutée à la main : la flotte marleyenne rejoint l'île depuis ses ports orientaux (canon).
+for (const lane of [['mar_ne2', 'pa_titan_s']]) {
+  const k = [...lane].sort();
+  if (!seaLanes.some((l) => l[0] === k[0] && l[1] === k[1])) seaLanes.push(k);
+}
+
 mkdirSync(OUT, { recursive: true });
 writeFileSync(path.join(OUT, 'provinces_mask.png'), PNG.sync.write(mask));
 writeFileSync(path.join(OUT, 'background.png'), PNG.sync.write(bg));
@@ -249,7 +289,8 @@ writeFileSync(path.join(OUT, 'provinces.json'), `${JSON.stringify({
   backgroundFile: 'background.png',
   ignoredColors: ['#000000'],
   homeLandmass: { paradis: 'paradis_island' },
+  seaLanes,
   provinces,
   states,
 }, null, 2)}\n`);
-console.log(`Carte générée : ${W}×${H}, ${provinces.length} provinces, ${states.length} états.`);
+console.log(`Carte générée : ${W}×${H}, ${provinces.length} provinces, ${states.length} états, ${seaLanes.length} routes maritimes.`);

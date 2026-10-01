@@ -28,9 +28,16 @@ export function advanceTargets(view, provinceId) {
   const me = view.viewerId;
   const wars = view.military.wars ?? [];
   const atWar = (x) => x && wars.some(([a, b]) => (a === me && b === x) || (b === me && a === x));
-  return (view.military.adjacency?.[provinceId] ?? [])
-    .map((id) => view.provinces.find((p) => p.id === id))
-    .filter((p) => p && (p.visibility !== 'known' ? wars.some(([a, b]) => a === me || b === me) : atWar(p.controllerId)));
+  const anyWar = wars.some(([a, b]) => a === me || b === me);
+  const byId = (id) => view.provinces.find((p) => p.id === id);
+  // Terre : provinces ennemies (attaque) ou amies (déplacement) ; mer : débarquement [EXTENSION].
+  const land = (view.military.adjacency?.[provinceId] ?? []).map(byId)
+    .filter((p) => p && (p.visibility !== 'known' ? anyWar : atWar(p.controllerId) || p.controllerId === me))
+    .map((p) => ({ ...p, naval: false }));
+  const sea = (view.military.seaAdjacency?.[provinceId] ?? []).map(byId)
+    .filter((p) => p && (p.visibility !== 'known' ? anyWar : atWar(p.controllerId)))
+    .map((p) => ({ ...p, naval: true }));
+  return [...land, ...sea];
 }
 
 /** Menu d'ordres commun à l'OOB et au clic droit sur la carte (FEATURES §2, §8). */
@@ -39,7 +46,7 @@ export function orderButtons(view, ctx, divisionIds, provinceId) {
   const targets = advanceTargets(view, provinceId);
   const advance = h('select.order-select', { 'aria-label': t('oob.order.advance') },
     h('option', { value: '' }, `${t('oob.order.advance')}…`),
-    ...targets.map((p) => h('option', { value: p.id }, p.visibility === 'known' ? loc(p.name) : t('map.menu.unknownTarget'))));
+    ...targets.map((p) => h('option', { value: p.id }, `${p.visibility === 'known' ? loc(p.name) : t('map.menu.unknownTarget')}${p.naval ? ` — ${t('map.menu.naval')}` : ''}`)));
   advance.disabled = targets.length === 0;
   advance.title = targets.length === 0 ? t('map.menu.noTarget') : '';
   advance.addEventListener('change', () => { if (advance.value) act({ order: 'advance', targetProvinceId: advance.value }); });
@@ -84,7 +91,9 @@ export function renderDivisions(host, ctx) {
       h('summary', {}, `${frontLabel(frontId)} — ${divs.length}`),
       ...divs.map((d) => {
         const tpl = tplById.get(d.templateId);
-        const orderText = d.movement ? t('oob.moving', { n: d.movement.daysRemaining })
+        const orderText = d.movement?.naval ? t('oob.naval', { n: d.movement.daysRemaining })
+          : d.amphibious ? `${t('oob.amphibious')} ${t('oob.target', { province: provinceName(view, d.targetProvinceId) })}`
+          : d.movement ? t('oob.moving', { n: d.movement.daysRemaining })
           : d.order ? `${t(`oob.order.${d.order}`)}${d.targetProvinceId ? ` ${t('oob.target', { province: provinceName(view, d.targetProvinceId) })}` : ''}`
             : t('oob.order.none');
         return h('details.oob-division', {},

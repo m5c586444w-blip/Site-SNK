@@ -90,5 +90,10 @@
       }
     },
     "_note": "Si le stock ne couvre pas la consommation du jour, la production de la ligne est réduite au prorata."
-  }
+  },
+  "factorySlotsPerState": {
+    "base": 2,
+    "perInfrastructureLevel": 2
+  },
+  "_factorySlotsNote": "[EXTENSION] Emplacements d'usines par état : 2 + 2 × infrastructure. Sans cette limite, la construction devient exponentielle (chaque usine civile accélère la suivante)."
 }

@@ -55,6 +55,9 @@ export async function validateMap(dir = mapDir()) {
     }
   }
 
+  for (const lane of def.seaLanes ?? []) {
+    if (!Array.isArray(lane) || lane.length !== 2 || !lane.every((id) => provIds.has(id))) errors.push(`route maritime invalide : ${JSON.stringify(lane)}`);
+  }
   const ignored = new Set((def.ignoredColors ?? []).map(norm));
   const seen = new Set();
   const unknown = new Map();
