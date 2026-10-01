@@ -135,11 +135,22 @@ export function endWar(state, a, b, winner) {
   addJournal(state, { visibleTo: [a, b], category: 'diplomacy', textKey: 'journal.peace', vars: { winner, loser } });
 }
 
-/** §8 : +10 de score par objectif (province) pris ; 100 impose la paix. */
+/**
+ * §8 : +10 de score par objectif (province) pris ; 100 impose la paix.
+ * [CHOIX] Un objectif est une province appartenant à l'adversaire ; chacune ne compte qu'une fois par
+ * guerre, et reprendre ses propres provinces ne rapporte rien. Sans cela, une province côtière prise
+ * et reprise plusieurs fois suffisait à « gagner » une guerre sans rien occuper.
+ */
 export function recordCaptures(state, captured) {
   for (const c of captured) {
     const info = state.warInfo[warKey(c.from, c.to)];
     if (!info) continue;
+    const owner = state.states.find((st) => st.provinceIds.includes(c.provinceId))?.ownerId;
+    if (owner !== c.from) continue;
+    info.objectivesTaken ??= {};
+    const taken = (info.objectivesTaken[c.to] ??= []);
+    if (taken.includes(c.provinceId)) continue;
+    taken.push(c.provinceId);
     info.warscore[c.to] = (info.warscore[c.to] ?? 0) + WARSCORE_PER_OBJECTIVE_CAPTURED;
   }
 }

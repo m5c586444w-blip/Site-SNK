@@ -30,7 +30,8 @@ Le launcher affiche l'adresse locale et l'adresse sur le réseau local. Les sauv
 
 Toutes les données de jeu (carte, valeurs de départ, technologies, ordre de bataille, lois…) sont
 désormais présentes. Ce qui manquait aux spécifications a été rédigé en **[EXTENSION]** d'après le
-lore : voir `docs/PHASE5_GAPS.md`. Pour régénérer la carte : `node tools/generate-map.js`.
+lore : voir `docs/PHASE5_GAPS.md`. La carte est construite à partir de la carte de référence fournie
+(`data/map/source/world_reference.png`) ; pour la reconstruire : `node tools/extract-map.js`.
 
 `npm run start:fixture` lance le jeu sur les **données de test abstraites** de `tests/fixtures/`.
 

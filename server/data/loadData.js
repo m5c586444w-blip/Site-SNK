@@ -110,6 +110,7 @@ export async function loadMap() {
     provinces,
     states: def.states ?? [],
     seaLanes: def.seaLanes ?? [],
+    wallRings: def.wallRings ?? null,
     seaAdjacency: (def.seaLanes ?? []).reduce((acc, [a, b]) => {
       (acc[a] ??= []).push(b);
       (acc[b] ??= []).push(a);

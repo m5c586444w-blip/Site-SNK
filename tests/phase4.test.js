@@ -209,10 +209,14 @@ test('guerre : 90 jours de justification, garants entraînés, score 100 = paix 
   for (let i = 0; i < 90; i++) dip.diplomacyDay(state, data.diplomacyRules);
   dip.diplomaticAction(state, 'marley', 'paradis', 'declare_war');
   assert.deepEqual(state.wars, [['marley', 'paradis'], ['marley', 'hizuru']]);
-  // Marley prend l'état A2 (une province) ; 10 captures = score 100
+  // Marley prend l'état A2 (une province) : un objectif ne compte qu'une fois, reprendre le sien ne compte pas
   state.provinceControl.test_a2 = 'marley';
   state.states.find((s) => s.id === 'test_state_a2').controllerId = 'marley';
   dip.recordCaptures(state, Array.from({ length: 10 }, () => ({ provinceId: 'test_a2', from: 'paradis', to: 'marley' })));
+  dip.recordCaptures(state, [{ provinceId: 'test_b1', from: 'marley', to: 'paradis' }, { provinceId: 'test_a1', from: 'marley', to: 'paradis' }]);
+  const info = state.warInfo['marley|paradis'];
+  assert.deepEqual(info.warscore, { marley: 10, paradis: 10 });
+  info.warscore.marley = 100; // score 100 = paix
   dip.diplomacyDay(state, data.diplomacyRules);
   assert.deepEqual(state.wars, [['marley', 'hizuru']]);
   assert.equal(state.states.find((s) => s.id === 'test_state_a2').ownerId, 'marley');

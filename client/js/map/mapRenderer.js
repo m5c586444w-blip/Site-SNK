@@ -48,7 +48,8 @@ export class MapRenderer {
     this.resizeObserver.observe(container);
   }
 
-  async load({ maskUrl, backgroundUrl }) {
+  async load({ maskUrl, backgroundUrl, wallRings = null }) {
+    this.wallRings = wallRings;
     const mask = await loadImage(maskUrl);
     this.width = mask.naturalWidth;
     this.height = mask.naturalHeight;
@@ -166,7 +167,7 @@ export class MapRenderer {
             out = nationEdge ? NATION_BORDER : mix(out, PROVINCE_BORDER, 0.6);
             if (this.mode === 'front_combat' && nbrs.some((n) => n >= 0 && n !== idx && this.atWar(provs[n].controllerId, p.controllerId))) out = FRONT_LINE;
           }
-          if (p.isWallState) {
+          if (p.isWallState && !this.wallRings) {
             // Mur : ligne claire de 2 px cernée de sombre, le long du bord de l'état fortifié
             const edge2 = [pp[i - 2 * w], pp[i + 2 * w], x > 1 ? pp[i - 2] : -1, x < w - 2 ? pp[i + 2] : -1]
               .some((n) => n !== undefined && n !== idx);
@@ -251,10 +252,58 @@ export class MapRenderer {
     return { x: this.view.ox + x * this.view.scale, y: this.view.oy + y * this.view.scale };
   }
 
+  /**
+   * Murs tracés en vectoriel (cercles de la carte, data/map/provinces.json « wallRings ») : un trait
+   * d'épaisseur constante à l'écran, quel que soit le zoom. Seules les portions posées sur un état
+   * de Mur connu sont dessinées.
+   */
+  drawWalls() {
+    const { ctx } = this;
+    // Les provinces du masque sont attribuées selon les coordonnées entières des pixels : le centre
+    // du pixel (x + 0,5) sert de référence pour le tracé.
+    const [cx, cy] = this.wallRings.center.map((v) => v + 0.5);
+    const { rings } = this.wallRings;
+    const onWall = (x, y) => {
+      const xi = Math.floor(x); const yi = Math.floor(y);
+      if (xi < 0 || yi < 0 || xi >= this.width || yi >= this.height) return false;
+      const p = this.provinces[this.pixelProvince[yi * this.width + xi]];
+      return Boolean(p?.isWallState && p.visibility === 'known');
+    };
+    const width = Math.max(2, Math.min(6, this.view.scale * 0.9));
+    ctx.save();
+    ctx.lineCap = 'round';
+    for (const { radius } of rings) {
+      const steps = Math.max(48, Math.ceil(radius * 8));
+      const runs = [];
+      let run = null;
+      for (let k = 0; k <= steps; k++) {
+        const a = (k / steps) * Math.PI * 2;
+        const x = cx + Math.cos(a) * radius; const y = cy + Math.sin(a) * radius;
+        // pixel juste à l'intérieur du cercle : il appartient à l'état que ce Mur entoure
+        if (onWall(cx + Math.cos(a) * (radius - 1.5), cy + Math.sin(a) * (radius - 1.5))) {
+          if (!run) { run = []; runs.push(run); }
+          run.push(this.toScreen({ x, y }));
+        } else run = null;
+      }
+      for (const [stroke, w] of [[WALL_OUTLINE, width + 2], [WALL_LINE, width]]) {
+        ctx.strokeStyle = `rgb(${stroke})`;
+        ctx.lineWidth = w;
+        for (const r of runs) {
+          if (r.length < 2) continue;
+          ctx.beginPath();
+          r.forEach((pt, i) => (i ? ctx.lineTo(pt.x, pt.y) : ctx.moveTo(pt.x, pt.y)));
+          ctx.stroke();
+        }
+      }
+    }
+    ctx.restore();
+  }
+
   /** Pions de divisions (par nation et par province) et icônes de combat (FEATURES §2, §13). */
   drawOverlay() {
     if (!this.centroids) return;
     const { ctx } = this;
+    if (this.wallRings && this.pixelProvince) this.drawWalls();
     const byProvince = new Map();
     for (const d of this.military.divisions ?? []) {
       if (!byProvince.has(d.locationProvinceId)) byProvince.set(d.locationProvinceId, new Map());

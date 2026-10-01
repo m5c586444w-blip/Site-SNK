@@ -5,8 +5,11 @@
 - **Blasons** (`client/assets/blasons/`) : dessins originaux créés pour ce projet (formes
   héraldiques génériques et couleurs de faction du cahier §9). Aucun emblème officiel de l'œuvre
   n'est repris : ni « Ailes de la Liberté », ni brassard, ni étoile à neuf branches.
-- **Carte et fond de carte** (`data/map/`) : générés par `tools/generate-map.js`, d'après la carte
-  de référence fournie par le commanditaire (`client/assets/map/reference_map.jpg`).
+- **Carte et fond de carte** (`data/map/`) : construits par `tools/extract-map.js` à partir de la
+  carte de référence fournie par le commanditaire (« Map of the World Known by Residents of Paradis
+  Island », `data/map/source/world_reference.png`, également affichée quand la carte manque :
+  `client/assets/map/reference_map.jpg`). Son auteur et sa licence ne sont pas connus : le fond du
+  jeu est redessiné à partir des seuls contours, sans reprendre l'image.
 - **Textures** : le papier vieilli et le lavis de la mer sont générés par programme, sans ressource
   externe. Les packs CC0 et CC-BY cités au cahier §10 ne sont pas utilisés à ce stade : il n'y a
   donc aucune attribution à ajouter.

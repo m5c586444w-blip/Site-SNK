@@ -17,6 +17,9 @@ import { actionBlocker, diplomaticAction, relation } from './diplomacy.js';
 /** Focus jamais choisis par l'IA : arme de fin de partie (choix du joueur uniquement). */
 const AI_FORBIDDEN_FOCUS = new Set(['PARADIS_WALLS_AWAKEN']);
 const AI_WAR_CHANCE_PER_WEEK = 0.005;
+/** Débarquement : divisions réunies au port avant de traverser, et plafond de divisions envoyées au port. */
+const AI_LANDING_GROUP = 3;
+const AI_LANDING_MAX_STAGED = 6;
 
 function random(state) {
   const [v, next] = nextRandom(state.rngState);
@@ -111,27 +114,64 @@ function maybeStartWar(state, nationId, data) {
   }
 }
 
+/** Premier pas du plus court chemin, par ses propres provinces, vers l'une des provinces cibles. */
+function stepToward(state, map, nationId, from, targets) {
+  if (targets.has(from)) return null;
+  const prev = new Map([[from, null]]);
+  const queue = [from];
+  while (queue.length) {
+    const p = queue.shift();
+    if (targets.has(p)) {
+      let step = p;
+      while (prev.get(step) !== from) step = prev.get(step);
+      return step;
+    }
+    for (const n of map.adjacency?.[p] ?? []) {
+      if (prev.has(n) || provinceController(state, n) !== nationId) continue;
+      prev.set(n, p);
+      queue.push(n);
+    }
+  }
+  return null;
+}
+
 function dailyMilitary(state, nationId, data, getMods) {
   const { map, militaryRules } = data;
   const enemies = enemiesOf(state, nationId);
   if (!enemies.length) return;
+  const isEnemy = (p) => enemies.includes(provinceController(state, p));
   const defenders = (pid) => state.divisions.filter((d) => d.locationProvinceId === pid && d.nationId !== nationId).length;
-  let invasionLaunched = state.divisions.some((d) => d.nationId === nationId && d.movement?.naval);
-  for (const d of state.divisions.filter((x) => x.nationId === nationId)) {
+  const own = state.divisions.filter((x) => x.nationId === nationId);
+  const invasionUnderway = own.some((d) => d.movement?.naval);
+  const owned = Object.keys(state.provinceControl).filter((p) => state.provinceControl[p] === nationId);
+  const frontier = owned.some((p) => (map.adjacency?.[p] ?? []).some(isEnemy));
+  // Sans frontière terrestre avec l'ennemi : ports d'où une route maritime mène chez lui.
+  const ports = new Set(frontier ? [] : owned.filter((p) => (map.seaAdjacency?.[p] ?? []).some(isEnemy)));
+  let staged = own.filter((d) => ports.has(d.locationProvinceId) || (d.movement && ports.has(d.movement.to))).length;
+
+  for (const d of own) {
     if (d.movement || d.amphibious) continue;
     if (d.organization < 30) { if (d.order === 'advance') tryDo(() => orderDivision(state, map, nationId, d.id, 'hold', null, militaryRules, getMods)); continue; }
     if (d.order === 'advance' || d.organization < 60) continue;
-    const land = (map.adjacency?.[d.locationProvinceId] ?? []).filter((p) => enemies.includes(provinceController(state, p)));
+    const land = (map.adjacency?.[d.locationProvinceId] ?? []).filter(isEnemy);
     if (land.length) {
       const target = land.sort((a, b) => defenders(a) - defenders(b) || a.localeCompare(b))[0];
       tryDo(() => orderDivision(state, map, nationId, d.id, 'advance', target, militaryRules, getMods));
       continue;
     }
-    // Pas de frontière terrestre : un débarquement à la fois.
-    const sea = (map.seaAdjacency?.[d.locationProvinceId] ?? []).filter((p) => enemies.includes(provinceController(state, p)));
-    if (sea.length && !invasionLaunched) {
-      if (tryDo(() => orderDivision(state, map, nationId, d.id, 'advance', sea[0], militaryRules, getMods))) invasionLaunched = true;
+    if (!ports.size || invasionUnderway) continue;
+    if (ports.has(d.locationProvinceId)) {
+      // Débarquement groupé : toutes les divisions prêtes du port traversent ensemble.
+      const group = own.filter((x) => x.locationProvinceId === d.locationProvinceId && !x.movement && !x.amphibious && x.order !== 'advance' && x.organization >= 60);
+      if (group.length < AI_LANDING_GROUP) continue;
+      const target = (map.seaAdjacency[d.locationProvinceId] ?? []).filter(isEnemy).sort((a, b) => defenders(a) - defenders(b) || a.localeCompare(b))[0];
+      for (const x of group) tryDo(() => orderDivision(state, map, nationId, x.id, 'advance', target, militaryRules, getMods));
+      return;
     }
+    // Sinon, rejoindre le port le plus proche (dans la limite des divisions engagées outre-mer).
+    if (staged >= AI_LANDING_MAX_STAGED) continue;
+    const step = stepToward(state, map, nationId, d.locationProvinceId, ports);
+    if (step && tryDo(() => orderDivision(state, map, nationId, d.id, 'advance', step, militaryRules, getMods))) staged += 1;
   }
 }
 

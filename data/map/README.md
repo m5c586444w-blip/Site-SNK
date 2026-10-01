@@ -1,7 +1,10 @@
 # Carte des provinces : format attendu
 
-**État actuel** : la carte fournie est une carte **[EXTENSION]** générée par
-`node tools/generate-map.js` d'après la carte de référence et LORE §2 (voir `docs/PHASE5_GAPS.md`).
+**État actuel** : la carte est construite par `node tools/extract-map.js` à partir de la carte de
+référence fournie (`source/world_reference.png`). Les contours des nations, les frontières tracées
+et les noms de régions viennent de la référence ; le découpage en provinces est dans
+`tools/map-layout.js` (voir `docs/PHASE5_GAPS.md` §9). Les terres blanches « Uncharted by Eldia »
+n'ont pas de province (couleur `#ffffff` du masque, ignorée).
 Pour la remplacer par une carte dessinée à la main, déposez vos fichiers ici au même format, puis
 vérifiez-les avec `npm run validate-map`.
 
@@ -28,6 +31,8 @@ transparents et laissent voir le fond. Déclarez leurs couleurs dans `ignoredCol
   "backgroundFile": "background.jpg",          // optionnel
   "ignoredColors": ["#000000"],                // couleurs sans province (mer…)
   "homeLandmass": { "paradis": "paradis_island" }, // MECHANICS_SPEC §10 : Paradis voit seulement son île
+  "wallRings": { "center": [x, y], "rings": [{ "ring": "inner", "radius": 5.5 }] }, // optionnel : Murs tracés en vectoriel
+  "seaLanes": [["prov_a", "prov_b"]],          // optionnel : routes de débarquement
   "provinces": [
     {
       "id": "prov_x",

@@ -448,7 +448,7 @@ export async function gameScreen(root, nav) {
       if (!renderer) {
         clear(mapHost);
         renderer = new MapRenderer(mapHost, { onHover, onSelect, onContextMenu, onCombatClick });
-        await renderer.load({ maskUrl: '/map/mask.png', backgroundUrl: view.map.hasBackground ? '/map/background' : null });
+        await renderer.load({ maskUrl: '/map/mask.png', backgroundUrl: view.map.hasBackground ? '/map/background' : null, wallRings: view.map.wallRings });
       }
       if (!view.fogOfWarEnabled && mapMode === 'fog_of_war') mapMode = 'political';
       renderer.mode = mapMode;

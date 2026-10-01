@@ -173,7 +173,7 @@ export function viewFor(state, viewerId, map, { technologies = [], economyRules 
     date: formatDate(state.date),
     speed: state.speed,
     fogOfWarEnabled: Boolean(state.visibility[viewerId]),
-    map: map.available ? { available: true, hasBackground: Boolean(map.backgroundPath) } : { available: false, reason: map.reason },
+    map: map.available ? { available: true, hasBackground: Boolean(map.backgroundPath), wallRings: map.wallRings ?? null } : { available: false, reason: map.reason },
     nations,
     provinces,
     economy: economyView(state, viewerId, economyRules),
